@@ -6,6 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.ide"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.shrike"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.core.tests"/>
-	<classpathentry kind="lib" path="C:/eclipse3.6RC4/plugins/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

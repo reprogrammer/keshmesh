@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ConcurrencyBugsDetector
+Bundle-SymbolicName: edu.illinois.keshmesh.detector
+Bundle-Version: 1.0.0.0
+Bundle-ClassPath: ConcurrencyBugsDetector.jar,
+ plugins/org.eclipse.equinox.common_3.6.0.v20100503.jar
+Export-Package: .
+Require-Bundle: org.eclipse.equinox.common;bundle-version="3.6.0"

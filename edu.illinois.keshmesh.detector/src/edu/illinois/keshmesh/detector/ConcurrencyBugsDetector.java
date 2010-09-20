@@ -1,8 +1,10 @@
+package edu.illinois.keshmesh.detector;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
+import com.ibm.wala.classLoader.IBytecodeMethod;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.core.tests.callGraph.CallGraphTestUtil;
@@ -21,6 +23,7 @@ import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
+import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -109,12 +112,14 @@ public class ConcurrencyBugsDetector {
 		Iterator<CGNode> cgNodesIterator = callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
-			if (analysisScope.isApplicationLoader(cgNode.getMethod().getDeclaringClass().getClassLoader())) {
+			IMethod method = cgNode.getMethod();
+			if (analysisScope.isApplicationLoader(method.getDeclaringClass().getClassLoader())) {
 				System.out.println("CGNode:" + cgNode);
 				IR ir = cgNode.getIR();
 				System.out.println("IR:" + ir);
 				SSAInstruction[] instructions = ir.getInstructions();
-				for (SSAInstruction instruction : instructions) {
+				for (int i=0; i<instructions.length; i++) {
+					SSAInstruction instruction = instructions[i];
 					if (instruction instanceof SSAMonitorInstruction) {
 						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) instruction;
 						if (monitorInstruction.isMonitorEnter()) {
@@ -127,9 +132,17 @@ public class ConcurrencyBugsDetector {
 									NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 									if (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals(JAVA_LANG_CLASS)) {
 										if (normalAllocationInNode.getNode().getMethod().getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE)) {
-											System.out.println("Detected an instance of LCK02-J");
+											//It should be IBytecodeMethod
+											try {
+												int bcIndex = ((IBytecodeMethod) method).getBytecodeIndex(i);
+												int lineNumber = method.getLineNumber(bcIndex);
+												System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() +
+														", line number=" + lineNumber);
+											} catch (InvalidClassFileException e) {
+												e.printStackTrace();
+											}
 										}
-									}
+									}									
 								}
 							}
 						}
