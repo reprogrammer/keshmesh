@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.IJavaProject"
+            id="edu.illinois.keshmesh.detector.ui.contribution">
+         <menu
+               label="Keshmesh"
+               path="additions"
+               id="edu.illinois.keshmesh.detector.ui.menu">
+            <separator
+                  name="group">
+            </separator>
+         </menu>
+         <action
+               label="LCK02-J"
+               class="edu.illinois.keshmesh.detector.ui.popup.actions.LCK02JAction"
+               menubarPath="edu.illinois.keshmesh.detector.ui.menu/group"
+               enablesFor="1"
+               id="edu.illinois.keshmesh.detector.ui.LCK02JAction">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

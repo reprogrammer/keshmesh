@@ -4,5 +4,3 @@ sun\/awt\/.*
 sun\/swing\/.*
 com\/sun\/.*
 sun\/.*
-org\/netbeans\/.*
-org\/openide\/.*

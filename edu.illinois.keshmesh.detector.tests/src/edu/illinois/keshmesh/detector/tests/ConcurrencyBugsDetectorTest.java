@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -14,13 +13,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.JavaModelException;
 import org.junit.Test;
 
-import com.ibm.wala.ipa.callgraph.CallGraphBuilderCancelException;
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
-
 import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
+import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
 public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 
@@ -46,17 +42,7 @@ public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 					isDone = true;
 					try {
 						performTest();
-					} catch (JavaModelException e) {
-						e.printStackTrace();
-					} catch (ClassHierarchyException e) {
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-					} catch (CallGraphBuilderCancelException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (URISyntaxException e) {
+					} catch (WALAInitializationException e) {
 						e.printStackTrace();
 					}
 				}
@@ -76,9 +62,9 @@ public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 		return sb.toString();
 	}
 
-	private void performTest() throws JavaModelException, ClassHierarchyException, IllegalArgumentException, CallGraphBuilderCancelException, IOException, URISyntaxException {
+	private void performTest() throws WALAInitializationException {
 		System.out.println("Compilation done");
-		String classpath = javaProject.getOutputLocation().toOSString();
-		ConcurrencyBugsDetector.initAndPerformAnalysis(classpath);
+		//String classpath = javaProject.getOutputLocation().toOSString();
+		ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
 	}
 }
