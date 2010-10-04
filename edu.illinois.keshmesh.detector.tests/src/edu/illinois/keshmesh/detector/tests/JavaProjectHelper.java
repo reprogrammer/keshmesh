@@ -50,6 +50,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
+import org.eclipse.jdt.launching.JavaRuntime;
 
 /**
  * Helper methods to set up a IJavaProject.
@@ -463,6 +464,18 @@ public class JavaProjectHelper {
 		IFolder folder = jproject.getProject().getFolder(containerName);
 		removeFromClasspath(jproject, folder.getFullPath());
 		folder.delete(true, null);
+	}
+
+	/**
+	 * 
+	 * @see ﻿Aeschlimann, Martin, Dirk Bäumer, and Jerome Lanneluc. 2005. Java
+	 *      Tool Smithing Extending the Eclipse Java Development Tools. In
+	 *      EclipseCon, 1-51. http://www.eclipsecon.org/2005/presentations/
+	 *      EclipseCON2005_Tutorial29.pdf.
+	 */
+	public static void addJREContainer(IJavaProject jproject) throws JavaModelException {
+		IClasspathEntry jreCPEntry = JavaCore.newContainerEntry(new Path(JavaRuntime.JRE_CONTAINER));
+		addToClasspath(jproject, jreCPEntry);
 	}
 
 	/**

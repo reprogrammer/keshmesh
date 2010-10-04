@@ -4,23 +4,17 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
-import org.junit.After;
 import org.junit.Before;
 
 public abstract class AbstractTestCase {
@@ -59,7 +53,7 @@ public abstract class AbstractTestCase {
 	}
 
 	@Before
-	public void setUp() throws Exception {		
+	public void setUp() throws Exception {
 		javaProject = createAndInitializeProject("test");
 		//Should be called after the projects are created
 		JavaProjectHelper.setAutoBuilding(false);
@@ -94,10 +88,7 @@ public abstract class AbstractTestCase {
 	}
 
 	/**
-	 * Creates a new project in Eclipse and initializes its molhadoRef's ID and
-	 * FQN maps. If the caller does not want to do explicit check out of the
-	 * project then it must call this method to setup molhadoref, else check out
-	 * will automatically setup molhadoref.
+	 * Creates a new project in Eclipse and sets up its dependencies on JRE.
 	 * 
 	 * @param projectName
 	 * @param baseProjectName
@@ -107,7 +98,7 @@ public abstract class AbstractTestCase {
 	protected IJavaProject createAndInitializeProject(String projectName, String baseProjectName) throws CoreException {
 		IJavaProject project;
 		project = JavaProjectHelper.createJavaProject(projectName, "bin");
-		JavaProjectHelper.addRTJar(project);
+		JavaProjectHelper.addJREContainer(project);
 		// set compiler options on projectOriginal
 		Map options = project.getOptions(false);
 		JavaProjectHelper.set15CompilerOptions(options);
@@ -121,7 +112,7 @@ public abstract class AbstractTestCase {
 		return createAndInitializeProject(projectName, null);
 	}
 
-//	@After
+	//	@After
 	public void tearDown() throws Exception {
 		JavaProjectHelper.performDummySearch();
 		JavaProjectHelper.delete(javaProject);
@@ -145,13 +136,13 @@ public abstract class AbstractTestCase {
 		return document.get();
 	}
 
-//	public static void performDummySearch() throws JavaModelException {
-//		new SearchEngine().searchAllTypeNames(null,
-//				"A".toCharArray(), // make sure we search a concrete name. This
-//				// is faster according to Kent
-//				SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE, IJavaSearchConstants.CLASS, SearchEngine.createJavaSearchScope(new IJavaElement[0]), new Requestor(),
-//				IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
-//	}
+	//	public static void performDummySearch() throws JavaModelException {
+	//		new SearchEngine().searchAllTypeNames(null,
+	//				"A".toCharArray(), // make sure we search a concrete name. This
+	//				// is faster according to Kent
+	//				SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE, IJavaSearchConstants.CLASS, SearchEngine.createJavaSearchScope(new IJavaElement[0]), new Requestor(),
+	//				IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
+	//	}
 
 	private static class Requestor extends TypeNameRequestor {
 	}
