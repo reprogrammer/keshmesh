@@ -12,8 +12,10 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jdt.core;bundle-version="3.6.0",
  com.ibm.wala.cast.java.jdt;bundle-version="1.0.0",
  com.ibm.wala.cast.java;bundle-version="1.0.0",
- org.eclipse.ui
+ org.eclipse.ui,
+ com.ibm.wala.cast;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: edu.illinois.keshmesh.detector,
+ edu.illinois.keshmesh.detector.bugs,
  edu.illinois.keshmesh.detector.exception

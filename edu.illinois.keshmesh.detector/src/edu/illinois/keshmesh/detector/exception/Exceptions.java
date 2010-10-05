@@ -1,5 +1,11 @@
 package edu.illinois.keshmesh.detector.exception;
 
+/**
+ * 
+ * @author Mohsen Vakilian
+ * @author Stas Negara
+ * 
+ */
 public class Exceptions {
 
 	@SuppressWarnings("serial")

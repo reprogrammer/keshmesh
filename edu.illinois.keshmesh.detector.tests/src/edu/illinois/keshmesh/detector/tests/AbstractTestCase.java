@@ -15,7 +15,6 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
-import org.junit.Before;
 
 public abstract class AbstractTestCase {
 
@@ -30,12 +29,12 @@ public abstract class AbstractTestCase {
 
 	/**
 	 * Creates the class with the specified contents and name in the specified
-	 * package and returns the compilationunit of the newly created class. If
-	 * the class already exists no changes are maded to it and the preexisting
-	 * compilationunit is returned.
+	 * package and returns the compilation unit of the newly created class. If
+	 * the class already exists no changes are made to it and the preexisting
+	 * compilation unit is returned.
 	 * 
 	 * @param pack
-	 *            the pcakge in which the class will be created
+	 *            the package in which the class will be created
 	 * @param name
 	 *            the name of the class e.g. A.java
 	 * @param contents
@@ -52,8 +51,7 @@ public abstract class AbstractTestCase {
 		return cu;
 	}
 
-	@Before
-	public void setUp() throws Exception {
+	public void setUpProject() throws Exception {
 		javaProject = createAndInitializeProject("test");
 		//Should be called after the projects are created
 		JavaProjectHelper.setAutoBuilding(false);

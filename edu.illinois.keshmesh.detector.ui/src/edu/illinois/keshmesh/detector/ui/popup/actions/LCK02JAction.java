@@ -13,6 +13,12 @@ import org.eclipse.ui.IWorkbenchPart;
 import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
+/**
+ * 
+ * @author Mohsen Vakilian
+ * @author Stas Negara
+ * 
+ */
 public class LCK02JAction implements IObjectActionDelegate {
 
 	protected ISelection currentSelection;

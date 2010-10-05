@@ -5,50 +5,36 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
+import junit.framework.Assert;
+
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.ICompilationUnit;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
+import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.Position;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
+/**
+ * 
+ * @author Mohsen Vakilian
+ * @author Stas Negara
+ * 
+ */
 public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 
-	public static final IPath test1 = new Path("test-files/Test.java");
+	public static final IPath testClass1 = new Path("test-files/Test.java");
 
-	@Test
-	public void testRenameMethodRefactoringWrapping() throws Exception {
-		File test1File = Activator.getDefault().getFileInPlugin(test1);
+	@Before
+	public void addTestClass() throws Exception {
+		setUpProject();
+		File test1File = Activator.getDefault().getFileInPlugin(testClass1);
 		String javaText = format(getFileContent(test1File.getAbsolutePath()));
-		ICompilationUnit cu = createCU(packageP, "Test.java", javaText);
-		proceedAfterBuilding();
-	}
-
-	private void proceedAfterBuilding() throws CoreException {
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		workspace.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor() {
-
-			private boolean isDone = false;
-
-			@Override
-			public void done() {
-				if (!isDone) {
-					isDone = true;
-					try {
-						performTest();
-					} catch (WALAInitializationException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-		});
+		createCU(packageP, "Test.java", javaText);
 	}
 
 	private String getFileContent(String fileName) throws IOException {
@@ -62,9 +48,10 @@ public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 		return sb.toString();
 	}
 
-	private void performTest() throws WALAInitializationException {
-		System.out.println("Compilation done");
-		//String classpath = javaProject.getOutputLocation().toOSString();
-		ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
+	@Test
+	public void shouldFindLCK02J() throws WALAInitializationException {
+		BugInstances bugInstances = ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
+		System.out.println(bugInstances.toString());
+		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new Position(203, 253))));
 	}
 }

@@ -5,7 +5,7 @@ import java.util.Iterator;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
-import com.ibm.wala.classLoader.IBytecodeMethod;
+import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -15,13 +15,16 @@ import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
-import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.util.intset.OrdinalSet;
 import com.ibm.wala.util.io.FileProvider;
 
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
+import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.Position;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
@@ -35,6 +38,7 @@ public class ConcurrencyBugsDetector {
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;";
 
+	private static DetectorJavaSourceAnalysisEngine engine;
 	//private static AnalysisScope analysisScope;
 	//private static AnalysisOptions analysisOptions;
 	private static ClassHierarchy classHierarchy;
@@ -43,9 +47,9 @@ public class ConcurrencyBugsDetector {
 	private static HeapModel heapModel;
 	private static BasicHeapGraph basicHeapGraph;
 
-	public static void initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
+	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
 		initAnalysis(javaProject);
-		performAnalysis();
+		return performAnalysis();
 	}
 
 	private static void initAnalysis(IJavaProject javaProject) throws WALAInitializationException {
@@ -64,17 +68,14 @@ public class ConcurrencyBugsDetector {
 		//		heapModel = pointerAnalysis.getHeapModel();
 		//		basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
 
-		DetectorProjectCGModelWithMain model;
-
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
-			model = new DetectorProjectCGModelWithMain(javaProject, exclusionsFileName);
-			model.buildGraph();
+			engine = new DetectorJavaSourceAnalysisEngine(javaProject, exclusionsFileName);
+			callGraph = engine.buildDefaultCallGraph();
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
-		callGraph = model.getGraph();
-		pointerAnalysis = model.getPointerAnalysis();
+		pointerAnalysis = engine.getPointerAnalysis();
 		heapModel = pointerAnalysis.getHeapModel();
 		basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
 	}
@@ -111,12 +112,12 @@ public class ConcurrencyBugsDetector {
 	//		};
 	//	}
 
-	private static void performAnalysis() {
+	private static BugInstances performAnalysis() {
+		BugInstances bugInstances = new BugInstances();
 		Iterator<CGNode> cgNodesIterator = callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
 			IMethod method = cgNode.getMethod();
-			//			if (analysisScope.isApplicationLoader(method.getDeclaringClass().getClassLoader())) {
 			System.out.println("CGNode:" + cgNode);
 			IR ir = cgNode.getIR();
 			if (ir != null) {
@@ -136,25 +137,20 @@ public class ConcurrencyBugsDetector {
 									NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 									if (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals(JAVA_LANG_CLASS)) {
 										if (normalAllocationInNode.getNode().getMethod().getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE)) {
-											//It should be IBytecodeMethod
-											try {
-												int bcIndex = ((IBytecodeMethod) method).getBytecodeIndex(i);
-												int lineNumber = method.getLineNumber(bcIndex);
-												System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-											} catch (InvalidClassFileException e) {
-												e.printStackTrace();
-											}
+											int lineNumber = ((AstMethod) method).getLineNumber(i);
+											com.ibm.wala.cast.tree.CAstSourcePositionMap.Position position = ((AstMethod) method).getSourcePosition();
+											System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
+											bugInstances.add(new BugInstance(BugPatterns.LCK02J, new Position(position)));
 										}
 									}
 								}
 							}
 						}
 					}
-
 				}
-				//			}
 			}
 		}
+		return bugInstances;
 	}
 
 }
