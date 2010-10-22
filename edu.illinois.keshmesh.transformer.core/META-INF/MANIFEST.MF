@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: edu.illinois.keshmesh.transformer.core
+Bundle-SymbolicName: edu.illinois.keshmesh.transformer.core
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: edu.illinois.keshmesh.transformer.core.Activator
+Bundle-Vendor: University of Illinois
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ltk.core.refactoring;bundle-version="3.9.100",
+ org.eclipse.jdt.core;bundle-version="3.6.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
