@@ -16,6 +16,6 @@ public class Test{
  private void increment(){
    synchronized(getClass()){
      i++;
-   }
- }
+   };
+ };
 }

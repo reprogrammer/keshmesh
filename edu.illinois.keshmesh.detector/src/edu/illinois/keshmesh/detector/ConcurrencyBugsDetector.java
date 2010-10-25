@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.cast.loader.AstMethod;
+import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -24,7 +25,7 @@ import com.ibm.wala.util.io.FileProvider;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.Position;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
@@ -123,8 +124,8 @@ public class ConcurrencyBugsDetector {
 			if (ir != null) {
 				System.out.println("IR:" + ir);
 				SSAInstruction[] instructions = ir.getInstructions();
-				for (int i = 0; i < instructions.length; i++) {
-					SSAInstruction instruction = instructions[i];
+				for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
+					SSAInstruction instruction = instructions[instructionIndex];
 					if (instruction instanceof SSAMonitorInstruction) {
 						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) instruction;
 						if (monitorInstruction.isMonitorEnter()) {
@@ -137,10 +138,10 @@ public class ConcurrencyBugsDetector {
 									NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 									if (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals(JAVA_LANG_CLASS)) {
 										if (normalAllocationInNode.getNode().getMethod().getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE)) {
-											int lineNumber = ((AstMethod) method).getLineNumber(i);
-											com.ibm.wala.cast.tree.CAstSourcePositionMap.Position position = ((AstMethod) method).getSourcePosition();
+											int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
+											Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
 											System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-											bugInstances.add(new BugInstance(BugPatterns.LCK02J, new Position(position)));
+											bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position)));
 										}
 									}
 								}

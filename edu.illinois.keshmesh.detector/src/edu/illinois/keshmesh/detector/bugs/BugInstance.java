@@ -10,11 +10,19 @@ public class BugInstance {
 
 	BugPattern bugPattern;
 
-	Position position;
+	BugPosition bugPosition;
 
-	public BugInstance(BugPattern bugPattern, Position position) {
+	public BugInstance(BugPattern bugPattern, BugPosition bugPosition) {
 		this.bugPattern = bugPattern;
-		this.position = position;
+		this.bugPosition = bugPosition;
+	}
+
+	public BugPattern getBugPattern() {
+		return bugPattern;
+	}
+
+	public BugPosition getBugPosition() {
+		return bugPosition;
 	}
 
 	@Override
@@ -22,7 +30,7 @@ public class BugInstance {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((bugPattern == null) ? 0 : bugPattern.hashCode());
-		result = prime * result + ((position == null) ? 0 : position.hashCode());
+		result = prime * result + ((bugPosition == null) ? 0 : bugPosition.hashCode());
 		return result;
 	}
 
@@ -40,16 +48,16 @@ public class BugInstance {
 				return false;
 		} else if (!bugPattern.equals(other.bugPattern))
 			return false;
-		if (position == null) {
-			if (other.position != null)
+		if (bugPosition == null) {
+			if (other.bugPosition != null)
 				return false;
-		} else if (!position.equals(other.position))
+		} else if (!bugPosition.equals(other.bugPosition))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return bugPattern + " @" + position;
+		return bugPattern + " @ " + bugPosition;
 	}
 }

@@ -1,23 +1,37 @@
 package edu.illinois.keshmesh.transformer.core;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.dom.SynchronizedStatement;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.UndoEdit;
+
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
 
 public class LCK02JFixer extends Refactoring {
 
-	int selectionStart;
-	int selectionLength;
-	String className;
+	BugPosition bugPosition;
 
-	public LCK02JFixer(int selectionStart, int selectionLength, String className) {
+	public LCK02JFixer(BugPosition bugPosition) {
 		super();
-		this.selectionStart = selectionStart;
-		this.selectionLength = selectionLength;
-		this.className = className;
+		this.bugPosition = bugPosition;
 	}
 
 	@Override
@@ -32,6 +46,50 @@ public class LCK02JFixer extends Refactoring {
 
 	@Override
 	public Change createChange(IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {
+		ITextFileBufferManager textFileBufferManager = null;
+		try {
+			//Retrieving the Document out of IPath
+			textFileBufferManager = FileBuffers.getTextFileBufferManager();
+			textFileBufferManager.connect(bugPosition.getSourcePath(), LocationKind.LOCATION, progressMonitor);
+			ITextFileBuffer textFileBuffer = textFileBufferManager.getTextFileBuffer(bugPosition.getSourcePath(), LocationKind.IFILE);
+			IDocument document = textFileBuffer.getDocument();
+			try {
+				System.out.println(document.get(bugPosition.getFirstOffset(), bugPosition.getLength()));
+			} catch (BadLocationException e1) {
+				e1.printStackTrace();
+			}
+			// Parsing the Document
+			ASTParser parser = ASTParser.newParser(AST.JLS3);
+			parser.setKind(ASTParser.K_COMPILATION_UNIT);
+			parser.setSource(document.get().toCharArray());
+			parser.setResolveBindings(true);
+			CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(progressMonitor);
+
+			//Rewriting the AST
+			ASTNode monitorNode = NodeFinder.perform(compilationUnit, bugPosition.getFirstOffset(), bugPosition.getLength());
+			SynchronizedStatement synchronizedStatement = (SynchronizedStatement) monitorNode;
+			AST ast = synchronizedStatement.getAST();
+			ASTRewrite rewriter = ASTRewrite.create(ast);
+
+			ASTParser expressionParser = ASTParser.newParser(AST.JLS3);
+			expressionParser.setKind(ASTParser.K_EXPRESSION);
+			expressionParser.setSource("Test.class".toCharArray());
+			ASTNode astNode = expressionParser.createAST(progressMonitor);
+			rewriter.set(synchronizedStatement, SynchronizedStatement.EXPRESSION_PROPERTY, astNode, null);
+			TextEdit textEdit = rewriter.rewriteAST(document, null);
+			try {
+				UndoEdit undoEdit = textEdit.apply(document);
+			} catch (MalformedTreeException e) {
+				e.printStackTrace();
+			} catch (BadLocationException e) {
+				e.printStackTrace();
+			}
+
+			//Committing changes to the source file
+			textFileBuffer.commit(progressMonitor, true);
+		} finally {
+			textFileBufferManager.disconnect(bugPosition.getSourcePath(), LocationKind.LOCATION, progressMonitor);
+		}
 		return null;
 	}
 

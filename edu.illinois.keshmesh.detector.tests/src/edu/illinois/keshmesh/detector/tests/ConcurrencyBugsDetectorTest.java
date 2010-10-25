@@ -7,8 +7,12 @@ import java.io.IOException;
 
 import junit.framework.Assert;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,8 +20,9 @@ import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.Position;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
 
 /**
  * 
@@ -27,14 +32,17 @@ import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationExc
  */
 public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 
-	public static final IPath testClass1 = new Path("test-files/Test.java");
+	private static final IPath testClass1 = new Path("test-files/Test.java");
+
+	private IPath compilationUnitPath = null;
 
 	@Before
 	public void addTestClass() throws Exception {
 		setUpProject();
 		File test1File = Activator.getDefault().getFileInPlugin(testClass1);
 		String javaText = format(getFileContent(test1File.getAbsolutePath()));
-		createCU(packageP, "Test.java", javaText);
+		ICompilationUnit compilationUnit = createCU(packageP, "Test.java", javaText);
+		compilationUnitPath = compilationUnit.getResource().getLocation();
 	}
 
 	private String getFileContent(String fileName) throws IOException {
@@ -52,6 +60,17 @@ public class ConcurrencyBugsDetectorTest extends AbstractTestCase {
 	public void shouldFindLCK02J() throws WALAInitializationException {
 		BugInstances bugInstances = ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
 		System.out.println(bugInstances.toString());
-		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new Position(203, 253))));
+		for (BugInstance bugInstance : bugInstances) {
+			BugPosition bugPosition = bugInstance.getBugPosition();
+			LCK02JFixer fixer = new LCK02JFixer(bugPosition);
+			try {
+				fixer.createChange(new NullProgressMonitor());
+			} catch (OperationCanceledException e) {
+				e.printStackTrace();
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+		}
+		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(208, 249, compilationUnitPath))));
 	}
 }
