@@ -71,7 +71,7 @@ public class BugInstances implements Collection<BugInstance> {
 
 	@Override
 	public int size() {
-		throw new UnsupportedOperationException();
+		return bugInstances.size();
 	}
 
 	@Override

@@ -23,15 +23,26 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 
 public class LCK02JFixer extends Refactoring {
 
 	BugPosition bugPosition;
+	BugInstance bugInstance;
+	LCK02JFixInformation fixInformation;
 
 	public LCK02JFixer(BugPosition bugPosition) {
 		super();
 		this.bugPosition = bugPosition;
+	}
+
+	public LCK02JFixer(BugInstance bugInstance) {
+		super();
+		this.bugInstance = bugInstance;
+		this.bugPosition = bugInstance.getBugPosition();
+		this.fixInformation = (LCK02JFixInformation) bugInstance.getFixInformation();
 	}
 
 	@Override
@@ -73,7 +84,7 @@ public class LCK02JFixer extends Refactoring {
 
 			ASTParser expressionParser = ASTParser.newParser(AST.JLS3);
 			expressionParser.setKind(ASTParser.K_EXPRESSION);
-			expressionParser.setSource("Test.class".toCharArray());
+			expressionParser.setSource(fixInformation.getTypeName().toCharArray());
 			ASTNode astNode = expressionParser.createAST(progressMonitor);
 			rewriter.set(synchronizedStatement, SynchronizedStatement.EXPRESSION_PROPERTY, astNode, null);
 			TextEdit textEdit = rewriter.rewriteAST(document, null);

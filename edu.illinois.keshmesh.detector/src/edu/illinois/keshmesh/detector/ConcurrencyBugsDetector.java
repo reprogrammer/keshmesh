@@ -10,15 +10,18 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
+import com.ibm.wala.ipa.callgraph.propagation.AbstractTypeInNode;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
+import com.ibm.wala.ipa.callgraph.propagation.ReceiverInstanceContext;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
+import com.ibm.wala.types.TypeName;
 import com.ibm.wala.util.intset.OrdinalSet;
 import com.ibm.wala.util.io.FileProvider;
 
@@ -26,9 +29,16 @@ import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
+/**
+ * 
+ * @author Stas Negara
+ * @author Mohsen Vakilian
+ * 
+ */
 public class ConcurrencyBugsDetector {
 
 	//	public static String REGRESSION_EXCLUSIONS = "dat" + System.getProperty("file.separator") + "Java60RegressionExclusions.txt";
@@ -113,6 +123,14 @@ public class ConcurrencyBugsDetector {
 	//		};
 	//	}
 
+	private static String getReceiverTypeName(AbstractTypeInNode node) {
+		TypeName typeName = ((ReceiverInstanceContext) (node.getNode().getContext())).getReceiver().getConcreteType().getName();
+		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName() + ".class";
+
+		//WALA uses $ to refers to inner classes. We have to replace $ by . to make it a valid class name in Java source code.
+		return fullyQualifiedName.replace("$", ".");
+	}
+
 	private static BugInstances performAnalysis() {
 		BugInstances bugInstances = new BugInstances();
 		Iterator<CGNode> cgNodesIterator = callGraph.iterator();
@@ -141,7 +159,7 @@ public class ConcurrencyBugsDetector {
 											int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 											Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
 											System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-											bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position)));
+											bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position), new LCK02JFixInformation(getReceiverTypeName(normalAllocationInNode))));
 										}
 									}
 								}

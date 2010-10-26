@@ -5,6 +5,12 @@ import org.eclipse.core.runtime.Path;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 
+/**
+ * 
+ * @author Mohsen Vakilian
+ * @author Stas Negara
+ * 
+ */
 public class BugPosition {
 
 	// [firstOffset, lastOffset)

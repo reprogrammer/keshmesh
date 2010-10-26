@@ -1,5 +1,8 @@
 package edu.illinois.keshmesh.detector.tests;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -141,6 +144,17 @@ public abstract class AbstractTestCase {
 	//				SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE, IJavaSearchConstants.CLASS, SearchEngine.createJavaSearchScope(new IJavaElement[0]), new Requestor(),
 	//				IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
 	//	}
+
+	protected String getFileContent(String fileName) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(fileName));
+		StringBuilder sb = new StringBuilder();
+		String str;
+		while ((str = in.readLine()) != null) {
+			sb.append(str);
+		}
+		in.close();
+		return sb.toString();
+	}
 
 	private static class Requestor extends TypeNameRequestor {
 	}
