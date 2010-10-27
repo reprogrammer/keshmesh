@@ -1,3 +1,6 @@
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package edu.illinois.keshmesh.transformer.core;
 
 import org.eclipse.core.filebuffers.FileBuffers;
@@ -27,6 +30,12 @@ import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 
+/**
+ * 
+ * @author Mohsen Vakilian
+ * @author Stas Negara
+ * 
+ */
 public class LCK02JFixer extends Refactoring {
 
 	BugPosition bugPosition;
