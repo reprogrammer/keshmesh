@@ -3,6 +3,8 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import java.util.Set;
+
 /**
  * 
  * @author Mohsen Vakilian
@@ -11,22 +13,22 @@ package edu.illinois.keshmesh.detector.bugs;
  */
 public class LCK02JFixInformation implements FixInformation {
 
-	String typeName;
+	Set<String> typeNames;
 
-	public LCK02JFixInformation(String typeName) {
+	public LCK02JFixInformation(Set<String> typeNames) {
 		super();
-		this.typeName = typeName;
+		this.typeNames = typeNames;
 	}
 
-	public String getTypeName() {
-		return typeName;
+	public Set<String> getTypeNames() {
+		return typeNames;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((typeName == null) ? 0 : typeName.hashCode());
+		result = prime * result + ((typeNames == null) ? 0 : typeNames.hashCode());
 		return result;
 	}
 
@@ -39,17 +41,17 @@ public class LCK02JFixInformation implements FixInformation {
 		if (getClass() != obj.getClass())
 			return false;
 		LCK02JFixInformation other = (LCK02JFixInformation) obj;
-		if (typeName == null) {
-			if (other.typeName != null)
+		if (typeNames == null) {
+			if (other.typeNames != null)
 				return false;
-		} else if (!typeName.equals(other.typeName))
+		} else if (!typeNames.equals(other.typeNames))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LCK02JFixInformation [typeName=" + typeName + "]";
+		return "LCK02JFixInformation [typeNames=" + typeNames + "]";
 	}
 
 }

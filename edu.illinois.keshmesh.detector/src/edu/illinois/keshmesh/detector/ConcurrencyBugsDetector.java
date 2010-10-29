@@ -153,11 +153,11 @@ public class ConcurrencyBugsDetector {
 						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) instruction;
 						if (monitorInstruction.isMonitorEnter()) {
 							Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames(monitorInstruction, cgNode);
-							if (synchronizedClassTypeNames.size() == 1) {
+							if (!synchronizedClassTypeNames.isEmpty()) {
 								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
-								System.out.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position), new LCK02JFixInformation(getTheOnlyElementOf(synchronizedClassTypeNames))));
+								System.err.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
+								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}
 						}
 					}
@@ -165,13 +165,6 @@ public class ConcurrencyBugsDetector {
 			}
 		}
 		return bugInstances;
-	}
-
-	static private String getTheOnlyElementOf(Set<String> set) {
-		if (set.size() != 1) {
-			throw new RuntimeException("Expected a set of one element");
-		}
-		return set.toArray(new String[1])[0];
 	}
 
 	private static boolean isReturnedByGetClass(NormalAllocationInNode normalAllocationInNode) {

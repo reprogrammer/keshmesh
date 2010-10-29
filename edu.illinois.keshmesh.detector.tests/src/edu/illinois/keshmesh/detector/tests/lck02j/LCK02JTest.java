@@ -52,7 +52,9 @@ abstract public class LCK02JTest extends AbstractTestCase {
 			BugPosition bugPosition = bugInstance.getBugPosition();
 			LCK02JFixer fixer = new LCK02JFixer(bugInstance);
 			try {
-				fixer.createChange(new NullProgressMonitor());
+				if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
+					fixer.createChange(new NullProgressMonitor());
+				}
 			} catch (OperationCanceledException e) {
 				e.printStackTrace();
 			} catch (CoreException e) {

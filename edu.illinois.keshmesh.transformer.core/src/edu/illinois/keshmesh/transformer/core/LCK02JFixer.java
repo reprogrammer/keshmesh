@@ -10,6 +10,7 @@ import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -29,6 +30,7 @@ import org.eclipse.text.edits.UndoEdit;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
+import edu.illinois.keshmesh.detector.util.SetUtils;
 
 /**
  * 
@@ -61,7 +63,11 @@ public class LCK02JFixer extends Refactoring {
 
 	@Override
 	public RefactoringStatus checkInitialConditions(IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {
-		return null;
+		if (fixInformation.getTypeNames().size() == 1) {
+			return RefactoringStatus.create(Status.OK_STATUS);
+		} else {
+			return RefactoringStatus.createFatalErrorStatus("More than one possible target classes were found: " + fixInformation.toString());
+		}
 	}
 
 	@Override
@@ -93,7 +99,7 @@ public class LCK02JFixer extends Refactoring {
 
 			ASTParser expressionParser = ASTParser.newParser(AST.JLS3);
 			expressionParser.setKind(ASTParser.K_EXPRESSION);
-			expressionParser.setSource(fixInformation.getTypeName().toCharArray());
+			expressionParser.setSource(SetUtils.getTheOnlyElementOf(fixInformation.getTypeNames()).toCharArray());
 			ASTNode astNode = expressionParser.createAST(progressMonitor);
 			rewriter.set(synchronizedStatement, SynchronizedStatement.EXPRESSION_PROPERTY, astNode, null);
 			TextEdit textEdit = rewriter.rewriteAST(document, null);
