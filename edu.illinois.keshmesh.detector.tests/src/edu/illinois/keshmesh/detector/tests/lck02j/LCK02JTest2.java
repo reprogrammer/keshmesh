@@ -31,7 +31,7 @@ public class LCK02JTest2 extends LCK02JTest {
 	public void shouldFindLCK02J() throws WALAInitializationException {
 		Assert.assertEquals(1, bugInstances.size());
 		//Linux:
-		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(245, 275, targetTestClassPath), new LCK02JFixInformation("p.Test.C.class"))));
+		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(364, 394, targetTestClassPath), new LCK02JFixInformation("p.Test.C.class"))));
 		// Windows: Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(208, 249, compilationUnitPath), new LCK02JFixInformation("p.Test.class"))));
 	}
 }
