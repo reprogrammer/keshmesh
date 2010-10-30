@@ -19,18 +19,22 @@ public class BugPosition {
 	// [firstOffset, lastOffset)
 	private int firstOffset, lastOffset;
 
+	private int firstLine, lastLine;
+
 	private IPath sourcePath;
 
 	public BugPosition(Position position) {
 		this.firstOffset = position.getFirstOffset();
 		this.lastOffset = position.getLastOffset();
+		this.firstLine = position.getFirstLine();
+		this.lastLine = position.getLastLine();
 		this.sourcePath = Path.fromPortableString(position.getURL().getFile());
 	}
 
-	public BugPosition(int firstOffset, int lastOffset, IPath sourcePath) {
+	public BugPosition(int firstLine, int lastLine, IPath sourcePath) {
 		super();
-		this.firstOffset = firstOffset;
-		this.lastOffset = lastOffset;
+		this.firstLine = firstLine;
+		this.lastLine = lastLine;
 		this.sourcePath = sourcePath;
 	}
 
@@ -40,6 +44,14 @@ public class BugPosition {
 
 	public int getLastOffset() {
 		return lastOffset;
+	}
+
+	public int getFirstLine() {
+		return firstLine;
+	}
+
+	public int getLastLine() {
+		return lastLine;
 	}
 
 	public int getLength() {
@@ -54,8 +66,8 @@ public class BugPosition {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + firstOffset;
-		result = prime * result + lastOffset;
+		result = prime * result + firstLine;
+		result = prime * result + lastLine;
 		result = prime * result + ((sourcePath == null) ? 0 : sourcePath.toPortableString().hashCode());
 		return result;
 	}
@@ -69,21 +81,21 @@ public class BugPosition {
 		if (getClass() != obj.getClass())
 			return false;
 		BugPosition other = (BugPosition) obj;
-		if (firstOffset != other.firstOffset)
+		if (firstLine != other.firstLine)
 			return false;
-		if (lastOffset != other.lastOffset)
+		if (lastLine != other.lastLine)
 			return false;
 		if (sourcePath == null) {
 			if (other.sourcePath != null)
 				return false;
-		} else if (!sourcePath.toPortableString().equals(other.sourcePath.toPortableString()))
+		} else if (!sourcePath.equals(other.sourcePath))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return sourcePath.toPortableString() + " @ [" + firstOffset + ":" + lastOffset + "]";
+		return sourcePath.toPortableString() + " @ [" + firstLine + "--" + lastLine + "]";
 	}
 
 }
