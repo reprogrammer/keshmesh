@@ -38,8 +38,12 @@ public class BugInstances implements Collection<BugInstance> {
 	}
 
 	@Override
-	public boolean contains(Object bugInstance) {
-		return bugInstances.contains(bugInstance);
+	public boolean contains(Object object) {
+		for (BugInstance bugInstance : bugInstances) {
+			if (bugInstance.portableEquals(object))
+				return true;
+		}
+		return false;
 	}
 
 	@Override

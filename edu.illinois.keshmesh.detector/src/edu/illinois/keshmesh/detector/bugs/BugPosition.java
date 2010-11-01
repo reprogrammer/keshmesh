@@ -67,13 +67,39 @@ public class BugPosition {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + firstLine;
+		result = prime * result + firstOffset;
 		result = prime * result + lastLine;
+		result = prime * result + lastOffset;
 		result = prime * result + ((sourcePath == null) ? 0 : sourcePath.toPortableString().hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BugPosition other = (BugPosition) obj;
+		if (firstLine != other.firstLine)
+			return false;
+		if (firstOffset != other.firstOffset)
+			return false;
+		if (lastLine != other.lastLine)
+			return false;
+		if (lastOffset != other.lastOffset)
+			return false;
+		if (sourcePath == null) {
+			if (other.sourcePath != null)
+				return false;
+		} else if (!sourcePath.equals(other.sourcePath))
+			return false;
+		return true;
+	}
+
+	public boolean portableEquals(Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)
@@ -95,7 +121,7 @@ public class BugPosition {
 
 	@Override
 	public String toString() {
-		return sourcePath.toPortableString() + " @ [" + firstLine + "--" + lastLine + "]";
+		return sourcePath.toPortableString() + " @ [" + firstLine + "--" + lastLine + "(" + firstOffset + ", " + lastOffset + ")" + "]";
 	}
 
 }

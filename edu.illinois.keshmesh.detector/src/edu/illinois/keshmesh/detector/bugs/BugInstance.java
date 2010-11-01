@@ -72,6 +72,32 @@ public class BugInstance {
 		return true;
 	}
 
+	public boolean portableEquals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BugInstance other = (BugInstance) obj;
+		if (bugPattern == null) {
+			if (other.bugPattern != null)
+				return false;
+		} else if (!bugPattern.equals(other.bugPattern))
+			return false;
+		if (bugPosition == null) {
+			if (other.bugPosition != null)
+				return false;
+		} else if (!bugPosition.portableEquals(other.bugPosition))
+			return false;
+		if (fixInformation == null) {
+			if (other.fixInformation != null)
+				return false;
+		} else if (!fixInformation.equals(other.fixInformation))
+			return false;
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		return bugPattern + " @ " + bugPosition + " : " + fixInformation;
