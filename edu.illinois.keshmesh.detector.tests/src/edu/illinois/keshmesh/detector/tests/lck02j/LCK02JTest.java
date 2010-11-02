@@ -15,7 +15,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.Activator;
@@ -34,32 +33,33 @@ abstract public class LCK02JTest extends AbstractTestCase {
 
 	public void setupProjectAndAnalyze(String testClass) throws Exception {
 		addTestClass(testClass);
-		findAndFixBugs();
+		findBugs();
 	}
 
 	public void addTestClass(String testClass) throws Exception {
 		setUpProject();
-		File test1File = Activator.getDefault().getFileInPlugin(new Path(testClass));
+		Path testClassPath = new Path(testClass);
+		File test1File = Activator.getDefault().getFileInPlugin(testClassPath);
 		String javaText = format(getFileContent(test1File.getAbsolutePath()));
-		ICompilationUnit compilationUnit = createCU(packageP, "Test.java", javaText);
+		ICompilationUnit compilationUnit = createCU(packageP, testClassPath.lastSegment(), javaText);
 		targetTestClassPath = compilationUnit.getResource().getLocation();
 	}
 
-	public void findAndFixBugs() throws WALAInitializationException {
+	public void findBugs() throws WALAInitializationException {
 		bugInstances = ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
 		System.out.println(bugInstances);
-		for (BugInstance bugInstance : bugInstances) {
-			BugPosition bugPosition = bugInstance.getBugPosition();
-			LCK02JFixer fixer = new LCK02JFixer(bugInstance);
-			try {
-				if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
-					fixer.createChange(new NullProgressMonitor());
-				}
-			} catch (OperationCanceledException e) {
-				e.printStackTrace();
-			} catch (CoreException e) {
-				e.printStackTrace();
+	}
+
+	public void findAndFixBugs(BugInstance bugInstance) {
+		LCK02JFixer fixer = new LCK02JFixer(bugInstance);
+		try {
+			if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
+				fixer.createChange(new NullProgressMonitor());
 			}
+		} catch (OperationCanceledException e) {
+			e.printStackTrace();
+		} catch (CoreException e) {
+			e.printStackTrace();
 		}
 	}
 
