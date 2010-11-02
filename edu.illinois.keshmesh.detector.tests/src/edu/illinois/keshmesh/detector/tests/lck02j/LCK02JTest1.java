@@ -3,16 +3,8 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import edu.illinois.keshmesh.detector.bugs.BugInstance;
-import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
-import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
-import edu.illinois.keshmesh.detector.util.SetUtils;
 
 /**
  * 
@@ -22,14 +14,16 @@ import edu.illinois.keshmesh.detector.util.SetUtils;
  */
 public class LCK02JTest1 extends LCK02JTest {
 
+	private static final String classA = "A.java";
+
 	@Before
 	public void setup() throws Exception {
-		setupProjectAndAnalyze("test-files/LCK02J/01/Test.java");
+		setupProjectAndAnalyze("01", classA);
 	}
 
 	@Test
 	public void shouldFindLCK02J() {
-		Assert.assertEquals(1, bugInstances.size());
-		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(17, 19, targetTestClassPath), new LCK02JFixInformation(SetUtils.asSet("p.Test.class")))));
+		checkNumberOfBugInstances(1);
+		bugInstanceShouldExist(10, 12, classA, "p.A.class");
 	}
 }

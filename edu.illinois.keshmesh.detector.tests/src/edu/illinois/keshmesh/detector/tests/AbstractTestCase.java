@@ -54,8 +54,8 @@ public abstract class AbstractTestCase {
 		return cu;
 	}
 
-	public void setUpProject() throws Exception {
-		javaProject = createAndInitializeProject("test");
+	public void setUpProject(String testID) throws Exception {
+		javaProject = createAndInitializeProject(testID);
 		//Should be called after the projects are created
 		JavaProjectHelper.setAutoBuilding(false);
 		fragmentRoot = JavaProjectHelper.addSourceContainer(javaProject, CONTAINER);
@@ -109,7 +109,7 @@ public abstract class AbstractTestCase {
 	}
 
 	protected IJavaProject createAndInitializeProject(String suffix) throws CoreException {
-		String projectName = "TestProject" + suffix + System.currentTimeMillis();
+		String projectName = "TestProject" + suffix + "-" + System.currentTimeMillis();
 		return createAndInitializeProject(projectName, null);
 	}
 

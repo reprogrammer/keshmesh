@@ -2,25 +2,23 @@
 package p;
 
 public class A {
+	static B b;
+
 	public static void main(String args[]) {
-		A.m();
+		new A().m();
 	}
 
-	private static void m() {
-		A a = new A();
-		Class l1 = a.new B().getClass();
-		Class l2 = a.new C().getClass();
-		synchronized (l1) {
+	public A() {
+		b = new B();
+	}
+
+	private void m() {
+		Class l = b.getClass();
+		synchronized (l) {
 			System.out.println("replace with p.A.B.class");
-		}
-		synchronized (l2) {
-			System.out.println("replace with p.A.C.class");
 		}
 	}
 
 	class B {
-	}
-
-	class C {
 	}
 }

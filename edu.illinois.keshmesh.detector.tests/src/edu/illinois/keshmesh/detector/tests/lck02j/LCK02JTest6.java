@@ -3,16 +3,8 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import edu.illinois.keshmesh.detector.bugs.BugInstance;
-import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
-import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
-import edu.illinois.keshmesh.detector.util.SetUtils;
 
 /**
  * 
@@ -22,17 +14,17 @@ import edu.illinois.keshmesh.detector.util.SetUtils;
  */
 public class LCK02JTest6 extends LCK02JTest {
 
+	private static final String classA = "A.java";
+
 	@Before
 	public void setup() throws Exception {
-		setupProjectAndAnalyze("test-files/LCK02J/06/A.java");
+		setupProjectAndAnalyze("06", classA);
 	}
 
 	@Test
 	public void shouldFindLCK02J() {
-		Assert.assertEquals(2, bugInstances.size());
-		BugInstance bugInstance1 = new BugInstance(BugPatterns.LCK02J, new BugPosition(13, 15, targetTestClassPath), new LCK02JFixInformation(SetUtils.asSet("p.A.B.class")));
-		BugInstance bugInstance2 = new BugInstance(BugPatterns.LCK02J, new BugPosition(16, 18, targetTestClassPath), new LCK02JFixInformation(SetUtils.asSet("p.A.C.class")));
-		Assert.assertTrue(bugInstances.contains(bugInstance1));
-		Assert.assertTrue(bugInstances.contains(bugInstance2));
+		checkNumberOfBugInstances(2);
+		bugInstanceShouldExist(13, 15, classA, "p.A.B.class");
+		bugInstanceShouldExist(16, 18, classA, "p.A.C.class");
 	}
 }

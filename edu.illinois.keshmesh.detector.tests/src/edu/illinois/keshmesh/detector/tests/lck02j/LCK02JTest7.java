@@ -12,18 +12,21 @@ import org.junit.Test;
  * @author Mohsen Vakilian
  * 
  */
-public class LCK02JTest3 extends LCK02JTest {
+public class LCK02JTest7 extends LCK02JTest {
 
 	private static final String classA = "A.java";
 
 	@Before
 	public void setup() throws Exception {
-		setupProjectAndAnalyze("03", classA);
+		setupProjectAndAnalyze("07", classA);
 	}
 
 	@Test
 	public void shouldFindLCK02J() {
-		checkNumberOfBugInstances(1);
-		bugInstanceShouldExist(17, 19, classA, "p.A.B.class");
+		checkNumberOfBugInstances(4);
+		bugInstanceShouldExist(13, 15, classA, "p.A.B.class");
+		bugInstanceShouldExist(19, 21, classA, "p.A.class");
+		bugInstanceShouldExist(22, 24, classA, "p.A.C.class");
+		bugInstanceShouldExist(26, 29, classA, "p.A.B.class", "p.A.C.class");
 	}
 }

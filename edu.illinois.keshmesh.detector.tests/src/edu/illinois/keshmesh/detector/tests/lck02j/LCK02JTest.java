@@ -4,6 +4,10 @@
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -15,9 +19,13 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.Activator;
+import edu.illinois.keshmesh.detector.util.SetUtils;
 import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
 
 /**
@@ -28,21 +36,42 @@ import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
  */
 abstract public class LCK02JTest extends AbstractTestCase {
 
-	protected IPath targetTestClassPath = null;
+	protected Map<String, IPath> targetTestClassPathMap = new HashMap<String, IPath>();
 	protected BugInstances bugInstances;
+	protected String testNumber;
 
-	public void setupProjectAndAnalyze(String testClass) throws Exception {
-		addTestClass(testClass);
+	private String getPathForClass(String testClass) {
+		return "test-files/LCK02J/" + testNumber + "/" + testClass;
+	}
+
+	private String getTestID() {
+		return "LCK02J-" + testNumber;
+	}
+
+	public void setupProjectAndAnalyze(String testNumber, String... testClasses) throws Exception {
+		this.testNumber = testNumber;
+		setUpProject(getTestID());
+		for (String testClass : testClasses) {
+			addTestClass(testClass);
+		}
 		findBugs();
 	}
 
-	public void addTestClass(String testClass) throws Exception {
-		setUpProject();
-		Path testClassPath = new Path(testClass);
+	private void addTestClass(String testClass) throws Exception {
+		String pathForClass = getPathForClass(testClass);
+		Path testClassPath = new Path(pathForClass);
 		File test1File = Activator.getDefault().getFileInPlugin(testClassPath);
 		String javaText = format(getFileContent(test1File.getAbsolutePath()));
 		ICompilationUnit compilationUnit = createCU(packageP, testClassPath.lastSegment(), javaText);
-		targetTestClassPath = compilationUnit.getResource().getLocation();
+		targetTestClassPathMap.put(pathForClass, compilationUnit.getResource().getLocation());
+	}
+
+	public IPath getTargetPathForClass(String testClass) {
+		String pathForClass = getPathForClass(testClass);
+		if (!targetTestClassPathMap.containsKey(pathForClass)) {
+			throw new RuntimeException("Could not find the path to test class \"" + pathForClass + "\"");
+		}
+		return targetTestClassPathMap.get(pathForClass);
 	}
 
 	public void findBugs() throws WALAInitializationException {
@@ -61,6 +90,15 @@ abstract public class LCK02JTest extends AbstractTestCase {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
+	}
+
+	protected void bugInstanceShouldExist(int firstLine, int lastLine, String className, String... replacements) {
+		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(firstLine, lastLine, getTargetPathForClass(className)), new LCK02JFixInformation(SetUtils
+				.asSet(replacements)))));
+	}
+
+	public void checkNumberOfBugInstances(int numOfBugInstances) {
+		Assert.assertEquals(numOfBugInstances, bugInstances.size());
 	}
 
 }
