@@ -47,29 +47,15 @@ public class BugInstance {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		BugInstance other = (BugInstance) obj;
-		if (bugPattern == null) {
-			if (other.bugPattern != null)
+		if (portableEquals(obj)) {
+			BugInstance other = (BugInstance) obj;
+			if (bugPosition == null) {
+				if (other.bugPosition != null)
+					return false;
+			} else if (!bugPosition.equals(other.bugPosition))
 				return false;
-		} else if (!bugPattern.equals(other.bugPattern))
-			return false;
-		if (bugPosition == null) {
-			if (other.bugPosition != null)
-				return false;
-		} else if (!bugPosition.equals(other.bugPosition))
-			return false;
-		if (fixInformation == null) {
-			if (other.fixInformation != null)
-				return false;
-		} else if (!fixInformation.equals(other.fixInformation))
-			return false;
-		return true;
+		}
+		return false;
 	}
 
 	public boolean portableEquals(Object obj) {

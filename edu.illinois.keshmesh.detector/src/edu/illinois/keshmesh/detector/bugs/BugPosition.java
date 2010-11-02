@@ -76,27 +76,14 @@ public class BugPosition {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		BugPosition other = (BugPosition) obj;
-		if (firstLine != other.firstLine)
-			return false;
-		if (firstOffset != other.firstOffset)
-			return false;
-		if (lastLine != other.lastLine)
-			return false;
-		if (lastOffset != other.lastOffset)
-			return false;
-		if (sourcePath == null) {
-			if (other.sourcePath != null)
+		if (portableEquals(obj)) {
+			BugPosition other = (BugPosition) obj;
+			if (firstOffset != other.firstOffset)
 				return false;
-		} else if (!sourcePath.equals(other.sourcePath))
-			return false;
-		return true;
+			if (lastOffset != other.lastOffset)
+				return false;
+		}
+		return false;
 	}
 
 	public boolean portableEquals(Object obj) {
