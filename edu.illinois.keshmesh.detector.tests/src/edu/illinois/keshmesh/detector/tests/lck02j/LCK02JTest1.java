@@ -26,7 +26,7 @@ public class LCK02JTest1 extends LCK02JTest {
 	@Before
 	public void setup() throws Exception {
 		setupProjectAndAnalyze("01", classA);
-		bugInstance1 = createTestBugInstnace(12, 14, classA, "p.A.class");
+		bugInstance1 = createTestBugInstance(12, 14, classA, "p.A.class");
 	}
 
 	@Test

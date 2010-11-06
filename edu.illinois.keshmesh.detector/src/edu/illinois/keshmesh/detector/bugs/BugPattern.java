@@ -11,10 +11,20 @@ package edu.illinois.keshmesh.detector.bugs;
  */
 abstract public class BugPattern {
 
+	protected final String name;
 	protected final String description;
 
-	public BugPattern(String description) {
+	public BugPattern(String name, String description) {
+		this.name = name;
 		this.description = description;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getDescription() {
+		return description;
 	}
 
 	@Override
@@ -22,6 +32,7 @@ abstract public class BugPattern {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -39,11 +50,17 @@ abstract public class BugPattern {
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "BugPattern: " + description;
+		return name + ". " + description;
 	}
+
 }

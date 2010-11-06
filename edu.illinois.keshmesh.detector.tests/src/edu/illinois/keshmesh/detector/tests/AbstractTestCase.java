@@ -3,9 +3,14 @@ package edu.illinois.keshmesh.detector.tests;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -18,6 +23,13 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
+
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
+import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPattern;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.FixInformation;
 
 public abstract class AbstractTestCase {
 
@@ -155,6 +167,48 @@ public abstract class AbstractTestCase {
 		}
 		in.close();
 		return sb.toString();
+	}
+
+	protected abstract FixInformation createFixInformation(String... replacements);
+
+	protected BugInstance createTestBugInstance(BugPattern bugPattern, int firstLine, int lastLine, IPath targetFilePath, String... replacements) {
+		return new BugInstance(bugPattern, new BugPosition(firstLine, lastLine, targetFilePath), createFixInformation(replacements));
+	}
+
+	protected BugInstances createTestBugInstances(IPath filePath) throws IOException {
+		Deque<BugInstance> stack = new LinkedList<BugInstance>();
+		BufferedReader in = new BufferedReader(new FileReader(filePath.toFile()));
+		BugInstances bugInstances = new BugInstances();
+		String str;
+		int currentLineNumber = 0;
+		while ((str = in.readLine()) != null) {
+			++currentLineNumber;
+			int startIndex = 0;
+			while (true) {
+
+				int beginMarkerStartIndex = str.indexOf("/*[", startIndex);
+				int endMarkerstartIndex = str.indexOf("/*]*/", startIndex);
+
+				while ((startIndex = str.indexOf("/*[", startIndex)) != -1) {
+					String marker = str.substring(startIndex + 3, str.indexOf("*/", startIndex) - 2);
+					List<String> markerParts = Arrays.asList(marker.split(","));
+					String bugPatternName = markerParts.get(0);
+					String bugInstanceNumber = markerParts.get(1);
+					markerParts.remove(0);
+					markerParts.remove(0);
+					String[] replacements = markerParts.toArray(new String[markerParts.size()]);
+					BugInstance testBugInstance = createTestBugInstance(BugPatterns.getBugPatternByName(bugPatternName), currentLineNumber, -1, filePath, replacements);
+					stack.addLast(testBugInstance);
+				}
+				while ((startIndex = str.indexOf("/*]*/", startIndex)) != -1) {
+					BugInstance testBugInstance = stack.removeLast();
+					//				testBugInstance.getBugPosition().
+
+				}
+			}
+		}
+		in.close();
+		return bugInstances;
 	}
 
 	private static class Requestor extends TypeNameRequestor {

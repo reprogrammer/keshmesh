@@ -28,10 +28,10 @@ public class LCK02JTest8 extends LCK02JTest {
 	@Before
 	public void setup() throws Exception {
 		setupProjectAndAnalyze("08", classA, classB, classC);
-		bugInstance1 = createTestBugInstnace(14, 16, classA, "p.B.class");
-		bugInstance2 = createTestBugInstnace(20, 22, classA, "p.C.class");
-		bugInstance3 = createTestBugInstnace(12, 14, classB, "p.B.class");
-		bugInstance4 = createTestBugInstnace(18, 20, classB, "p.A.class", "p.C.class");
+		bugInstance1 = createTestBugInstance(14, 16, classA, "p.B.class");
+		bugInstance2 = createTestBugInstance(20, 22, classA, "p.C.class");
+		bugInstance3 = createTestBugInstance(12, 14, classB, "p.B.class");
+		bugInstance4 = createTestBugInstance(18, 20, classB, "p.A.class", "p.C.class");
 	}
 
 	@Test

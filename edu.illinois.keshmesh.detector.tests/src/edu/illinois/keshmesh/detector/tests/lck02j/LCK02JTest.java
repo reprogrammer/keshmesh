@@ -115,7 +115,7 @@ abstract public class LCK02JTest extends AbstractTestCase {
 		Assert.assertTrue(bugInstances.contains(bugInstance));
 	}
 
-	protected BugInstance createTestBugInstnace(int firstLine, int lastLine, String className, String... replacements) {
+	protected BugInstance createTestBugInstance(int firstLine, int lastLine, String className, String... replacements) {
 		return new BugInstance(BugPatterns.LCK02J, new BugPosition(firstLine, lastLine, getTargetPathForInputFile(className)), new LCK02JFixInformation(SetUtils.asSet(replacements)));
 	}
 
