@@ -21,10 +21,10 @@ public class A {
 		if (new Random().nextBoolean()) {
 			l = new C().getClass();
 		}
-		synchronized (l) {
+		/*[LCK02J,01,p.A.B.class,p.A.C.class*/synchronized (l) {
 			System.out
 					.println("multiple replacements: p.A.B.class, p.A.C.class");
-		}
+		}/*]*/
 	}
 
 	class B {

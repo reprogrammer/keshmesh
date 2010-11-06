@@ -12,12 +12,12 @@ public class A {
 		A a = new A();
 		Class l1 = a.new B().getClass();
 		Class l2 = a.new C().getClass();
-		synchronized (p.A.B.class) {
+		/*[LCK02J,01,p.A.B.class*/synchronized (p.A.B.class) {
 			System.out.println("replace with p.A.B.class");
-		}
-		synchronized (l2) {
+		}/*]*/
+		/*[LCK02J,02,p.A.C.class*/synchronized (l2) {
 			System.out.println("replace with p.A.C.class");
-		}
+		}/*]*/
 	}
 
 	class B {

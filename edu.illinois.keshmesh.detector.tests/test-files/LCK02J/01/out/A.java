@@ -9,7 +9,7 @@ public class A {
 	}
 
 	private void m() {
-		/*[LCK02-J,01,p.A.class*/synchronized (p.A.class) {
+		/*[LCK02J,01,p.A.class*/synchronized (p.A.class) {
 			System.out.println("replace by p.A.class");
 		}/*]*/
 	}

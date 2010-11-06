@@ -18,7 +18,7 @@ public class BugPatterns {
 
 	private static Map<String, BugPattern> bugPatternsMap;
 
-	{
+	static {
 		bugPatternsMap = new HashMap<String, BugPattern>();
 		bugPatternsMap.put(LCK02J.getName(), LCK02J);
 	}

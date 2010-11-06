@@ -6,7 +6,9 @@ package edu.illinois.keshmesh.detector.tests.lck02j;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -21,11 +23,14 @@ import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.Activator;
+import edu.illinois.keshmesh.detector.tests.BugInstanceCreator;
+import edu.illinois.keshmesh.detector.tests.BugInstanceParser;
+import edu.illinois.keshmesh.detector.tests.NumberedBugInstance;
 import edu.illinois.keshmesh.detector.util.SetUtils;
 import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
 
@@ -45,6 +50,8 @@ abstract public class LCK02JTest extends AbstractTestCase {
 
 	protected BugInstances bugInstances;
 	protected String testNumber;
+
+	private Set<NumberedBugInstance> expectedBugInstances = new HashSet<NumberedBugInstance>();
 
 	private static String join(String... pathElements) {
 		StringBuilder sb = new StringBuilder();
@@ -78,7 +85,19 @@ abstract public class LCK02JTest extends AbstractTestCase {
 		for (String inputFileName : inputFileNames) {
 			addFile(inputFileName);
 		}
+		for (String inputFileName : inputFileNames) {
+			BugInstanceParser bugInstanceParser = new BugInstanceParser(getBugInstanceCreator(), getTargetPathForInputFile(inputFileName));
+			expectedBugInstances.addAll(bugInstanceParser.parseExpectedBugInstances());
+		}
 		findBugs();
+	}
+
+	public Set<NumberedBugInstance> getExpectedBugInstances() {
+		return expectedBugInstances;
+	}
+
+	public BugInstances getActualBugInstances() {
+		return bugInstances;
 	}
 
 	private void addFile(String inputFileName) throws Exception {
@@ -111,12 +130,22 @@ abstract public class LCK02JTest extends AbstractTestCase {
 		}
 	}
 
-	protected void bugInstanceShouldExist(BugInstance bugInstance) {
-		Assert.assertTrue(bugInstances.contains(bugInstance));
+	public static class LCK02JBugInstanceCreator extends AbstractTestCase.GeneralBugInstanceCreator {
+
+		@Override
+		public FixInformation createFixInformation(String... replacements) {
+			return new LCK02JFixInformation(SetUtils.asSet(replacements));
+		}
+
 	}
 
-	protected BugInstance createTestBugInstance(int firstLine, int lastLine, String className, String... replacements) {
-		return new BugInstance(BugPatterns.LCK02J, new BugPosition(firstLine, lastLine, getTargetPathForInputFile(className)), new LCK02JFixInformation(SetUtils.asSet(replacements)));
+	@Override
+	public BugInstanceCreator getBugInstanceCreator() {
+		return new LCK02JBugInstanceCreator();
+	}
+
+	protected BugInstance createTestBugInstance(int firstLine, int lastLine, String inputFileName, String... replacements) {
+		return getBugInstanceCreator().createTestBugInstance(BugPatterns.LCK02J, firstLine, lastLine, getTargetPathForInputFile(inputFileName), replacements);
 	}
 
 	public void checkNumberOfBugInstances(int numOfBugInstances) {
@@ -128,8 +157,21 @@ abstract public class LCK02JTest extends AbstractTestCase {
 	}
 
 	public void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
+		if (getActualBugInstances().size() == 1)
+			bugInstanceNumber = "";
 		fixBugInstance(bugInstances.find(bugInstance));
 		checkFix(bugInstanceNumber);
+	}
+
+	public void tryFix(String bugInstanceNumber) throws OperationCanceledException, IOException, CoreException {
+		boolean foundBugInstance = false;
+		for (NumberedBugInstance numberedBugInstance : getExpectedBugInstances()) {
+			if (numberedBugInstance.getNumber().equals(bugInstanceNumber)) {
+				tryFix(numberedBugInstance.getBugInstance(), numberedBugInstance.getNumber());
+				foundBugInstance = true;
+			}
+		}
+		Assert.assertTrue(String.format("Could not find bug instance number %s.", bugInstanceNumber), foundBugInstance);
 	}
 
 	private void checkFix(String bugInstanceNumber) throws IOException {
