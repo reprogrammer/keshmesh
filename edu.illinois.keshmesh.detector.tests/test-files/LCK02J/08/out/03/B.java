@@ -9,14 +9,14 @@ public class B {
 	}
 
 	private void m() {
-		synchronized (p.B.class) {
+		/*[LCK02J,03,p.B.class*/synchronized (p.B.class) {
 			System.err.println("replace with p.B.class");
-		}
+		}/*]*/
 		Class l1 = new A().getClass();
 		Class l2 = new C().getClass();
 		Class l = (1 > 2) ? l1 : l2;
-		synchronized (l) {
+		/*[LCK02J,04,p.A.class,p.C.class*/synchronized (l) {
 			System.err.println("multiple replacements: p.A.class, p.C.class");
-		}
+		}/*]*/
 	}
 }

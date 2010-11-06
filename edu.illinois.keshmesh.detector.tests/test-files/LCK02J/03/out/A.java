@@ -16,9 +16,9 @@ public class A {
 
 	private void m() {
 		Class l = b.getClass();
-		synchronized (p.A.B.class) {
+		/*[LCK02J,01,p.A.B.class*/synchronized (p.A.B.class) {
 			System.out.println("replace with p.A.B.class");
-		}
+		}/*]*/
 	}
 
 	class B {

@@ -3,9 +3,14 @@ package edu.illinois.keshmesh.detector.tests;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -18,6 +23,13 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
+import org.junit.Test;
+
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
+import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPattern;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.FixInformation;
 
 public abstract class AbstractTestCase {
 
@@ -155,6 +167,46 @@ public abstract class AbstractTestCase {
 		}
 		in.close();
 		return sb.toString();
+	}
+
+	public abstract BugInstanceCreator getBugInstanceCreator();
+
+	public static abstract class GeneralBugInstanceCreator implements BugInstanceCreator {
+
+		@Override
+		public BugInstance createTestBugInstance(BugPattern bugPattern, int firstLine, int lastLine, IPath targetFilePath, String... replacements) {
+			return new BugInstance(bugPattern, new BugPosition(firstLine, lastLine, targetFilePath), createFixInformation(replacements));
+		}
+
+		@Override
+		public abstract FixInformation createFixInformation(String... replacements);
+
+	}
+
+	abstract public Set<NumberedBugInstance> getExpectedBugInstances();
+
+	abstract public BugInstances getActualBugInstances();
+
+	@Test
+	public void shouldFindAllBugInstances() {
+		Assert.assertEquals(getExpectedBugInstances().size(), getActualBugInstances().size());
+	}
+
+	protected void bugInstanceShouldExist(BugInstance bugInstance) {
+		boolean bugInstanceExists = getActualBugInstances().contains(bugInstance);
+		if (!bugInstanceExists) {
+			Set<BugInstance> actualBugInstanceInSet = new HashSet<BugInstance>();
+			actualBugInstanceInSet.add(bugInstance);
+			Assert.assertEquals(getActualBugInstances().toString(), actualBugInstanceInSet.toString());
+		}
+		Assert.assertTrue(String.format("Expected bug instance %s was not found.", bugInstance), bugInstanceExists);
+	}
+
+	@Test
+	public void bugInstancesShouldExist() {
+		for (NumberedBugInstance numberedBugInstance : getExpectedBugInstances()) {
+			bugInstanceShouldExist(numberedBugInstance.getBugInstance());
+		}
 	}
 
 	private static class Requestor extends TypeNameRequestor {

@@ -12,6 +12,6 @@ package edu.illinois.keshmesh.detector.bugs;
 public class LCK02J extends BugPattern {
 
 	public LCK02J() {
-		super("LCK02-J. Do not synchronize on the class object returned by getClass()");
+		super("LCK02J", "Do not synchronize on the class object returned by getClass()");
 	}
 }
