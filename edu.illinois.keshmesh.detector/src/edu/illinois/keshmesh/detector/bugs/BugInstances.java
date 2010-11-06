@@ -37,6 +37,14 @@ public class BugInstances implements Collection<BugInstance> {
 		throw new UnsupportedOperationException();
 	}
 
+	public BugInstance find(BugInstance testBugInstance) {
+		for (BugInstance bugInstance : bugInstances) {
+			if (bugInstance.portableEquals(testBugInstance))
+				return bugInstance;
+		}
+		return null;
+	}
+
 	@Override
 	public boolean contains(Object object) {
 		for (BugInstance bugInstance : bugInstances) {

@@ -1,4 +1,6 @@
-/** * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details. */
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package p;
 
 public class A {
@@ -8,7 +10,7 @@ public class A {
 
 	private void m() {
 		Class l = new B().getClass();
-		synchronized (l) {
+		synchronized (p.A.B.class) {
 			System.out.println("replace by p.A.B.class");
 		}
 	}

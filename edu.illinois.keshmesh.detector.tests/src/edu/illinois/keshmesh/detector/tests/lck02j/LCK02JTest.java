@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,42 +37,65 @@ import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
  */
 abstract public class LCK02JTest extends AbstractTestCase {
 
-	protected Map<String, IPath> targetTestClassPathMap = new HashMap<String, IPath>();
+	/*
+	 * Maps absolute path of the input Java file into the absolute path of the
+	 * file in the target workspace.
+	 */
+	protected Map<String, IPath> inputFileToTargetMap = new HashMap<String, IPath>();
+
 	protected BugInstances bugInstances;
 	protected String testNumber;
 
-	private String getPathForClass(String testClass) {
-		return "test-files/LCK02J/" + testNumber + "/" + testClass;
+	private static String join(String... pathElements) {
+		StringBuilder sb = new StringBuilder();
+		for (String pathElement : pathElements) {
+			if (!pathElement.isEmpty()) {
+				sb.append(pathElement);
+				sb.append(File.separator);
+			}
+		}
+		sb.deleteCharAt(sb.length() - 1);
+		return sb.toString();
+	}
+
+	private String getPathForInputFile(String inputFileName) {
+		String prefix = join("test-files", "LCK02J", testNumber);
+		Assert.assertTrue(String.format("The path %s contains \"in\"", prefix), !prefix.contains("in"));
+		return join(prefix, "in", inputFileName);
+	}
+
+	private String getPathForOutputFile(String inputFileName, String bugInstanceNumber) {
+		return inputFileName.replaceFirst("in", join("out", bugInstanceNumber));
 	}
 
 	private String getTestID() {
 		return "LCK02J-" + testNumber;
 	}
 
-	public void setupProjectAndAnalyze(String testNumber, String... testClasses) throws Exception {
+	public void setupProjectAndAnalyze(String testNumber, String... inputFileNames) throws Exception {
 		this.testNumber = testNumber;
 		setUpProject(getTestID());
-		for (String testClass : testClasses) {
-			addTestClass(testClass);
+		for (String inputFileName : inputFileNames) {
+			addFile(inputFileName);
 		}
 		findBugs();
 	}
 
-	private void addTestClass(String testClass) throws Exception {
-		String pathForClass = getPathForClass(testClass);
-		Path testClassPath = new Path(pathForClass);
-		File test1File = Activator.getDefault().getFileInPlugin(testClassPath);
-		String javaText = format(getFileContent(test1File.getAbsolutePath()));
-		ICompilationUnit compilationUnit = createCU(packageP, testClassPath.lastSegment(), javaText);
-		targetTestClassPathMap.put(pathForClass, compilationUnit.getResource().getLocation());
+	private void addFile(String inputFileName) throws Exception {
+		String inputFileString = getPathForInputFile(inputFileName);
+		Path inputFilePath = new Path(inputFileString);
+		File inputFile = Activator.getDefault().getFileInPlugin(inputFilePath);
+		String inputFileContents = format(getFileContent(inputFile.getAbsolutePath()));
+		ICompilationUnit compilationUnit = createCU(packageP, inputFilePath.lastSegment(), inputFileContents);
+		inputFileToTargetMap.put(inputFileString, compilationUnit.getResource().getLocation());
 	}
 
-	public IPath getTargetPathForClass(String testClass) {
-		String pathForClass = getPathForClass(testClass);
-		if (!targetTestClassPathMap.containsKey(pathForClass)) {
-			throw new RuntimeException("Could not find the path to test class \"" + pathForClass + "\"");
+	public IPath getTargetPathForInputFile(String inputFileName) {
+		String pathForInputFile = getPathForInputFile(inputFileName);
+		if (!inputFileToTargetMap.containsKey(pathForInputFile)) {
+			throw new RuntimeException("Could not find the path to test class \"" + pathForInputFile + "\"");
 		}
-		return targetTestClassPathMap.get(pathForClass);
+		return inputFileToTargetMap.get(pathForInputFile);
 	}
 
 	public void findBugs() throws WALAInitializationException {
@@ -79,26 +103,43 @@ abstract public class LCK02JTest extends AbstractTestCase {
 		System.out.println(bugInstances);
 	}
 
-	public void findAndFixBugs(BugInstance bugInstance) {
+	private void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
+		Assert.assertNotNull("Could not find bug instance.", bugInstance);
 		LCK02JFixer fixer = new LCK02JFixer(bugInstance);
-		try {
-			if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
-				fixer.createChange(new NullProgressMonitor());
-			}
-		} catch (OperationCanceledException e) {
-			e.printStackTrace();
-		} catch (CoreException e) {
-			e.printStackTrace();
+		if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
+			fixer.createChange(new NullProgressMonitor());
 		}
 	}
 
-	protected void bugInstanceShouldExist(int firstLine, int lastLine, String className, String... replacements) {
-		Assert.assertTrue(bugInstances.contains(new BugInstance(BugPatterns.LCK02J, new BugPosition(firstLine, lastLine, getTargetPathForClass(className)), new LCK02JFixInformation(SetUtils
-				.asSet(replacements)))));
+	protected void bugInstanceShouldExist(BugInstance bugInstance) {
+		Assert.assertTrue(bugInstances.contains(bugInstance));
+	}
+
+	protected BugInstance createTestBugInstnace(int firstLine, int lastLine, String className, String... replacements) {
+		return new BugInstance(BugPatterns.LCK02J, new BugPosition(firstLine, lastLine, getTargetPathForInputFile(className)), new LCK02JFixInformation(SetUtils.asSet(replacements)));
 	}
 
 	public void checkNumberOfBugInstances(int numOfBugInstances) {
 		Assert.assertEquals(numOfBugInstances, bugInstances.size());
+	}
+
+	public void tryFix(BugInstance bugInstance) throws OperationCanceledException, IOException, CoreException {
+		tryFix(bugInstance, "");
+	}
+
+	public void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
+		fixBugInstance(bugInstances.find(bugInstance));
+		checkFix(bugInstanceNumber);
+	}
+
+	private void checkFix(String bugInstanceNumber) throws IOException {
+		for (Map.Entry<String, IPath> entry : inputFileToTargetMap.entrySet()) {
+			compareFiles(getPathForOutputFile(entry.getKey(), bugInstanceNumber), entry.getValue().toPortableString());
+		}
+	}
+
+	private static void compareFiles(String expectedFilePath, String actualFilePath) throws IOException {
+		Assert.assertEquals(getFileContent(expectedFilePath), getFileContent(actualFilePath));
 	}
 
 }

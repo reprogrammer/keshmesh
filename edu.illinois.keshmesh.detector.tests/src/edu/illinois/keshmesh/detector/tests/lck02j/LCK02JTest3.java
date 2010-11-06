@@ -3,8 +3,14 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
+import java.io.IOException;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.junit.Before;
 import org.junit.Test;
+
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
 
 /**
  * 
@@ -15,15 +21,23 @@ import org.junit.Test;
 public class LCK02JTest3 extends LCK02JTest {
 
 	private static final String classA = "A.java";
+	private BugInstance bugInstance1;
 
 	@Before
 	public void setup() throws Exception {
 		setupProjectAndAnalyze("03", classA);
+		bugInstance1 = createTestBugInstnace(19, 21, classA, "p.A.B.class");
+
 	}
 
 	@Test
-	public void shouldFindLCK02J() {
+	public void shouldFindBugInstances() {
 		checkNumberOfBugInstances(1);
-		bugInstanceShouldExist(17, 19, classA, "p.A.B.class");
+		bugInstanceShouldExist(bugInstance1);
+	}
+
+	@Test
+	public void shouldFixBugInstance() throws OperationCanceledException, IOException, CoreException {
+		tryFix(bugInstance1);
 	}
 }

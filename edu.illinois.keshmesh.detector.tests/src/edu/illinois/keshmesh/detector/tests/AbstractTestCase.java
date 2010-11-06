@@ -145,12 +145,13 @@ public abstract class AbstractTestCase {
 	//				IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
 	//	}
 
-	protected String getFileContent(String fileName) throws IOException {
+	protected static String getFileContent(String fileName) throws IOException {
 		BufferedReader in = new BufferedReader(new FileReader(fileName));
 		StringBuilder sb = new StringBuilder();
 		String str;
 		while ((str = in.readLine()) != null) {
 			sb.append(str);
+			sb.append("\n");
 		}
 		in.close();
 		return sb.toString();

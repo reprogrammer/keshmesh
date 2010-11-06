@@ -1,5 +1,9 @@
-/** * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details. */
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package p;
+
+import java.util.Random;
 
 public class A {
 	static B b;
@@ -14,7 +18,7 @@ public class A {
 
 	private void m() {
 		Class l = b.getClass();
-		if (1 < 2) {
+		if (new Random().nextBoolean()) {
 			l = new C().getClass();
 		}
 		synchronized (l) {
