@@ -28,8 +28,8 @@ public class BugInstances implements Collection<BugInstance> {
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends BugInstance> arg0) {
-		throw new UnsupportedOperationException();
+	public boolean addAll(Collection<? extends BugInstance> bugInstances) {
+		return this.bugInstances.addAll(bugInstances);
 	}
 
 	@Override

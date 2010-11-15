@@ -20,7 +20,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 
-import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
+import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -119,7 +119,7 @@ abstract public class LCK02JTest extends AbstractTestCase {
 	}
 
 	public void findBugs() throws WALAInitializationException {
-		bugInstances = ConcurrencyBugsDetector.initAndPerformAnalysis(javaProject);
+		bugInstances = Main.initAndPerformAnalysis(javaProject);
 		System.out.println(bugInstances);
 	}
 

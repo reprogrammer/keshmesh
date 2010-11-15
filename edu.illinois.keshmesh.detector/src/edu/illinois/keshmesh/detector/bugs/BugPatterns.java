@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector.bugs;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -14,16 +15,23 @@ import java.util.Map;
  */
 public class BugPatterns {
 
-	public final static BugPattern LCK02J = new LCK02J();
+	public final static BugPattern LCK02J = new LCK02JBugPattern();
+	public final static BugPattern LCK06J = new LCK06JBugPattern();
 
 	private static Map<String, BugPattern> bugPatternsMap;
 
 	static {
 		bugPatternsMap = new HashMap<String, BugPattern>();
 		bugPatternsMap.put(LCK02J.getName(), LCK02J);
+		bugPatternsMap.put(LCK06J.getName(), LCK06J);
 	}
 
 	public static BugPattern getBugPatternByName(String name) {
 		return bugPatternsMap.get(name);
 	}
+
+	public static Iterator<BugPattern> iterator() {
+		return bugPatternsMap.values().iterator();
+	}
+
 }

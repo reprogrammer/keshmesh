@@ -13,7 +13,7 @@ import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
-import edu.illinois.keshmesh.detector.ConcurrencyBugsDetector;
+import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
 /**
@@ -48,9 +48,9 @@ public class LCK02JAction implements IObjectActionDelegate {
 	public void run(IAction action) {
 		IJavaProject selectedJavaProject = (IJavaProject) ((IStructuredSelection) currentSelection).getFirstElement();
 
-		MessageDialog.openInformation(shell, "Ui", selectedJavaProject.getElementName());
+		MessageDialog.openInformation(shell, "UI", selectedJavaProject.getElementName());
 		try {
-			ConcurrencyBugsDetector.initAndPerformAnalysis(selectedJavaProject);
+			Main.initAndPerformAnalysis(selectedJavaProject);
 		} catch (WALAInitializationException e) {
 			//FIXME: Put it in the error log
 			e.printStackTrace();

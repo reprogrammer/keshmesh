@@ -3,6 +3,8 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import edu.illinois.keshmesh.detector.BugPatternDetector;
+
 /**
  * 
  * @author Mohsen Vakilian
@@ -11,12 +13,14 @@ package edu.illinois.keshmesh.detector.bugs;
  */
 abstract public class BugPattern {
 
-	protected final String name;
-	protected final String description;
+	private final String name;
+	private final String description;
+	private final BugPatternDetector bugPatternDetector;
 
-	public BugPattern(String name, String description) {
+	public BugPattern(String name, String description, BugPatternDetector bugPatternDetector) {
 		this.name = name;
 		this.description = description;
+		this.bugPatternDetector = bugPatternDetector;
 	}
 
 	public String getName() {
@@ -25,6 +29,10 @@ abstract public class BugPattern {
 
 	public String getDescription() {
 		return description;
+	}
+
+	public BugPatternDetector getBugPatternDetector() {
+		return bugPatternDetector;
 	}
 
 	@Override
