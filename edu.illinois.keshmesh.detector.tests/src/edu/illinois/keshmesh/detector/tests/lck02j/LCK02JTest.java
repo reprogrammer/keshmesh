@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import junit.framework.Assert;
 
@@ -72,7 +73,7 @@ abstract public class LCK02JTest extends AbstractTestCase {
 	}
 
 	private String getPathForOutputFile(String inputFileName, String bugInstanceNumber) {
-		return inputFileName.replaceFirst("in", join("out", bugInstanceNumber));
+		return inputFileName.replaceFirst("in", Matcher.quoteReplacement(join("out", bugInstanceNumber)));
 	}
 
 	private String getTestID() {
