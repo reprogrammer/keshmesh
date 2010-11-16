@@ -24,7 +24,7 @@ public class LCK06JBugDetector implements BugPatternDetector {
 	private BasicAnalysisData basicAnalysisData = null;
 
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
-		this.basicAnalysisData = analysisData;
+		basicAnalysisData = analysisData;
 		BugInstances bugInstances = new BugInstances();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {

@@ -1,8 +1,8 @@
 package edu.illinois.keshmesh.detector.tests;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -11,118 +11,63 @@ import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.formatter.CodeFormatter;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.text.edits.MalformedTreeException;
-import org.eclipse.text.edits.TextEdit;
 import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
+import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
 public abstract class AbstractTestCase {
 
-	protected IJavaProject javaProject;
+	private IJavaProject javaProject;
 
-	protected IPackageFragmentRoot fragmentRoot;
+	private IPackageFragmentRoot fragmentRoot;
 
-	protected IPackageFragment packageP;
+	private IPackageFragment packageP;
 
-	protected static final String CONTAINER = "src";
-	protected static final String PACKAGE_NAME = "p";
+	private String testNumber;
 
-	/**
-	 * Creates the class with the specified contents and name in the specified
-	 * package and returns the compilation unit of the newly created class. If
-	 * the class already exists no changes are made to it and the preexisting
-	 * compilation unit is returned.
-	 * 
-	 * @param pack
-	 *            the package in which the class will be created
-	 * @param name
-	 *            the name of the class e.g. A.java
-	 * @param contents
-	 *            the source code of the class.
-	 * @return the compilation unit corresponding to the class with the
-	 *         specified <code>name</code>
-	 * @throws Exception
+	/*
+	 * Maps absolute path of the input Java file into the absolute path of the
+	 * file in the target workspace.
 	 */
-	public static ICompilationUnit createCU(IPackageFragment pack, String name, String contents) throws Exception {
-		if (pack.getCompilationUnit(name).exists())
-			return pack.getCompilationUnit(name);
-		ICompilationUnit cu = pack.createCompilationUnit(name, contents, true, null);
-		cu.save(null, true);
-		return cu;
-	}
+	private Map<String, IPath> inputFileToTargetMap = new HashMap<String, IPath>();
 
-	public void setUpProject(String testID) throws Exception {
-		javaProject = createAndInitializeProject(testID);
+	private Set<NumberedBugInstance> expectedBugInstances = new HashSet<NumberedBugInstance>();
+
+	private BugInstances bugInstances;
+
+	static final String CONTAINER = "src";
+	static final String PACKAGE_NAME = "p";
+
+	private void setUpProject(String testID) throws Exception {
+		javaProject = TestSetupHelper.createAndInitializeProject(testID);
 		//Should be called after the projects are created
 		JavaProjectHelper.setAutoBuilding(false);
 		fragmentRoot = JavaProjectHelper.addSourceContainer(javaProject, CONTAINER);
 		packageP = fragmentRoot.createPackageFragment(PACKAGE_NAME, true, null);
 	}
 
-	/**
-	 * Creates the specified package in the specified project if the package
-	 * does not already exist else it simply returns the preexisting package.
-	 * 
-	 * @param containerProject
-	 * @param packageName
-	 * @return
-	 * @throws CoreException
-	 */
-	protected IPackageFragment createPackage(IJavaProject containerProject, String packageName) throws CoreException {
-		boolean alreadyExists = false;
-		IPackageFragmentRoot packageFragmentRoot = null;
-		IPackageFragmentRoot[] allPackageFragmentRoots = containerProject.getAllPackageFragmentRoots();
-		for (IPackageFragmentRoot root : allPackageFragmentRoots) {
-			if (root.getElementName().equals(CONTAINER)) {
-				alreadyExists = true;
-				packageFragmentRoot = root;
-				break;
-			}
-		}
-		if (!alreadyExists) {
-			packageFragmentRoot = JavaProjectHelper.addSourceContainer(containerProject, CONTAINER);
-		}
-		return (packageFragmentRoot.createPackageFragment(packageName, true, null));
+	@Test
+	public void shouldFindAllBugInstances() {
+		Assert.assertEquals(expectedBugInstances.size(), bugInstances.size());
 	}
 
-	/**
-	 * Creates a new project in Eclipse and sets up its dependencies on JRE.
-	 * 
-	 * @param projectName
-	 * @param baseProjectName
-	 * @return
-	 * @throws CoreException
-	 */
-	protected IJavaProject createAndInitializeProject(String projectName, String baseProjectName) throws CoreException {
-		IJavaProject project;
-		project = JavaProjectHelper.createJavaProject(projectName, "bin");
-		JavaProjectHelper.addJREContainer(project);
-		// set compiler options on projectOriginal
-		Map options = project.getOptions(false);
-		JavaProjectHelper.set15CompilerOptions(options);
-		project.setOptions(options);
-
-		return project;
-	}
-
-	protected IJavaProject createAndInitializeProject(String suffix) throws CoreException {
-		String projectName = "TestProject" + suffix + "-" + System.currentTimeMillis();
-		return createAndInitializeProject(projectName, null);
+	@Test
+	public void bugInstancesShouldExist() {
+		for (NumberedBugInstance numberedBugInstance : expectedBugInstances) {
+			bugInstanceShouldExist(numberedBugInstance.getBugInstance());
+		}
 	}
 
 	//	@After
@@ -131,47 +76,92 @@ public abstract class AbstractTestCase {
 		JavaProjectHelper.delete(javaProject);
 	}
 
-	protected String format(String contents) {
-		IDocument document = new Document();
-		document.set(contents);
-		CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(null);
-		TextEdit textEdit = codeFormatter.format(CodeFormatter.K_COMPILATION_UNIT, contents, 0, contents.length(), 0, null);
-		if (textEdit != null)
-			try {
-				textEdit.apply(document);
-			} catch (MalformedTreeException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (BadLocationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		return document.get();
-	}
+	protected abstract BugPattern getBugPattern();
 
-	//	public static void performDummySearch() throws JavaModelException {
-	//		new SearchEngine().searchAllTypeNames(null,
-	//				"A".toCharArray(), // make sure we search a concrete name. This
-	//				// is faster according to Kent
-	//				SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE, IJavaSearchConstants.CLASS, SearchEngine.createJavaSearchScope(new IJavaElement[0]), new Requestor(),
-	//				IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
-	//	}
+	protected abstract void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
 
-	protected static String getFileContent(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new FileReader(fileName));
-		StringBuilder sb = new StringBuilder();
-		String str;
-		while ((str = in.readLine()) != null) {
-			sb.append(str);
-			sb.append("\n");
+	protected abstract BugInstanceCreator getBugInstanceCreator();
+
+	private void bugInstanceShouldExist(BugInstance bugInstance) {
+		boolean bugInstanceExists = bugInstances.contains(bugInstance);
+		if (!bugInstanceExists) {
+			Set<BugInstance> actualBugInstanceInSet = new HashSet<BugInstance>();
+			actualBugInstanceInSet.add(bugInstance);
+			Assert.assertEquals(bugInstances.toString(), actualBugInstanceInSet.toString());
 		}
-		in.close();
-		return sb.toString();
+		Assert.assertTrue(String.format("Expected bug instance %s was not found.", bugInstance), bugInstanceExists);
 	}
 
-	public abstract BugInstanceCreator getBugInstanceCreator();
+	private String getPathForInputFile(String inputFileName) {
+		String prefix = TestSetupHelper.join("test-files", getBugPattern().getName(), testNumber);
+		Assert.assertTrue(String.format("The path %s contains \"in\"", prefix), !prefix.contains("in"));
+		return TestSetupHelper.join(prefix, "in", inputFileName);
+	}
 
-	public static abstract class GeneralBugInstanceCreator implements BugInstanceCreator {
+	protected void setupProjectAndAnalyze(String testNumber, String... inputFileNames) throws Exception {
+		this.testNumber = testNumber;
+		setUpProject(getTestID());
+		for (String inputFileName : inputFileNames) {
+			addFile(inputFileName);
+		}
+		for (String inputFileName : inputFileNames) {
+			BugInstanceParser bugInstanceParser = new BugInstanceParser(getBugInstanceCreator(), getTargetPathForInputFile(inputFileName));
+			expectedBugInstances.addAll(bugInstanceParser.parseExpectedBugInstances());
+		}
+		findBugs();
+	}
+
+	private String getTestID() {
+		return getBugPattern().getName() + "-" + testNumber;
+	}
+
+	private void addFile(String inputFileName) throws Exception {
+		String inputFileString = getPathForInputFile(inputFileName);
+		Path inputFilePath = new Path(inputFileString);
+		File inputFile = Activator.getDefault().getFileInPlugin(inputFilePath);
+		String inputFileContents = TestSetupHelper.format(TestSetupHelper.getFileContent(inputFile.getAbsolutePath()));
+		ICompilationUnit compilationUnit = TestSetupHelper.createCU(packageP, inputFilePath.lastSegment(), inputFileContents);
+		inputFileToTargetMap.put(inputFileString, compilationUnit.getResource().getLocation());
+	}
+
+	private IPath getTargetPathForInputFile(String inputFileName) {
+		String pathForInputFile = getPathForInputFile(inputFileName);
+		if (!inputFileToTargetMap.containsKey(pathForInputFile)) {
+			throw new RuntimeException("Could not find the path to test class \"" + pathForInputFile + "\"");
+		}
+		return inputFileToTargetMap.get(pathForInputFile);
+	}
+
+	private void findBugs() throws WALAInitializationException {
+		bugInstances = Main.initAndPerformAnalysis(javaProject);
+		System.out.println(bugInstances);
+	}
+
+	private void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
+		if (bugInstances.size() == 1)
+			bugInstanceNumber = "";
+		fixBugInstance(bugInstances.find(bugInstance));
+		checkFix(bugInstanceNumber);
+	}
+
+	private void checkFix(String bugInstanceNumber) throws IOException {
+		for (Map.Entry<String, IPath> entry : inputFileToTargetMap.entrySet()) {
+			TestSetupHelper.compareFiles(TestSetupHelper.getPathForOutputFile(entry.getKey(), bugInstanceNumber), entry.getValue().toPortableString());
+		}
+	}
+
+	protected void tryFix(String bugInstanceNumber) throws OperationCanceledException, IOException, CoreException {
+		boolean foundBugInstance = false;
+		for (NumberedBugInstance numberedBugInstance : expectedBugInstances) {
+			if (numberedBugInstance.getNumber().equals(bugInstanceNumber)) {
+				tryFix(numberedBugInstance.getBugInstance(), numberedBugInstance.getNumber());
+				foundBugInstance = true;
+			}
+		}
+		Assert.assertTrue(String.format("Could not find bug instance number %s.", bugInstanceNumber), foundBugInstance);
+	}
+
+	protected static abstract class GeneralBugInstanceCreator implements BugInstanceCreator {
 
 		@Override
 		public BugInstance createTestBugInstance(BugPattern bugPattern, int firstLine, int lastLine, IPath targetFilePath, String... replacements) {
@@ -181,35 +171,6 @@ public abstract class AbstractTestCase {
 		@Override
 		public abstract FixInformation createFixInformation(String... replacements);
 
-	}
-
-	abstract public Set<NumberedBugInstance> getExpectedBugInstances();
-
-	abstract public BugInstances getActualBugInstances();
-
-	@Test
-	public void shouldFindAllBugInstances() {
-		Assert.assertEquals(getExpectedBugInstances().size(), getActualBugInstances().size());
-	}
-
-	protected void bugInstanceShouldExist(BugInstance bugInstance) {
-		boolean bugInstanceExists = getActualBugInstances().contains(bugInstance);
-		if (!bugInstanceExists) {
-			Set<BugInstance> actualBugInstanceInSet = new HashSet<BugInstance>();
-			actualBugInstanceInSet.add(bugInstance);
-			Assert.assertEquals(getActualBugInstances().toString(), actualBugInstanceInSet.toString());
-		}
-		Assert.assertTrue(String.format("Expected bug instance %s was not found.", bugInstance), bugInstanceExists);
-	}
-
-	@Test
-	public void bugInstancesShouldExist() {
-		for (NumberedBugInstance numberedBugInstance : getExpectedBugInstances()) {
-			bugInstanceShouldExist(numberedBugInstance.getBugInstance());
-		}
-	}
-
-	private static class Requestor extends TypeNameRequestor {
 	}
 
 }

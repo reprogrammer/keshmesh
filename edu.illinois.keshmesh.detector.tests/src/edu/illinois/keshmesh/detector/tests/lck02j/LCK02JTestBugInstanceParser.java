@@ -1,7 +1,7 @@
 /**
  * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
  */
-package edu.illinois.keshmesh.detector.tests;
+package edu.illinois.keshmesh.detector.tests.lck02j;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,7 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.tests.lck02j.LCK02JTest;
+import edu.illinois.keshmesh.detector.tests.BugInstanceParser;
+import edu.illinois.keshmesh.detector.tests.NumberedBugInstance;
 
 /**
  * 
@@ -23,7 +24,7 @@ import edu.illinois.keshmesh.detector.tests.lck02j.LCK02JTest;
  * @author Stas Negara
  * 
  */
-public class TestBugInstanceParser {
+public class LCK02JTestBugInstanceParser {
 
 	BugInstanceParser bugInstanceParser;
 	private Path path;
