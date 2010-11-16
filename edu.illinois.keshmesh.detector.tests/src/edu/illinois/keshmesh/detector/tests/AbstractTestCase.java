@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.Main;
@@ -27,6 +28,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
+@SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
 
 	private IJavaProject javaProject;
@@ -53,7 +55,7 @@ public abstract class AbstractTestCase {
 	private void setUpProject(String testID) throws Exception {
 		javaProject = TestSetupHelper.createAndInitializeProject(testID);
 		//Should be called after the projects are created
-		JavaProjectHelper.setAutoBuilding(false);
+		//TestSetupHelper.setAutoBuilding(false);
 		fragmentRoot = JavaProjectHelper.addSourceContainer(javaProject, CONTAINER);
 		packageP = fragmentRoot.createPackageFragment(PACKAGE_NAME, true, null);
 	}

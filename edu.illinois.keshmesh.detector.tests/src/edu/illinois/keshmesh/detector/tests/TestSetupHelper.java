@@ -12,13 +12,22 @@ import java.util.regex.Matcher;
 
 import junit.framework.Assert;
 
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceDescription;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
+import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -31,6 +40,7 @@ import org.eclipse.text.edits.TextEdit;
  * @author Stas Negara
  * 
  */
+@SuppressWarnings("restriction")
 public abstract class TestSetupHelper {
 
 	/**
@@ -41,10 +51,11 @@ public abstract class TestSetupHelper {
 	 * @return
 	 * @throws CoreException
 	 */
+	@SuppressWarnings("rawtypes")
 	static IJavaProject createAndInitializeProject(String projectName, String baseProjectName) throws CoreException {
 		IJavaProject project;
 		project = JavaProjectHelper.createJavaProject(projectName, "bin");
-		JavaProjectHelper.addJREContainer(project);
+		TestSetupHelper.addJREContainer(project);
 		// set compiler options on projectOriginal
 		Map options = project.getOptions(false);
 		JavaProjectHelper.set15CompilerOptions(options);
@@ -149,6 +160,37 @@ public abstract class TestSetupHelper {
 
 	protected static void compareFiles(String expectedFilePath, String actualFilePath) throws IOException {
 		Assert.assertEquals(getFileContent(expectedFilePath), getFileContent(actualFilePath));
+	}
+
+	/**
+	 * 
+	 * @see Martin Aeschlimann, Dirk Bäumer, and Jerome Lanneluc. 2005. Java
+	 *      Tool Smithing Extending the Eclipse Java Development Tools. In
+	 *      EclipseCon, 1-51. http://www.eclipsecon.org/2005/presentations/
+	 *      EclipseCON2005_Tutorial29.pdf.
+	 */
+	public static void addJREContainer(IJavaProject jproject) throws JavaModelException {
+		IClasspathEntry jreCPEntry = JavaCore.newContainerEntry(new Path(JavaRuntime.JRE_CONTAINER));
+		JavaProjectHelper.addToClasspath(jproject, jreCPEntry);
+	}
+
+	/**
+	 * Sets auto-building state for the test workspace.
+	 * 
+	 * @param state
+	 *            The new auto building state
+	 * @return The previous state
+	 * @throws CoreException
+	 *             Change failed
+	 */
+	public static boolean setAutoBuilding(boolean state) throws CoreException {
+		// disable auto build
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IWorkspaceDescription desc = workspace.getDescription();
+		boolean result = desc.isAutoBuilding();
+		desc.setAutoBuilding(state);
+		workspace.setDescription(desc);
+		return result;
 	}
 
 }
