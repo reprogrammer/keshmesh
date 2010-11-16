@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<FindbugsPlugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="findbugsplugin.xsd" pluginid="edu.illinois.keshmesh.ui"
+	defaultenabled="true" provider="University of Illinois" website="http://blog.soal.org">
+
+	<Detector class="edu.illinois.keshmesh.ui.findbugs.LCK02JFindBugsDetector"
+		speed="fast" reports="KESHMESH_PATTERNS" />
+
+	<BugPattern abbrev="KESHMESH_LCK02J" type="KESHMESH_LCK02J"
+		category="BAD_PRACTICE" />
+
+</FindbugsPlugin>
