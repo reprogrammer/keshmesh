@@ -3,8 +3,12 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
+import com.ibm.wala.cast.loader.AstMethod;
+import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ssa.IR;
@@ -40,13 +44,38 @@ public class LCK06JBugDetector implements BugPatternDetector {
 					if (instruction instanceof SSAMonitorInstruction) {
 						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) instruction;
 						if (monitorInstruction.isMonitorEnter()) {
-							//TODO
+							AstMethod astMethod = (AstMethod) method;
+							int lineNumber = astMethod.getLineNumber(instructionIndex);
+							Position position = astMethod.getSourcePosition(instructionIndex);
+							Set<SSAInstruction> containedInstructions = getContainedInstructions(astMethod, ir, position);
+							for (SSAInstruction containedInstruction : containedInstructions) {
+								System.out.println("Contained instruction: " + containedInstruction);
+							}
 						}
 					}
 				}
 			}
 		}
 		return bugInstances;
+	}
+
+	private Set<SSAInstruction> getContainedInstructions(AstMethod method, IR ir, Position containingPosition) {
+		Set<SSAInstruction> containedInstructions = new HashSet<SSAInstruction>();
+		SSAInstruction[] instructions = ir.getInstructions();
+		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
+			SSAInstruction instruction = instructions[instructionIndex];
+			Position instructionPosition = method.getSourcePosition(instructionIndex);
+			if (instructionPosition != null) {
+				if (isInside(containingPosition, instructionPosition)) {
+					containedInstructions.add(instruction);
+				}
+			}
+		}
+		return containedInstructions;
+	}
+
+	private static boolean isInside(Position container, Position containee) {
+		return container.getFirstOffset() <= containee.getFirstOffset() && container.getLastOffset() >= containee.getLastOffset();
 	}
 
 }
