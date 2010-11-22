@@ -6,12 +6,20 @@ package p;
 public class A {
 
 	private static B b;
+	private B b2;
+	private static A a;
 
 	public static void main(String args[]) {
-		b = new B(5);
+		a = new A();
+		a.m2();
+		b = new B(a);
 		m();
 	}
 
+	void m2() {
+		b2 = new B(new A());
+	}
+	
 	private static void m() {
 		Object obj = new Object();
 		synchronized (obj) {
@@ -21,16 +29,4 @@ public class A {
 		}
 	}
 
-}
-
-class B {
-	int i;
-
-	public B(int i) {
-		this.i = i;
-	}
-
-	public void set(int i) {
-		this.i = i;
-	}
 }

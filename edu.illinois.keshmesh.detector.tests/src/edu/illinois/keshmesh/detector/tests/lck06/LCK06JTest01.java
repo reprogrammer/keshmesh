@@ -15,7 +15,7 @@ public class LCK06JTest01 extends LCK06JTest {
 
 	@Before
 	public void setup() throws Exception {
-		setupProjectAndAnalyze("01", "A.java");
+		setupProjectAndAnalyze("01", "A.java", "B.java");
 	}
 
 	//	@Test

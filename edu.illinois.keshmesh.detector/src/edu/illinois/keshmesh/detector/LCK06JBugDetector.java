@@ -9,8 +9,12 @@ import java.util.Set;
 
 import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -25,10 +29,13 @@ import edu.illinois.keshmesh.detector.bugs.BugInstances;
  */
 public class LCK06JBugDetector implements BugPatternDetector {
 
+	private static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial";
+
 	private BasicAnalysisData basicAnalysisData = null;
 
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
+		getAllObjectsPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
@@ -57,6 +64,37 @@ public class LCK06JBugDetector implements BugPatternDetector {
 			}
 		}
 		return bugInstances;
+	}
+
+	private Set<Object> getAllObjectsPointedByStaticFields() {
+		Set<Object> pointedObjects = new HashSet<Object>();
+		for (IField staticField : getAllStaticFields()) {
+			System.out.println("Static field: " + staticField);
+			PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
+			Iterator<InstanceKey> pointedObjectsIterator = basicAnalysisData.pointerAnalysis.getPointsToSet(staticFieldPointer).iterator();
+			while (pointedObjectsIterator.hasNext()) {
+				Object object = pointedObjectsIterator.next();
+				System.out.println("Pointed object: " + object);
+				pointedObjects.add(object);
+			}
+		}
+		return pointedObjects;
+	}
+
+	private Set<IField> getAllStaticFields() {
+		Set<IField> staticFields = new HashSet<IField>();
+		Iterator<IClass> classIterator = basicAnalysisData.classHierarchy.iterator();
+		while (classIterator.hasNext()) {
+			IClass klass = classIterator.next();
+			if (!isJDKClass(klass)) {
+				staticFields.addAll(klass.getAllStaticFields());
+			}
+		}
+		return staticFields;
+	}
+
+	private boolean isJDKClass(IClass klass) {
+		return klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
 	}
 
 	private Set<SSAInstruction> getContainedInstructions(AstMethod method, IR ir, Position containingPosition) {

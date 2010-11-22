@@ -7,7 +7,7 @@ import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
-import com.ibm.wala.ipa.cha.ClassHierarchy;
+import com.ibm.wala.ipa.cha.IClassHierarchy;
 
 /**
  * 
@@ -17,13 +17,13 @@ import com.ibm.wala.ipa.cha.ClassHierarchy;
  */
 public class BasicAnalysisData {
 
-	public final ClassHierarchy classHierarchy;
+	public final IClassHierarchy classHierarchy;
 	public final CallGraph callGraph;
 	public final PointerAnalysis pointerAnalysis;
 	public final HeapModel heapModel;
 	public final BasicHeapGraph basicHeapGraph;
 
-	public BasicAnalysisData(ClassHierarchy classHierarchy, CallGraph callGraph, PointerAnalysis pointerAnalysis, HeapModel heapModel, BasicHeapGraph basicHeapGraph) {
+	public BasicAnalysisData(IClassHierarchy classHierarchy, CallGraph callGraph, PointerAnalysis pointerAnalysis, HeapModel heapModel, BasicHeapGraph basicHeapGraph) {
 		this.classHierarchy = classHierarchy;
 		this.callGraph = callGraph;
 		this.pointerAnalysis = pointerAnalysis;
