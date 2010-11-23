@@ -34,13 +34,11 @@ import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
  * @author Stas Negara
  * 
  */
-public class LCK02JBugDetector implements BugPatternDetector {
+public class LCK02JBugDetector extends BugPatternDetector {
 
 	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class";
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;";
-
-	private BasicAnalysisData basicAnalysisData = null;
 
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
@@ -82,7 +80,7 @@ public class LCK02JBugDetector implements BugPatternDetector {
 	private Set<String> getSynchronizedClassTypeNames(SSAMonitorInstruction monitorInstruction, CGNode cgNode) {
 		Set<String> result = new HashSet<String>();
 		int lockValueNumber = monitorInstruction.getRef();
-		PointerKey lockPointer = basicAnalysisData.heapModel.getPointerKeyForLocal(cgNode, lockValueNumber);
+		PointerKey lockPointer = getPointerForValueNumber(cgNode, lockValueNumber);
 		OrdinalSet<InstanceKey> lockObjects = basicAnalysisData.pointerAnalysis.getPointsToSet(lockPointer);
 		for (InstanceKey instanceKey : lockObjects) {
 			System.out.println("InstanceKey:" + instanceKey);

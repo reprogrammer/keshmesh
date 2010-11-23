@@ -19,7 +19,6 @@ import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
-import edu.illinois.keshmesh.detector.util.DisplayUtils;
 
 /**
  * 
@@ -56,7 +55,7 @@ public class Main {
 			heapModel = pointerAnalysis.getHeapModel();
 			basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
 			classHierarchy = engine.getClassHierarchy();
-			DisplayUtils.displayGraph(basicHeapGraph);
+			//DisplayUtils.displayGraph(basicHeapGraph);
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
