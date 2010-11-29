@@ -13,6 +13,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
+import edu.illinois.keshmesh.detector.Main;
+import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.Detector;
@@ -70,10 +73,13 @@ public class LCK02JFindBugsDetector implements Detector {
 			String projectName = getProjectName(classContext.getAnalysisContext());
 			IJavaProject javaProject = getProject(projectName);
 			System.out.println("The java project under analyais is " + javaProject.getElementName());
+			BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 			bugReporter.reportBug(new BugInstance(this, "KESHMESH_LCK02J", HIGH_PRIORITY).addClass(classContext.getJavaClass()));
 		} catch (ProjectNotFoundException e) {
 			e.printStackTrace();
 		} catch (CoreException e) {
+			e.printStackTrace();
+		} catch (WALAInitializationException e) {
 			e.printStackTrace();
 		}
 	}
