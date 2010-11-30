@@ -42,6 +42,10 @@ public class LCK02JBugDetector implements BugPatternDetector {
 
 	private BasicAnalysisData basicAnalysisData = null;
 
+	private static String getFullyQualifiedName(TypeName typeName) {
+		return typeName.getPackage().toString().replaceAll("/", ".") + "." + typeName.getClassName();
+	}
+
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
 		BugInstances bugInstances = new BugInstances();
@@ -64,7 +68,8 @@ public class LCK02JBugDetector implements BugPatternDetector {
 								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
 								System.err.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position), new LCK02JFixInformation(synchronizedClassTypeNames)));
+								String enclosingClassName = getFullyQualifiedName(method.getDeclaringClass().getName());
+								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}
 						}
 					}

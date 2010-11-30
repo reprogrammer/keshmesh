@@ -23,19 +23,31 @@ public class BugPosition {
 
 	private IPath sourcePath;
 
-	public BugPosition(Position position) {
+	private String fullyQualifiedClassName;
+
+	public BugPosition(Position position, String fullyQualifiedClassName) {
 		this.firstOffset = position.getFirstOffset();
 		this.lastOffset = position.getLastOffset();
 		this.firstLine = position.getFirstLine();
 		this.lastLine = position.getLastLine();
 		this.sourcePath = Path.fromPortableString(position.getURL().getFile());
+		this.fullyQualifiedClassName = fullyQualifiedClassName;
 	}
 
-	public BugPosition(int firstLine, int lastLine, IPath sourcePath) {
+	public BugPosition(Position position) {
+		this(position, null);
+	}
+
+	public BugPosition(int firstLine, int lastLine, IPath sourcePath, String fullyQualifiedClassName) {
 		super();
 		this.firstLine = firstLine;
 		this.lastLine = lastLine;
 		this.sourcePath = sourcePath;
+		this.fullyQualifiedClassName = fullyQualifiedClassName;
+	}
+
+	public BugPosition(int firstLine, int lastLine, IPath sourcePath) {
+		this(firstLine, lastLine, sourcePath, null);
 	}
 
 	public int getFirstOffset() {
@@ -62,12 +74,17 @@ public class BugPosition {
 		return sourcePath;
 	}
 
+	public String getFullyQualifiedClassName() {
+		return fullyQualifiedClassName;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + firstLine;
 		result = prime * result + firstOffset;
+		result = prime * result + ((fullyQualifiedClassName == null) ? 0 : fullyQualifiedClassName.hashCode());
 		result = prime * result + lastLine;
 		result = prime * result + lastOffset;
 		result = prime * result + ((sourcePath == null) ? 0 : sourcePath.toPortableString().hashCode());
@@ -108,7 +125,7 @@ public class BugPosition {
 
 	@Override
 	public String toString() {
-		return sourcePath.toPortableString() + " @ [" + firstLine + "--" + lastLine + "(" + firstOffset + ", " + lastOffset + ")" + "]";
+		return sourcePath.toPortableString() + " / " + fullyQualifiedClassName + " @ [" + firstLine + "--" + lastLine + "(" + firstOffset + ", " + lastOffset + ")" + "]";
 	}
 
 }
