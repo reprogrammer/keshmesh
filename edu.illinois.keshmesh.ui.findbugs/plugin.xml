@@ -2,9 +2,10 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
+         id="lib\KeshmeshDetectors.jar"
          point="edu.umd.cs.findbugs.plugin.eclipse.detectorPlugins">
       <detectorPlugin
-            libraryPath="lib/KeshmeshFindBugsDetectors.jar">
+            libraryPath="lib/KeshmeshDetectors.jar">
       </detectorPlugin>
    </extension>
 

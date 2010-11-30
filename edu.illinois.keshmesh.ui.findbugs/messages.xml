@@ -14,7 +14,7 @@
 		</Details>
 	</Plugin>
 
-	<Detector class="edu.illinois.keshmesh.ui.findbugs.LCK02JFindBugsDetector">
+	<Detector class="edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector">
 		<Details>
 			<![CDATA[Detector KESHMESH_LCK02J Details]]>
 		</Details>
