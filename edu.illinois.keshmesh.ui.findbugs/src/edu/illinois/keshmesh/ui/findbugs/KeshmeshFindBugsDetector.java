@@ -79,6 +79,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 				System.out.println("The java project under analyais is " + javaProject.getElementName());
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
+					System.out.println(bugInstance.getBugPosition().getFullyQualifiedClassName());
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(
 							new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath().toString(), bugInstance.getBugPosition()
 									.getFirstLine(), bugInstance.getBugPosition().getLastLine(), 0, 0)));

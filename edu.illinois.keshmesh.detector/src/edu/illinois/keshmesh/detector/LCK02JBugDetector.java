@@ -42,8 +42,25 @@ public class LCK02JBugDetector implements BugPatternDetector {
 
 	private BasicAnalysisData basicAnalysisData = null;
 
-	private static String getFullyQualifiedName(TypeName typeName) {
-		return typeName.getPackage().toString().replaceAll("/", ".") + "." + typeName.getClassName();
+	/**
+	 * Findbugs needs the name of the class that contains the bug. The class
+	 * name that WALA returns includes some additional information such as the
+	 * method name in case of anonymous classes. But, Findbugs expects names
+	 * that follow the standard Java bytecode convention. This method takes a
+	 * class name as reported by WALA and returns the name of the innermost
+	 * enclosing non-anonymous class of it. See issue #5 for more details.
+	 * 
+	 * @param walaClassName
+	 * @return
+	 */
+	private static String getEnclosingNonanonymousClassName(TypeName typeName) {
+		String packageName = typeName.getPackage().toString().replaceAll("/", ".");
+		int indexOfOpenParen = packageName.indexOf('(');
+		if (indexOfOpenParen != -1) {
+			int indexOfLastPackageSeparator = packageName.lastIndexOf('.', indexOfOpenParen);
+			return packageName.substring(0, indexOfLastPackageSeparator);
+		}
+		return packageName + "." + typeName.getClassName();
 	}
 
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
@@ -67,8 +84,8 @@ public class LCK02JBugDetector implements BugPatternDetector {
 							if (!synchronizedClassTypeNames.isEmpty()) {
 								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
-								System.err.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
-								String enclosingClassName = getFullyQualifiedName(method.getDeclaringClass().getName());
+								String enclosingClassName = getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
+								System.err.println("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + lineNumber);
 								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}
 						}
