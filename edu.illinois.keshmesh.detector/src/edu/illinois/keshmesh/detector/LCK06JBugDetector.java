@@ -18,7 +18,7 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
-import com.ibm.wala.ssa.SSAFieldAccessInstruction;
+import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
@@ -32,6 +32,10 @@ import edu.illinois.keshmesh.detector.bugs.BugInstances;
  * 
  */
 public class LCK06JBugDetector extends BugPatternDetector {
+
+	enum SynchronizedBlockKind {
+		SAFE, UNSAFE
+	}
 
 	private static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial";
 
@@ -51,35 +55,32 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			//TODO: Should we look for bugs in JDK usage as well?
 			if (!isJDKClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
+				Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
+				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
+				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
+				for (InstructionInfo modifyingStaticFieldInstruction : modifyingStaticFieldsInstructions) {
+					if (!isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, modifyingStaticFieldInstruction)) {
+						unsafeModifyingStaticFieldsInstructions.add(modifyingStaticFieldInstruction);
+					}
+				}
+				for (InstructionInfo modifyInstruction : modifyingStaticFieldsInstructions) {
+					System.out.println("MODIFY: " + modifyInstruction);
+				}
+				for (InstructionInfo unsafeModifyInstruction : unsafeModifyingStaticFieldsInstructions) {
+					System.out.println("UNSAFE MODIFY: " + unsafeModifyInstruction);
+				}
 			}
 		}
-		//							AstMethod astMethod = (AstMethod) method;
-		//							int lineNumber = astMethod.getLineNumber(instructionIndex);
-		//							Position position = astMethod.getSourcePosition(instructionIndex);
-		//							Set<SSAInstruction> containedInstructions = getContainedInstructions(astMethod, ir, position);
-		//							for (SSAInstruction containedInstruction : containedInstructions) {
-		//								System.out.println("Contained instruction: " + containedInstruction);
-		//							}
 		return bugInstances;
 	}
 
-	public interface InstructionFilter {
-		public boolean accept(SSAInstruction ssaInstruction);
-	}
-
-	private void filter(Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
-		assert instructionInfos != null;
-		IR ir = cgNode.getIR();
-		if (ir == null) {
-			return;
-		}
-		SSAInstruction[] instructions = ir.getInstructions();
-		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
-			SSAInstruction instruction = instructions[instructionIndex];
-			if (instructionFilter == null || instructionFilter.accept(instruction)) {
-				instructionInfos.add(new InstructionInfo(cgNode, instruction, instructionIndex));
+	private boolean isProtectedByAnySynchronizedBlock(Collection<InstructionInfo> safeSynchronizedBlocks, InstructionInfo instruction) {
+		for (InstructionInfo safeSynchronizedBlock : safeSynchronizedBlocks) {
+			if (instruction.isInside(safeSynchronizedBlock)) {
+				return true;
 			}
 		}
+		return false;
 	}
 
 	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
@@ -94,26 +95,19 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
-				if (ssaInstruction instanceof SSAFieldAccessInstruction && ((SSAFieldAccessInstruction) ssaInstruction).isStatic()) {
-					if (ssaInstruction instanceof SSAPutInstruction) {
-						return true;
-					} else { //SSAGetInstruction
-						Iterator<SSAInstruction> staticFieldUsesIterator = defUse.getUses(ssaInstruction.getDef());
-						while (staticFieldUsesIterator.hasNext()) {
-							SSAInstruction staticFieldUse = staticFieldUsesIterator.next();
-							if (staticFieldUse instanceof SSAAbstractInvokeInstruction) {
-								return true;
-							}
+				if (ssaInstruction instanceof SSAPutInstruction && ((SSAPutInstruction) ssaInstruction).isStatic()) {
+					return true;
+				} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
+					for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
+						SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
+						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
+							return true;
 						}
 					}
 				}
 				return false;
 			}
 		});
-
-		for (InstructionInfo modifyInstruction : modifyingStaticFieldsInstructions) {
-			System.out.println("MODIFY: " + modifyInstruction);
-		}
 		return modifyingStaticFieldsInstructions;
 	}
 
@@ -122,23 +116,29 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
-			filter(unsafeSynchronizedBlocks, cgNode, new InstructionFilter() {
-
-				@Override
-				public boolean accept(SSAInstruction ssaInstruction) {
-					if (ssaInstruction instanceof SSAMonitorInstruction) {
-						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) ssaInstruction;
-						if (monitorInstruction.isMonitorEnter()) {
-							if (!isSafe(cgNode, monitorInstruction)) {
-								return true;
-							}
-						}
-					}
-					return false;
-				}
-			});
+			populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
 		}
 		return unsafeSynchronizedBlocks;
+	}
+
+	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
+		filter(synchronizedBlocks, cgNode, new InstructionFilter() {
+
+			@Override
+			public boolean accept(SSAInstruction ssaInstruction) {
+				if (ssaInstruction instanceof SSAMonitorInstruction) {
+					SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) ssaInstruction;
+					if (monitorInstruction.isMonitorEnter()) {
+						if (synchronizedBlockKind == SynchronizedBlockKind.SAFE) {
+							return isSafe(cgNode, monitorInstruction);
+						} else {
+							return !isSafe(cgNode, monitorInstruction);
+						}
+					}
+				}
+				return false;
+			}
+		});
 	}
 
 	private boolean isSafe(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
@@ -199,6 +199,25 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return container.getFirstOffset() <= containee.getFirstOffset() && container.getLastOffset() >= containee.getLastOffset();
 	}
 
+	public interface InstructionFilter {
+		public boolean accept(SSAInstruction ssaInstruction);
+	}
+
+	private void filter(Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
+		assert instructionInfos != null;
+		IR ir = cgNode.getIR();
+		if (ir == null) {
+			return;
+		}
+		SSAInstruction[] instructions = ir.getInstructions();
+		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
+			SSAInstruction instruction = instructions[instructionIndex];
+			if (instructionFilter == null || instructionFilter.accept(instruction)) {
+				instructionInfos.add(new InstructionInfo(cgNode, instruction, instructionIndex));
+			}
+		}
+	}
+
 	private static class InstructionInfo {
 		private final CGNode cgNode;
 		private final SSAInstruction ssaInstruction;
@@ -219,5 +238,12 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			Position thatPosition = that.getPosition();
 			return thatPosition.getFirstOffset() <= thisPosition.getFirstOffset() && thatPosition.getLastOffset() >= thisPosition.getLastOffset();
 		}
+
+		@Override
+		public String toString() {
+			return "InstructionInfo [method=" + cgNode.getMethod().getSignature() + ", ssaInstruction=" + ssaInstruction + ", instructionIndex=" + instructionIndex + "]";
+		}
+
 	}
+
 }
