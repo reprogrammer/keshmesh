@@ -50,10 +50,11 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		SAFE, UNSAFE
 	}
 
-	private static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial";
+	private static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
 	private final Set<InstanceKey> instancesPointedByStaticFields = new HashSet<InstanceKey>();
 
+	@Override
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
 		populateAllInstancesPointedByStaticFields();
@@ -75,10 +76,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			IntSet value = bitVectorSolver.getIn(cgNode).getValue();
 			if (value != null) {
 				IntIterator intIterator = value.intIterator();
-				System.out.println("CGNode: " + cgNode.getMethod().getSignature());
+				Logger.log("CGNode: " + cgNode.getMethod().getSignature());
 				while (intIterator.hasNext()) {
 					InstructionInfo instructionInfo = globalValues.getMappedObject(intIterator.next());
-					System.out.println("\tPropagated instruction: " + instructionInfo);
+					Logger.log("\tPropagated instruction: " + instructionInfo);
 				}
 			}
 		}
@@ -124,11 +125,11 @@ public class LCK06JBugDetector extends BugPatternDetector {
 					}
 				}
 				for (InstructionInfo modifyInstruction : modifyingStaticFieldsInstructions) {
-					System.out.println("MODIFY: " + modifyInstruction);
+					Logger.log("MODIFY: " + modifyInstruction);
 				}
 				for (InstructionInfo unsafeModifyInstruction : unsafeModifyingStaticFieldsInstructions) {
 					bitVector.set(globalValues.add(unsafeModifyInstruction));
-					System.out.println("UNSAFE MODIFY: " + unsafeModifyInstruction);
+					Logger.log("UNSAFE MODIFY: " + unsafeModifyInstruction);
 				}
 			}
 			cgNodeInfoMap.put(cgNode, new CGNodeInfo(safeSynchronizedBlocks, bitVector));
@@ -193,7 +194,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		});
 	}
 
-	private boolean isSafe(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
+	boolean isSafe(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
 		assert (monitorInstruction.isMonitorEnter());
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
@@ -205,11 +206,11 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private void populateAllInstancesPointedByStaticFields() {
 		for (IField staticField : getAllStaticFields()) {
-			System.out.println("Static field: " + staticField);
+			Logger.log("Static field: " + staticField);
 			PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
 			Collection<InstanceKey> pointedInstances = getPointedInstances(staticFieldPointer);
 			for (InstanceKey instance : pointedInstances) {
-				System.out.println("Pointed instance: " + instance);
+				Logger.log("Pointed instance: " + instance);
 			}
 			instancesPointedByStaticFields.addAll(pointedInstances);
 		}

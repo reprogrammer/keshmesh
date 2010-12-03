@@ -36,10 +36,11 @@ import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
  */
 public class LCK02JBugDetector extends BugPatternDetector {
 
-	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class";
+	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class"; //$NON-NLS-1$
 
-	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;";
+	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
+	@Override
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
 		BugInstances bugInstances = new BugInstances();
@@ -47,10 +48,10 @@ public class LCK02JBugDetector extends BugPatternDetector {
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
 			IMethod method = cgNode.getMethod();
-			System.out.println("CGNode:" + cgNode);
+			Logger.log("CGNode:" + cgNode);
 			IR ir = cgNode.getIR();
 			if (ir != null) {
-				System.out.println("IR:" + ir);
+				Logger.log("IR:" + ir);
 				SSAInstruction[] instructions = ir.getInstructions();
 				for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
 					SSAInstruction instruction = instructions[instructionIndex];
@@ -61,7 +62,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 							if (!synchronizedClassTypeNames.isEmpty()) {
 								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
-								System.err.println("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
+								Logger.log("Detected an instance of LCK02-J in class " + method.getDeclaringClass().getName() + ", line number=" + lineNumber);
 								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}
 						}
@@ -83,7 +84,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, lockValueNumber);
 		OrdinalSet<InstanceKey> lockObjects = basicAnalysisData.pointerAnalysis.getPointsToSet(lockPointer);
 		for (InstanceKey instanceKey : lockObjects) {
-			System.out.println("InstanceKey:" + instanceKey);
+			Logger.log("InstanceKey:" + instanceKey);
 			if (instanceKey instanceof NormalAllocationInNode) {
 				NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 				if (isReturnedByGetClass(normalAllocationInNode)) {

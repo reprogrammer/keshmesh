@@ -28,14 +28,17 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 		this.cgNodeInfoMap = cgNodeInfoMap;
 	}
 
+	@Override
 	public AbstractMeetOperator<BitVectorVariable> getMeetOperator() {
 		return BitVectorUnion.instance();
 	}
 
+	@Override
 	public boolean hasEdgeTransferFunctions() {
 		return true;
 	}
 
+	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
 		CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
 		CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
@@ -46,7 +49,7 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 			CallSiteReference callSiteReference = callSitesIterator.next();
 			IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
 			if (callInstructionIndices.size() > 1) {
-				throw new RuntimeException("Multiple invocations found for call site reference: " + callSiteReference);
+				throw new RuntimeException("Multiple invocations found for call site reference: " + callSiteReference); //$NON-NLS-1$
 			}
 			int invokeInstructionIndex = callInstructionIndices.intIterator().next();
 			InstructionInfo instructionInfo = new InstructionInfo(dst, invokeInstructionIndex);
@@ -58,10 +61,12 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 		return new BitVectorUnionVector(resultBitVector);
 	}
 
+	@Override
 	public boolean hasNodeTransferFunctions() {
 		return false;
 	}
 
+	@Override
 	public UnaryOperator<BitVectorVariable> getNodeTransferFunction(CGNode node) {
 		return null;
 	}
