@@ -4,14 +4,19 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-import com.ibm.wala.cast.loader.AstMethod;
-import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import org.eclipse.core.runtime.NullProgressMonitor;
+
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
+import com.ibm.wala.dataflow.graph.BitVectorFramework;
+import com.ibm.wala.dataflow.graph.BitVectorSolver;
+import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
@@ -22,8 +27,16 @@ import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
+import com.ibm.wala.util.CancelException;
+import com.ibm.wala.util.graph.impl.GraphInverter;
+import com.ibm.wala.util.intset.BitVector;
+import com.ibm.wala.util.intset.IntIterator;
+import com.ibm.wala.util.intset.IntSet;
+import com.ibm.wala.util.intset.MutableMapping;
+import com.ibm.wala.util.intset.OrdinalSetMapping;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
  * 
@@ -49,17 +62,64 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (unsafeSynchronizedBlocks.isEmpty()) {
 			return bugInstances;
 		}
+		Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
+		OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();
+
+		populateUnsafeModifyingStaticFieldsInstructionsMap(cgNodeInfoMap, globalValues);
+
+		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions(cgNodeInfoMap, globalValues);
+
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
+			IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+			if (value != null) {
+				IntIterator intIterator = value.intIterator();
+				System.out.println("CGNode: " + cgNode.getMethod().getSignature());
+				while (intIterator.hasNext()) {
+					InstructionInfo instructionInfo = globalValues.getMappedObject(intIterator.next());
+					System.out.println("\tPropagated instruction: " + instructionInfo);
+				}
+			}
+		}
+		return bugInstances;
+	}
+
+	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions(final Map<CGNode, CGNodeInfo> cgNodeInfoMap, OrdinalSetMapping<InstructionInfo> globalValues) {
+		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(basicAnalysisData.callGraph, cgNodeInfoMap);
+
+		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
+				globalValues);
+
+		BitVectorSolver<CGNode> bitVectorSolver = new BitVectorSolver<CGNode>(bitVectorFramework) {
+			@Override
+			protected BitVectorVariable makeNodeVariable(CGNode cgNode, boolean IN) {
+				BitVectorVariable nodeBitVectorVariable = new BitVectorVariable();
+				nodeBitVectorVariable.addAll(cgNodeInfoMap.get(cgNode).getBitVector());
+				return nodeBitVectorVariable;
+			}
+		};
+		try {
+			bitVectorSolver.solve(new NullProgressMonitor());
+		} catch (CancelException ex) {
+			ex.printStackTrace();
+		}
+		return bitVectorSolver;
+	}
+
+	private void populateUnsafeModifyingStaticFieldsInstructionsMap(Map<CGNode, CGNodeInfo> cgNodeInfoMap, OrdinalSetMapping<InstructionInfo> globalValues) {
+		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
+		while (cgNodesIterator.hasNext()) {
+			CGNode cgNode = cgNodesIterator.next();
+			BitVector bitVector = new BitVector();
+			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
 			//TODO: Should we look for bugs in JDK usage as well?
 			if (!isJDKClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
-				Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
 				for (InstructionInfo modifyingStaticFieldInstruction : modifyingStaticFieldsInstructions) {
-					if (!isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, modifyingStaticFieldInstruction)) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, modifyingStaticFieldInstruction)) {
 						unsafeModifyingStaticFieldsInstructions.add(modifyingStaticFieldInstruction);
 					}
 				}
@@ -67,20 +127,12 @@ public class LCK06JBugDetector extends BugPatternDetector {
 					System.out.println("MODIFY: " + modifyInstruction);
 				}
 				for (InstructionInfo unsafeModifyInstruction : unsafeModifyingStaticFieldsInstructions) {
+					bitVector.set(globalValues.add(unsafeModifyInstruction));
 					System.out.println("UNSAFE MODIFY: " + unsafeModifyInstruction);
 				}
 			}
+			cgNodeInfoMap.put(cgNode, new CGNodeInfo(safeSynchronizedBlocks, bitVector));
 		}
-		return bugInstances;
-	}
-
-	private boolean isProtectedByAnySynchronizedBlock(Collection<InstructionInfo> safeSynchronizedBlocks, InstructionInfo instruction) {
-		for (InstructionInfo safeSynchronizedBlock : safeSynchronizedBlocks) {
-			if (instruction.isInside(safeSynchronizedBlock)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
@@ -179,26 +231,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
 	}
 
-	private Set<SSAInstruction> getContainedInstructions(AstMethod method, IR ir, Position containingPosition) {
-		Set<SSAInstruction> containedInstructions = new HashSet<SSAInstruction>();
-		SSAInstruction[] instructions = ir.getInstructions();
-		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
-			SSAInstruction instruction = instructions[instructionIndex];
-			Position instructionPosition = method.getSourcePosition(instructionIndex);
-			if (instructionPosition != null) {
-				if (isInside(containingPosition, instructionPosition)) {
-					containedInstructions.add(instruction);
-				}
-			}
-		}
-		return containedInstructions;
-	}
-
-	@Deprecated
-	private static boolean isInside(Position container, Position containee) {
-		return container.getFirstOffset() <= containee.getFirstOffset() && container.getLastOffset() >= containee.getLastOffset();
-	}
-
 	public interface InstructionFilter {
 		public boolean accept(SSAInstruction ssaInstruction);
 	}
@@ -213,37 +245,9 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
 			SSAInstruction instruction = instructions[instructionIndex];
 			if (instructionFilter == null || instructionFilter.accept(instruction)) {
-				instructionInfos.add(new InstructionInfo(cgNode, instruction, instructionIndex));
+				instructionInfos.add(new InstructionInfo(cgNode, instructionIndex));
 			}
 		}
-	}
-
-	private static class InstructionInfo {
-		private final CGNode cgNode;
-		private final SSAInstruction ssaInstruction;
-		private final int instructionIndex;
-
-		public InstructionInfo(CGNode cgNode, SSAInstruction ssaInstruction, int instructionIndex) {
-			this.cgNode = cgNode;
-			this.ssaInstruction = ssaInstruction;
-			this.instructionIndex = instructionIndex;
-		}
-
-		public Position getPosition() {
-			return ((AstMethod) cgNode.getMethod()).getSourcePosition(instructionIndex);
-		}
-
-		public boolean isInside(InstructionInfo that) {
-			Position thisPosition = this.getPosition();
-			Position thatPosition = that.getPosition();
-			return thatPosition.getFirstOffset() <= thisPosition.getFirstOffset() && thatPosition.getLastOffset() >= thisPosition.getLastOffset();
-		}
-
-		@Override
-		public String toString() {
-			return "InstructionInfo [method=" + cgNode.getMethod().getSignature() + ", ssaInstruction=" + ssaInstruction + ", instructionIndex=" + instructionIndex + "]";
-		}
-
 	}
 
 }
