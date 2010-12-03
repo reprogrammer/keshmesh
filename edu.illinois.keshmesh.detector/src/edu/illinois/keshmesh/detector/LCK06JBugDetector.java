@@ -35,7 +35,10 @@ import com.ibm.wala.util.intset.IntSet;
 import com.ibm.wala.util.intset.MutableMapping;
 import com.ibm.wala.util.intset.OrdinalSetMapping;
 
+import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
@@ -54,6 +57,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private final Set<InstanceKey> instancesPointedByStaticFields = new HashSet<InstanceKey>();
 
+	private final OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();
+
+	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
+
 	@Override
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
@@ -63,12 +70,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (unsafeSynchronizedBlocks.isEmpty()) {
 			return bugInstances;
 		}
-		Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
-		OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();
 
-		populateUnsafeModifyingStaticFieldsInstructionsMap(cgNodeInfoMap, globalValues);
+		populateUnsafeModifyingStaticFieldsInstructionsMap();
 
-		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions(cgNodeInfoMap, globalValues);
+		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions();
 
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
@@ -83,10 +88,71 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				}
 			}
 		}
+
+		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
+			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
+			if (!actuallyUnsafeInstructions.isEmpty()) {
+				bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition()), null));
+			}
+			Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
+		}
+
 		return bugInstances;
 	}
 
-	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions(final Map<CGNode, CGNodeInfo> cgNodeInfoMap, OrdinalSetMapping<InstructionInfo> globalValues) {
+	public void addSolverResults(Collection<InstructionInfo> results, BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
+		IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+		if (value != null) {
+			IntIterator intIterator = value.intIterator();
+			while (intIterator.hasNext()) {
+				InstructionInfo instructionInfo = globalValues.getMappedObject(intIterator.next());
+				results.add(instructionInfo);
+			}
+		}
+	}
+
+	//TODO: Refactor the method.
+	private Collection<InstructionInfo> getActuallyUnsafeInstructions(final BitVectorSolver<CGNode> bitVectorSolver, final InstructionInfo unsafeSynchronizedBlock) {
+		Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
+		CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
+		Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
+		populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
+		IR ir = cgNode.getIR();
+		if (ir == null) {
+			return unsafeInstructions; //should not really be null here
+		}
+		DefUse defUse = new DefUse(ir);
+		SSAInstruction[] instructions = ir.getInstructions();
+		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
+			SSAInstruction instruction = instructions[instructionIndex];
+			if (instruction == null)
+				continue;
+			InstructionInfo instructionInfo = new InstructionInfo(cgNode, instructionIndex);
+			if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
+				if (instruction instanceof SSAPutInstruction && ((SSAPutInstruction) instruction).isStatic()) {
+					unsafeInstructions.add(instructionInfo);
+				} else if (instruction instanceof SSAAbstractInvokeInstruction) {
+					for (int i = 0; i < instruction.getNumberOfUses(); i++) {
+						SSAInstruction defInstruction = defUse.getDef(instruction.getUse(i));
+						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
+							// Add method invocations that involve static fields. 
+							unsafeInstructions.add(instructionInfo);
+							break;
+						}
+					}
+					SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
+					Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
+					for (CGNode possibleTarget : possibleTargets) {
+						// Add unsafe operations coming from callees.
+						addSolverResults(unsafeInstructions, bitVectorSolver, possibleTarget);
+					}
+				}
+			}
+		}
+		return unsafeInstructions;
+	}
+
+	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions() {
 		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(basicAnalysisData.callGraph, cgNodeInfoMap);
 
 		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
@@ -103,12 +169,19 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		try {
 			bitVectorSolver.solve(new NullProgressMonitor());
 		} catch (CancelException ex) {
+			//FIXME: Handle the exception (log or rethrow).
 			ex.printStackTrace();
 		}
 		return bitVectorSolver;
 	}
 
-	private void populateUnsafeModifyingStaticFieldsInstructionsMap(Map<CGNode, CGNodeInfo> cgNodeInfoMap, OrdinalSetMapping<InstructionInfo> globalValues) {
+	/**
+	 * Populates the initial sets for modifying static fields of all CGNodes.
+	 * 
+	 * @param cgNodeInfoMap
+	 * @param globalValues
+	 */
+	private void populateUnsafeModifyingStaticFieldsInstructionsMap() {
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
@@ -144,7 +217,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 		final DefUse defUse = new DefUse(ir);
 
-		filter(modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
+		AnalysisUtils.filter(modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
@@ -164,6 +237,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return modifyingStaticFieldsInstructions;
 	}
 
+	//TODO: A synchronized block that is nested inside a safe one is safe. So, this method should not return such synchronized blocks. 
 	private Collection<InstructionInfo> getUnsafeSynchronizedBlocks() {
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
@@ -175,7 +249,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
-		filter(synchronizedBlocks, cgNode, new InstructionFilter() {
+		AnalysisUtils.filter(synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
@@ -230,25 +304,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private boolean isJDKClass(IClass klass) {
 		return klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
-	}
-
-	public interface InstructionFilter {
-		public boolean accept(SSAInstruction ssaInstruction);
-	}
-
-	private void filter(Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
-		assert instructionInfos != null;
-		IR ir = cgNode.getIR();
-		if (ir == null) {
-			return;
-		}
-		SSAInstruction[] instructions = ir.getInstructions();
-		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
-			SSAInstruction instruction = instructions[instructionIndex];
-			if (instructionFilter == null || instructionFilter.accept(instruction)) {
-				instructionInfos.add(new InstructionInfo(cgNode, instructionIndex));
-			}
-		}
 	}
 
 }

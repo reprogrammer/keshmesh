@@ -7,6 +7,9 @@ import java.util.Set;
 
 /**
  * 
+ * FIXME: This class is a copy of LCK02JFixInformation. But, it should be
+ * adapted to LCK06J.
+ * 
  * @author Mohsen Vakilian
  * @author Stas Negara
  * 

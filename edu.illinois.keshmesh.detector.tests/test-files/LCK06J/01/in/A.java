@@ -16,25 +16,28 @@ public class A {
 		a = new A();
 		a.m2();
 		static_assigned = new B(a);
-		m();
+		synchronized (new Object()) {
+			m();
+		}
 	}
 
 	void m2() {
 		instance_assigned = new B(new A());
-		synchronized(instance_assigned) {
+		synchronized (instance_assigned) {
 			static_assigned = new B(new A());
 		}
-		synchronized(static_assigned) {
+		synchronized (static_assigned) {
+			counter++;
+			m3();
+		}
+		synchronized (static_unassigned) {
 			counter++;
 		}
-		synchronized(static_unassigned) {
-			counter++;
-		}
-		synchronized(instance_unassigned) {
+		synchronized (instance_unassigned) {
 			counter++;
 		}
 	}
-	
+
 	private static void m() {
 		Object obj = new Object();
 		synchronized (obj) {
@@ -42,6 +45,10 @@ public class A {
 				static_assigned.set(10);
 			}/* ] */
 		}
+		m3();
 	}
 
+	private static void m3() {
+		counter++;
+	}
 }

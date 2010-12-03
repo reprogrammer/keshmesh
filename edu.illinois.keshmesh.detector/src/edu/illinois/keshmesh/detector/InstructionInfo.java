@@ -29,6 +29,10 @@ public class InstructionInfo {
 		return ((AstMethod) cgNode.getMethod()).getSourcePosition(instructionIndex);
 	}
 
+	public CGNode getCGNode() {
+		return cgNode;
+	}
+
 	public boolean isInside(InstructionInfo that) {
 		if (cgNode != that.cgNode)
 			return false;

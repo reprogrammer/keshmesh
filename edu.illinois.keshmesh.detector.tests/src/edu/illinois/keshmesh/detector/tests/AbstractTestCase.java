@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
@@ -136,7 +137,7 @@ public abstract class AbstractTestCase {
 
 	private void findBugs() throws WALAInitializationException {
 		bugInstances = Main.initAndPerformAnalysis(javaProject);
-		System.out.println(bugInstances);
+		Logger.log(bugInstances.toString());
 	}
 
 	private void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
