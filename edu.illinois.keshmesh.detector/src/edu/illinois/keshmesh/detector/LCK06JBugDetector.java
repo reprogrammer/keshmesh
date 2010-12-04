@@ -27,6 +27,7 @@ import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
+import com.ibm.wala.types.TypeName;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.graph.impl.GraphInverter;
 import com.ibm.wala.util.intset.BitVector;
@@ -92,7 +93,9 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
 			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
 			if (!actuallyUnsafeInstructions.isEmpty()) {
-				bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition()), null));
+				TypeName enclosingClassName = unsafeSynchronizedBlock.getCGNode().getMethod().getDeclaringClass().getName();
+				bugInstances
+						.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), null));
 			}
 			Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
 		}

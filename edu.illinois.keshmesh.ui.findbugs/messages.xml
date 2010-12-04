@@ -16,7 +16,7 @@
 
 	<Detector class="edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector">
 		<Details>
-			<![CDATA[Detector KESHMESH_LCK02J Details]]>
+			<![CDATA[edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector Details]]>
 		</Details>
 	</Detector>
 
@@ -26,5 +26,14 @@
 		<Details>BugPattern KESHMESH_LCK02J Details</Details>
 	</BugPattern>
 
-	<BugCode abbrev="KESHMESH_LCK02J">KESHMESH_LCK02J BugCode</BugCode>
+	<BugCode abbrev="KESHMESH_LCK06J">KESHMESH_LCK02J BugCode</BugCode>
+	
+		<BugPattern type="KESHMESH_LCK06J">
+		<ShortDescription>Keshmesh LCK06J</ShortDescription>
+		<LongDescription>Do not use an instance lock to protect shared static data</LongDescription>
+		<Details>BugPattern KESHMESH_LCK06J Details</Details>
+	</BugPattern>
+
+	<BugCode abbrev="KESHMESH_LCK02J">KESHMESH_LCK06J BugCode</BugCode>
+	
 </MessageCollection>

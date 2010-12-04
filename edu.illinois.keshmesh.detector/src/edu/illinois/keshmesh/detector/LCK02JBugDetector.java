@@ -27,6 +27,7 @@ import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
+import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
  * 
@@ -39,27 +40,6 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class"; //$NON-NLS-1$
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
-
-	/**
-	 * Findbugs needs the name of the class that contains the bug. The class
-	 * name that WALA returns includes some additional information such as the
-	 * method name in case of anonymous classes. But, Findbugs expects names
-	 * that follow the standard Java bytecode convention. This method takes a
-	 * class name as reported by WALA and returns the name of the innermost
-	 * enclosing non-anonymous class of it. See issue #5 for more details.
-	 * 
-	 * @param walaClassName
-	 * @return
-	 */
-	private static String getEnclosingNonanonymousClassName(TypeName typeName) {
-		String packageName = typeName.getPackage().toString().replaceAll("/", ".");
-		int indexOfOpenParen = packageName.indexOf('(');
-		if (indexOfOpenParen != -1) {
-			int indexOfLastPackageSeparator = packageName.lastIndexOf('.', indexOfOpenParen);
-			return packageName.substring(0, indexOfLastPackageSeparator);
-		}
-		return packageName + "." + typeName.getClassName();
-	}
 
 	@Override
 	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
@@ -83,7 +63,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 							if (!synchronizedClassTypeNames.isEmpty()) {
 								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
 								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
-								String enclosingClassName = getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
+								String enclosingClassName = AnalysisUtils.getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
 								Logger.log("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + lineNumber);
 								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}

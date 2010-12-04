@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
+import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
@@ -73,13 +74,12 @@ public class KeshmeshFindBugsDetector implements Detector {
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			if (!getProjectName(classContext.getAnalysisContext()).equals(projectName)) {
-				System.out.println("Call Keshmesh again ....");
 				projectName = getProjectName(classContext.getAnalysisContext());
 				IJavaProject javaProject = getProject(projectName);
-				System.out.println("The java project under analyais is " + javaProject.getElementName());
+				Logger.log("The java project under analyais is " + javaProject.getElementName());
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
-					System.out.println(bugInstance.getBugPosition().getFullyQualifiedClassName());
+					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(
 							new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath().toString(), bugInstance.getBugPosition()
 									.getFirstLine(), bugInstance.getBugPosition().getLastLine(), 0, 0)));
@@ -106,7 +106,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 
 	public KeshmeshFindBugsDetector(BugReporter bugReporter) {
 		this.bugReporter = bugReporter;
-		System.out.println("LCK02JFindBugsDetector(BugReporter bugReporter)");
+		Logger.log("LCK02JFindBugsDetector(BugReporter bugReporter)");
 	}
 
 }
