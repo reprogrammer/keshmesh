@@ -11,7 +11,7 @@ import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
-import com.ibm.wala.ipa.cha.ClassHierarchy;
+import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.io.FileProvider;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
@@ -29,7 +29,7 @@ import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationExc
 public class Main {
 
 	private static DetectorJavaSourceAnalysisEngine engine;
-	private static ClassHierarchy classHierarchy;
+	private static IClassHierarchy classHierarchy;
 	private static CallGraph callGraph;
 	private static PointerAnalysis pointerAnalysis;
 	private static HeapModel heapModel;
@@ -51,12 +51,14 @@ public class Main {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
 			engine = new DetectorJavaSourceAnalysisEngine(javaProject, exclusionsFileName);
 			callGraph = engine.buildDefaultCallGraph();
+			pointerAnalysis = engine.getPointerAnalysis();
+			heapModel = pointerAnalysis.getHeapModel();
+			basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
+			classHierarchy = engine.getClassHierarchy();
+			//DisplayUtils.displayGraph(basicHeapGraph);
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
-		pointerAnalysis = engine.getPointerAnalysis();
-		heapModel = pointerAnalysis.getHeapModel();
-		basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, basicHeapGraph);
 	}
 }
