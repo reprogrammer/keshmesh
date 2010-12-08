@@ -3,8 +3,6 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
-import junit.framework.Assert;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -34,7 +32,6 @@ abstract public class LCK02JTest extends AbstractTestCase {
 
 	@Override
 	protected void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
-		Assert.assertNotNull("Could not find bug instance.", bugInstance);
 		LCK02JFixer fixer = new LCK02JFixer(bugInstance);
 		if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
 			fixer.createChange(new NullProgressMonitor());
