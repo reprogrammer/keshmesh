@@ -6,7 +6,6 @@ package edu.illinois.keshmesh.detector.tests.lck06j;
 import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
@@ -16,8 +15,6 @@ import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.BugInstanceCreator;
-import edu.illinois.keshmesh.detector.util.SetUtils;
-import edu.illinois.keshmesh.transformer.core.LCK06JFixer;
 
 /**
  * 
@@ -33,12 +30,9 @@ abstract public class LCK06JTest extends AbstractTestCase {
 	}
 
 	@Override
-	protected void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
+	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
-		LCK06JFixer fixer = new LCK06JFixer(bugInstance);
-		if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
-			fixer.createChange(new NullProgressMonitor());
-		}
+		return false; //nothing was fixed
 	}
 
 	@Override
@@ -50,7 +44,7 @@ abstract public class LCK06JTest extends AbstractTestCase {
 
 		@Override
 		public FixInformation createFixInformation(String... replacements) {
-			return new LCK06JFixInformation(SetUtils.asSet(replacements));
+			return new LCK06JFixInformation();
 		}
 
 	}

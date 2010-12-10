@@ -40,6 +40,7 @@ import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
@@ -94,8 +95,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
 			if (!actuallyUnsafeInstructions.isEmpty()) {
 				TypeName enclosingClassName = unsafeSynchronizedBlock.getCGNode().getMethod().getDeclaringClass().getName();
-				bugInstances
-						.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), null));
+				bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)),
+						new LCK06JFixInformation()));
 			}
 			Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
 		}
@@ -190,8 +191,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			//TODO: Should we look for bugs in JDK usage as well?
-			if (!isJDKClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -212,6 +212,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
+	//FIXME: Do not consider static fields of JDK classes (e.g. in System.out.println("")).
 	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
 		Collection<InstructionInfo> modifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
 		IR ir = cgNode.getIR();
@@ -246,7 +247,9 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
-			populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
+			}
 		}
 		return unsafeSynchronizedBlocks;
 	}
@@ -298,15 +301,18 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<IClass> classIterator = basicAnalysisData.classHierarchy.iterator();
 		while (classIterator.hasNext()) {
 			IClass klass = classIterator.next();
-			if (!isJDKClass(klass)) {
+			if (!isIgnoredClass(klass)) {
 				staticFields.addAll(klass.getAllStaticFields());
 			}
 		}
 		return staticFields;
 	}
 
-	private boolean isJDKClass(IClass klass) {
-		return klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+	private boolean isIgnoredClass(IClass klass) {
+		//TODO: Should we look for bugs in JDK usage as well?
+		//TODO: !!!What about other bytecodes, e.g. from the libraries, which will not allow to get the source position?
+		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+		return isJDKClass;
 	}
 
 }

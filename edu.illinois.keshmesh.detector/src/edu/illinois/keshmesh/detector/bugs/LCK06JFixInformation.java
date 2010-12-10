@@ -3,37 +3,13 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
-import java.util.Set;
-
 /**
- * 
- * FIXME: This class is a copy of LCK02JFixInformation. But, it should be
- * adapted to LCK06J.
  * 
  * @author Mohsen Vakilian
  * @author Stas Negara
  * 
  */
 public class LCK06JFixInformation implements FixInformation {
-
-	Set<String> typeNames;
-
-	public LCK06JFixInformation(Set<String> typeNames) {
-		super();
-		this.typeNames = typeNames;
-	}
-
-	public Set<String> getTypeNames() {
-		return typeNames;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((typeNames == null) ? 0 : typeNames.hashCode());
-		return result;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -43,18 +19,12 @@ public class LCK06JFixInformation implements FixInformation {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		LCK06JFixInformation other = (LCK06JFixInformation) obj;
-		if (typeNames == null) {
-			if (other.typeNames != null)
-				return false;
-		} else if (!typeNames.equals(other.typeNames))
-			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LCK02JFixInformation [typeNames=" + typeNames + "]";
+		return "LCK06JFixInformation";
 	}
 
 }

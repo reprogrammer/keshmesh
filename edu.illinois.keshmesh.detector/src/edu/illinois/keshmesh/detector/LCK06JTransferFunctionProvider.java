@@ -57,6 +57,7 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 		while (callSitesIterator.hasNext()) {
 			CallSiteReference callSiteReference = callSitesIterator.next();
 			IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
+			//FIXME: Handle such scenarios (LCK02JTest04 reveals this problem).
 			if (callInstructionIndices.size() > 1) {
 				throw new RuntimeException("Multiple invocations found for call site reference: " + callSiteReference); //$NON-NLS-1$
 			}
