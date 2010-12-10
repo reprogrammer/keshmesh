@@ -1,7 +1,7 @@
 /**
  * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
  */
-package edu.illinois.keshmesh.detector.tests.lck06;
+package edu.illinois.keshmesh.detector.tests.lck06j;
 
 import org.junit.Before;
 
