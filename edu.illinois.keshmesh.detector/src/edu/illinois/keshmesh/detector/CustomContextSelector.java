@@ -24,7 +24,7 @@ public class CustomContextSelector implements ContextSelector {
 			return new ReceiverInstanceContext(receiver);
 		} else {
 			//Provide a distinguishing context even when the receiver is null (e.g. in case of an invocation of a static method)
-			//Note: new Random() and similar statements cause an infinite pointer analysis for contexts like CallerSiteContext(caller, site) 
+			//Note: new Random() and similar statements cause an infinite pointer analysis for contexts like CallerSiteContext(caller, site)
 			return caller.getContext();
 		}
 	}

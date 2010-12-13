@@ -23,6 +23,7 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -115,7 +116,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	//TODO: Refactor the method.
 	private Collection<InstructionInfo> getActuallyUnsafeInstructions(final BitVectorSolver<CGNode> bitVectorSolver, final InstructionInfo unsafeSynchronizedBlock) {
 		Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
 		CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
@@ -133,17 +133,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				continue;
 			InstructionInfo instructionInfo = new InstructionInfo(cgNode, instructionIndex);
 			if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
-				if (instruction instanceof SSAPutInstruction && ((SSAPutInstruction) instruction).isStatic()) {
+				if (canModifyStaticField(defUse, instruction)) {
 					unsafeInstructions.add(instructionInfo);
-				} else if (instruction instanceof SSAAbstractInvokeInstruction) {
-					for (int i = 0; i < instruction.getNumberOfUses(); i++) {
-						SSAInstruction defInstruction = defUse.getDef(instruction.getUse(i));
-						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
-							// Add method invocations that involve static fields. 
-							unsafeInstructions.add(instructionInfo);
-							break;
-						}
-					}
+				}
+				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 					Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
 					for (CGNode possibleTarget : possibleTargets) {
@@ -212,7 +205,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	//FIXME: Do not consider static fields of JDK classes (e.g. in System.out.println("")).
 	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
 		Collection<InstructionInfo> modifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
 		IR ir = cgNode.getIR();
@@ -225,20 +217,29 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
-				if (ssaInstruction instanceof SSAPutInstruction && ((SSAPutInstruction) ssaInstruction).isStatic()) {
-					return true;
-				} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
-					for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-						SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
-							return true;
-						}
-					}
-				}
-				return false;
+				return canModifyStaticField(defUse, ssaInstruction);
 			}
 		});
 		return modifyingStaticFieldsInstructions;
+	}
+
+	private boolean canModifyStaticField(final DefUse defUse, SSAInstruction ssaInstruction) {
+		if (ssaInstruction instanceof SSAPutInstruction) {
+			return isStaticNonFinal((SSAFieldAccessInstruction) ssaInstruction);
+		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
+			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
+				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
+				if (defInstruction instanceof SSAGetInstruction && isStaticNonFinal((SSAFieldAccessInstruction) defInstruction)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
+		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
 	}
 
 	//TODO: A synchronized block that is nested inside a safe one is safe. So, this method should not return such synchronized blocks. 

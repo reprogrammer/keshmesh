@@ -6,12 +6,7 @@ package p;
 
 public class B {
 	
-	private A a;
 	int i;
-
-	public B(A a) {
-		this.a = a;
-	}
 
 	public void set(int i) {
 		this.i = i;

@@ -4,13 +4,16 @@
 package p;
 
 public class A {
+
+	final static Object o = new Object();
+
 	public static void main(String args[]) {
 		new A().m();
 	}
 
 	private void m() {
 		synchronized (new Object()) {
-			System.out.println("");
+			o.toString();
 		}
 	}
 }

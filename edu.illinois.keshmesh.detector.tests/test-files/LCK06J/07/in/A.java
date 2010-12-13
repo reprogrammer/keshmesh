@@ -3,14 +3,17 @@
  */
 package p;
 
+import java.util.Random;
+
 public class A {
+
 	public static void main(String args[]) {
 		new A().m();
 	}
 
 	private void m() {
-		synchronized (new Object()) {
-			System.out.println("");
+		new Random();
+		synchronized (this) {
 		}
 	}
 }

@@ -17,6 +17,7 @@ import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.util.intset.BitVector;
+import com.ibm.wala.util.intset.IntIterator;
 import com.ibm.wala.util.intset.IntSet;
 
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
@@ -52,23 +53,20 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 		CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
 		CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
 		Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
-		BitVector resultBitVector = new BitVector();
 		IR dstIR = dst.getIR();
 		while (callSitesIterator.hasNext()) {
 			CallSiteReference callSiteReference = callSitesIterator.next();
 			IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
-			//FIXME: Handle such scenarios (LCK02JTest04 reveals this problem).
-			if (callInstructionIndices.size() > 1) {
-				throw new RuntimeException("Multiple invocations found for call site reference: " + callSiteReference); //$NON-NLS-1$
-			}
-			int invokeInstructionIndex = callInstructionIndices.intIterator().next();
-			InstructionInfo instructionInfo = new InstructionInfo(dst, invokeInstructionIndex);
-			if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
-				resultBitVector.or(srcNodeInfo.getBitVector());
-				break;
+			IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
+			while (instructionIndicesIterator.hasNext()) {
+				int invokeInstructionIndex = instructionIndicesIterator.next();
+				InstructionInfo instructionInfo = new InstructionInfo(dst, invokeInstructionIndex);
+				if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
+					return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+				}
 			}
 		}
-		return new BitVectorUnionVector(resultBitVector);
+		return new BitVectorUnionVector(new BitVector());
 	}
 
 	@Override

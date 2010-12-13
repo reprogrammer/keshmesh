@@ -15,16 +15,16 @@ public class A {
 	public static void main(String args[]) {
 		a = new A();
 		a.m2();
-		static_assigned = new B(a);
+		static_assigned = new B();
 		/*[LCK06J,01*/synchronized (new Object()) {
 			m();
 		}/*]*/
 	}
 
 	void m2() {
-		instance_assigned = new B(new A());
+		instance_assigned = new B();
 		/*[LCK06J,02*/synchronized (instance_assigned) {
-			static_assigned = new B(new A());
+			static_assigned = new B();
 		}/*]*/
 		synchronized (static_assigned) {
 			counter++;

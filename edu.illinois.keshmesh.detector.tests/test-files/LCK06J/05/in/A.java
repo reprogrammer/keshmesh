@@ -4,13 +4,16 @@
 package p;
 
 public class A {
+
+	static Object o = new Object();
+
 	public static void main(String args[]) {
 		new A().m();
 	}
 
 	private void m() {
-		synchronized (new Object()) {
-			System.out.println("");
-		}
+		/*[LCK06J,01*/synchronized (new Object()) {
+			o.toString();
+		}/*]*/
 	}
 }
