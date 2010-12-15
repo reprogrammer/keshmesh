@@ -9,7 +9,6 @@ import java.io.IOException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.ibm.wala.cast.java.ipa.callgraph.AstJavaZeroOneContainerCFABuilder;
 import com.ibm.wala.cast.java.ipa.callgraph.JavaSourceAnalysisScope;
 import com.ibm.wala.cast.java.translator.jdt.JDTJavaSourceAnalysisEngine;
 import com.ibm.wala.ide.util.EclipseProjectPath;
@@ -59,13 +58,9 @@ public class DetectorJavaSourceAnalysisEngine extends JDTJavaSourceAnalysisEngin
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, AnalysisCache cache) {
 		ContextSelector contextSelector = new CustomContextSelector();
-		//com.ibm.wala.ipa.callgraph.CallGraphBuilder builder = Util.makeVanillaZeroOneCFABuilder(options, cache, cha, scope, null, null);
 		Util.addDefaultSelectors(options, cha);
 		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
-		return new AstJavaZeroOneContainerCFABuilder(cha, options, cache, contextSelector, null);
-
-		//return new ZeroCFABuilderFactory().make(options, cache, cha, scope, false);
-		//return builder;
+		return new KeshmeshCFABuilder(cha, options, cache, contextSelector, null);
 	}
 
 }

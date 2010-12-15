@@ -17,7 +17,7 @@ public class SetUtils {
 
 	public static String getTheOnlyElementOf(Set<String> set) {
 		if (set.size() != 1) {
-			throw new RuntimeException("Expected a set of one element");
+			throw new RuntimeException("Expected a set of one element"); //$NON-NLS-1$
 		}
 		return set.toArray(new String[1])[0];
 	}

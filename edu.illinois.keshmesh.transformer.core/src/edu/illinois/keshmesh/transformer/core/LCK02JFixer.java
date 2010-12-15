@@ -27,6 +27,7 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
+import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
@@ -80,7 +81,7 @@ public class LCK02JFixer extends Refactoring {
 			ITextFileBuffer textFileBuffer = textFileBufferManager.getTextFileBuffer(bugPosition.getSourcePath(), LocationKind.IFILE);
 			IDocument document = textFileBuffer.getDocument();
 			try {
-				System.out.println(document.get(bugPosition.getFirstOffset(), bugPosition.getLength()));
+				Logger.log(document.get(bugPosition.getFirstOffset(), bugPosition.getLength()));
 			} catch (BadLocationException e1) {
 				e1.printStackTrace();
 			}

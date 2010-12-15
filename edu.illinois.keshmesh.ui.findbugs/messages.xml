@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<MessageCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="messagecollection.xsd">
+
+	<Plugin>
+		<ShortDescription>Keshmesh</ShortDescription>
+		<Details>
+			<![CDATA[
+			<p>
+			This plugin contains a FindBugs extension for Keshmesh.
+			</p>
+			]]>
+		</Details>
+	</Plugin>
+
+	<Detector class="edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector">
+		<Details>
+			<![CDATA[edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector Details]]>
+		</Details>
+	</Detector>
+
+	<BugPattern type="KESHMESH_LCK02J">
+		<ShortDescription>Keshmesh LCK02J</ShortDescription>
+		<LongDescription>Do not synchronize on the class object returned by getClass()</LongDescription>
+		<Details>BugPattern KESHMESH_LCK02J Details</Details>
+	</BugPattern>
+
+	<BugCode abbrev="KESHMESH_LCK06J">KESHMESH_LCK02J BugCode</BugCode>
+	
+		<BugPattern type="KESHMESH_LCK06J">
+		<ShortDescription>Keshmesh LCK06J</ShortDescription>
+		<LongDescription>Do not use an instance lock to protect shared static data</LongDescription>
+		<Details>BugPattern KESHMESH_LCK06J Details</Details>
+	</BugPattern>
+
+	<BugCode abbrev="KESHMESH_LCK02J">KESHMESH_LCK06J BugCode</BugCode>
+	
+</MessageCollection>
