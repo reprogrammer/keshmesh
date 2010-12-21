@@ -11,8 +11,11 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -115,7 +118,25 @@ public abstract class AbstractTestCase {
 			addFile(inputFileName);
 		}
 		parseExpectedBugInstances(inputFileNames);
+		buildSynchronously();
 		findBugs();
+	}
+
+	private void buildSynchronously() throws CoreException, InterruptedException {
+		//FIXME: The threads need to own the monitor of this object
+		final Object lock = new Object();
+		ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor() {
+			private boolean isDone = false;
+
+			@Override
+			public void done() {
+				if (!isDone) {
+					isDone = true;
+					lock.notify();
+				}
+			}
+		});
+		lock.wait();
 	}
 
 	private void parseExpectedBugInstances(String... inputFileNames) throws IOException {
