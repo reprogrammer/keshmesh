@@ -113,8 +113,8 @@ public class BugPosition {
 		BugPosition other = (BugPosition) obj;
 		if (firstLine != other.firstLine)
 			return false;
-		if (lastLine != other.lastLine)
-			return false;
+		//		if (lastLine != other.lastLine)
+		//			return false;
 		if (sourcePath == null) {
 			if (other.sourcePath != null)
 				return false;

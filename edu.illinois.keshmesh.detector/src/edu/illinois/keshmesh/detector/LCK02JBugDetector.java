@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.ibm.wala.cast.loader.AstMethod;
+import org.eclipse.jdt.core.IJavaProject;
+
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
@@ -42,17 +43,41 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
 	@Override
-	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
+	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
 		BugInstances bugInstances = new BugInstances();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
-			CGNode cgNode = cgNodesIterator.next();
+			final CGNode cgNode = cgNodesIterator.next();
 			IMethod method = cgNode.getMethod();
 			Logger.log("CGNode:" + cgNode);
 			IR ir = cgNode.getIR();
 			if (ir != null) {
 				Logger.log("IR:" + ir);
+				//				Collection<InstructionInfo> synchronizedBlocksOnGetClassInstructions = new HashSet<InstructionInfo>();
+				//				AnalysisUtils.filter(javaProject, synchronizedBlocksOnGetClassInstructions, cgNode, new InstructionFilter() {
+				//					@Override
+				//					public boolean accept(SSAInstruction ssaInstruction) {
+				//						if (ssaInstruction instanceof SSAMonitorInstruction) {
+				//							SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) ssaInstruction;
+				//							if (monitorInstruction.isMonitorEnter()) {
+				//								Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames(monitorInstruction, cgNode);
+				//								if (!synchronizedClassTypeNames.isEmpty()) {
+				//									return true;
+				//								}
+				//							}
+				//						}
+				//						return false;
+				//					}
+				//				});
+				//				for (InstructionInfo instructionInfo : synchronizedBlocksOnGetClassInstructions) {
+				//					Position instructionPosition = instructionInfo.getPosition();
+				//					Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames((SSAMonitorInstruction) instructionInfo.getInstruction(), cgNode);
+				//					String enclosingClassName = AnalysisUtils.getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
+				//					Logger.log("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + instructionPosition.getFirstLine());
+				//					bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(instructionPosition, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
+				//				}
+
 				SSAInstruction[] instructions = ir.getInstructions();
 				for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
 					SSAInstruction instruction = instructions[instructionIndex];
@@ -61,11 +86,12 @@ public class LCK02JBugDetector extends BugPatternDetector {
 						if (monitorInstruction.isMonitorEnter()) {
 							Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames(monitorInstruction, cgNode);
 							if (!synchronizedClassTypeNames.isEmpty()) {
-								int lineNumber = ((AstMethod) method).getLineNumber(instructionIndex);
-								Position position = ((AstMethod) method).getSourcePosition(instructionIndex);
+								InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
+								Position instructionPosition = instructionInfo.getPosition();
 								String enclosingClassName = AnalysisUtils.getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
-								Logger.log("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + lineNumber);
-								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(position, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
+								Logger.log("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + instructionPosition.getFirstLine() + ", instructionIndex= "
+										+ instructionIndex);
+								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(instructionPosition, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
 							}
 						}
 					}

@@ -4,6 +4,9 @@
 package p;
 
 public class B {
+
+	static int counter = 0;
+
 	public static void main(String args[]) {
 		new B().m();
 	}
@@ -12,11 +15,18 @@ public class B {
 		/*[LCK02J,03,p.B.class*/synchronized (this.getClass()) {
 			System.err.println("replace with p.B.class");
 		}/*]*/
-		Class l1 = new A().getClass();
-		Class l2 = new C().getClass();
-		Class l = (1 > 2) ? l1 : l2;
+		Class l = getArbitraryClass();
 		/*[LCK02J,04,p.A.class,p.C.class*/synchronized (l) {
 			System.err.println("multiple replacements: p.A.class, p.C.class");
 		}/*]*/
 	}
+
+	private Class getArbitraryClass() {
+		if (counter++ == 0) {
+			return new A().getClass();
+		} else {
+			return new C().getClass();
+		}
+	}
+
 }

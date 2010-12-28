@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
@@ -65,7 +66,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
 
 	@Override
-	public BugInstances performAnalysis(BasicAnalysisData analysisData) {
+	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
+		this.javaProject = javaProject;
 		basicAnalysisData = analysisData;
 		populateAllInstancesPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
@@ -131,7 +133,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			SSAInstruction instruction = instructions[instructionIndex];
 			if (instruction == null)
 				continue;
-			InstructionInfo instructionInfo = new InstructionInfo(cgNode, instructionIndex);
+			InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
 			if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
 				if (canModifyStaticField(defUse, instruction)) {
 					unsafeInstructions.add(instructionInfo);
@@ -150,7 +152,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions() {
-		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(basicAnalysisData.callGraph, cgNodeInfoMap);
+		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(javaProject, basicAnalysisData.callGraph, cgNodeInfoMap);
 
 		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
 				globalValues);
@@ -213,7 +215,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 		final DefUse defUse = new DefUse(ir);
 
-		AnalysisUtils.filter(modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
+		AnalysisUtils.filter(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
@@ -256,7 +258,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
-		AnalysisUtils.filter(synchronizedBlocks, cgNode, new InstructionFilter() {
+		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {

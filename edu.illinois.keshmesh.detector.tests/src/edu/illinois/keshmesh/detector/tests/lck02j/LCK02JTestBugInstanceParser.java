@@ -39,7 +39,16 @@ public class LCK02JTestBugInstanceParser {
 
 	@Test
 	public void shouldParseLCK02J() {
-		List<String> lines = Arrays.asList(new String[] { "/*[LCK02J,01,p.A.class*/", "/*]*/" });
+		ensureIsFound("/*[LCK02J,01,p.A.class*/", "/*]*/");
+	}
+
+	@Test
+	public void shouldParseWithSpaces() {
+		ensureIsFound("/* [LCK02J,01,p.A.class */", "/* ] */");
+	}
+
+	private void ensureIsFound(String beginOpenMarker, String beginCloseMarker) {
+		List<String> lines = Arrays.asList(new String[] { beginOpenMarker, beginCloseMarker });
 		Set<NumberedBugInstance> actualNumberedBugInstances = bugInstanceParser.parseExpectedBugInstances(lines.iterator());
 		Assert.assertEquals(1, actualNumberedBugInstances.size());
 		Set<NumberedBugInstance> expectedNumberedBugInstances = new HashSet<NumberedBugInstance>();
@@ -47,4 +56,5 @@ public class LCK02JTestBugInstanceParser {
 		Assert.assertEquals(expectedNumberedBugInstances.toString(), actualNumberedBugInstances.toString());
 		Assert.assertEquals(expectedNumberedBugInstances, actualNumberedBugInstances);
 	}
+
 }

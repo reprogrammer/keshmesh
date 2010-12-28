@@ -47,6 +47,7 @@ public class BugInstanceParser {
 
 	//FIXME: This long method should be refactored.
 	public Set<NumberedBugInstance> parseLine(String line, int currentLineNumber) {
+		line = line.replaceAll("\\s", "");
 		Set<NumberedBugInstance> numberedBugInstances = new HashSet<NumberedBugInstance>();
 		int nextIndex = 0;
 

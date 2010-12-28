@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.Logger;
@@ -37,6 +38,8 @@ import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationExc
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
+
+	private boolean isBuildDone = false;
 
 	private IJavaProject javaProject;
 
@@ -93,14 +96,14 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
-	private void bugInstanceShouldExist(BugInstance bugInstance) {
-		boolean bugInstanceExists = bugInstances.contains(bugInstance);
+	private void bugInstanceShouldExist(BugInstance expectedBugInstance) {
+		boolean bugInstanceExists = bugInstances.contains(expectedBugInstance);
 		if (!bugInstanceExists) {
-			Set<BugInstance> actualBugInstanceInSet = new HashSet<BugInstance>();
-			actualBugInstanceInSet.add(bugInstance);
-			Assert.assertEquals(bugInstances.toString(), actualBugInstanceInSet.toString());
+			Set<BugInstance> expectedBugInstanceInSet = new HashSet<BugInstance>();
+			expectedBugInstanceInSet.add(expectedBugInstance);
+			Assert.assertEquals(expectedBugInstanceInSet.toString(), bugInstances.toString());
 		}
-		Assert.assertTrue(String.format("Expected bug instance %s was not found.", bugInstance), bugInstanceExists);
+		Assert.assertTrue(String.format("Expected bug instance %s was not found.", expectedBugInstance), bugInstanceExists);
 	}
 
 	private String getPathForInputFile(String inputFileName) {
@@ -123,20 +126,13 @@ public abstract class AbstractTestCase {
 	}
 
 	private void buildSynchronously() throws CoreException, InterruptedException {
-		//FIXME: The threads need to own the monitor of this object
 		final Object lock = new Object();
-		ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor() {
-			private boolean isDone = false;
-
-			@Override
-			public void done() {
-				if (!isDone) {
-					isDone = true;
-					lock.notify();
-				}
+		ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, new BuildProgressMonitor(lock));
+		synchronized (lock) {
+			if (!isBuildDone) {
+				lock.wait();
 			}
-		});
-		lock.wait();
+		}
 	}
 
 	private void parseExpectedBugInstances(String... inputFileNames) throws IOException {
@@ -211,11 +207,30 @@ public abstract class AbstractTestCase {
 		return expectedBugInstanceNumbers;
 	}
 
+	@Ignore
 	@Test
 	public void tryFixExpectedBugInstances() throws Exception {
 		for (String bugInstanceNumber : getExpectedBugInstanceNumbers()) {
 			setup();
 			tryFix(bugInstanceNumber);
+		}
+	}
+
+	private final class BuildProgressMonitor extends NullProgressMonitor {
+		private final Object lock;
+
+		private BuildProgressMonitor(Object lock) {
+			this.lock = lock;
+		}
+
+		@Override
+		public void done() {
+			synchronized (lock) {
+				if (!isBuildDone) {
+					isBuildDone = true;
+					lock.notify();
+				}
+			}
 		}
 	}
 
