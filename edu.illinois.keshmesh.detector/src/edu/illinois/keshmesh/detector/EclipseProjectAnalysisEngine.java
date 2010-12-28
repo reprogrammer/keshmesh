@@ -18,6 +18,7 @@ import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
+import com.ibm.wala.ipa.callgraph.impl.ContextInsensitiveSelector;
 import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 
@@ -47,7 +48,8 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-		ContextSelector contextSelector = new CustomContextSelector();
+//		ContextSelector contextSelector = new CustomContextSelector();
+		ContextSelector contextSelector = new ContextInsensitiveSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, scope, Util.class.getClassLoader(), classHierarchy);
 		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);

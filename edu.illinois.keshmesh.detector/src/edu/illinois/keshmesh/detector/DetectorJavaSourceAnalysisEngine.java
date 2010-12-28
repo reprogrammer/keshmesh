@@ -18,6 +18,7 @@ import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
+import com.ibm.wala.ipa.callgraph.impl.ContextInsensitiveSelector;
 import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.config.FileOfClasses;
@@ -57,7 +58,8 @@ public class DetectorJavaSourceAnalysisEngine extends JDTJavaSourceAnalysisEngin
 
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, AnalysisCache cache) {
-		ContextSelector contextSelector = new CustomContextSelector();
+		//		ContextSelector contextSelector = new CustomContextSelector();
+		ContextSelector contextSelector = new ContextInsensitiveSelector();
 		Util.addDefaultSelectors(options, cha);
 		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
 		return new KeshmeshCFABuilder(cha, options, cache, contextSelector, null);
