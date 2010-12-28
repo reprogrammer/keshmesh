@@ -15,36 +15,36 @@ public class A {
 	public static void main(String args[]) {
 		a = new A();
 		a.m2();
-		static_assigned = new B(a);
-		synchronized (new Object()) {
+		static_assigned = new B();
+		/*[LCK06J,01*/synchronized (new Object()) {
 			m();
-		}
+		}/*]*/
 	}
 
 	void m2() {
-		instance_assigned = new B(new A());
-		synchronized (instance_assigned) {
-			static_assigned = new B(new A());
-		}
+		instance_assigned = new B();
+		/*[LCK06J,02*/synchronized (instance_assigned) {
+			static_assigned = new B();
+		}/*]*/
 		synchronized (static_assigned) {
 			counter++;
 			m3();
 		}
-		synchronized (static_unassigned) {
+		/*[LCK06J,03*/synchronized (static_unassigned) {
 			counter++;
-		}
-		synchronized (instance_unassigned) {
+		}/*]*/
+		/*[LCK06J,04*/synchronized (instance_unassigned) {
 			counter++;
-		}
+		}/*]*/
 	}
 
 	private static void m() {
 		Object obj = new Object();
-		synchronized (obj) {
-			/* [LCK06J,01,p.A.class */synchronized (obj) {
+		/*[LCK06J,05*/synchronized (obj) {
+			/*[LCK06J,06*/synchronized (obj) {
 				static_assigned.set(10);
-			}/* ] */
-		}
+			}/*]*/
+		}/*]*/
 		m3();
 	}
 

@@ -2,8 +2,10 @@ package edu.illinois.keshmesh.detector.tests;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +20,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.Logger;
@@ -44,9 +47,9 @@ public abstract class AbstractTestCase {
 	 * Maps absolute path of the input Java file into the absolute path of the
 	 * file in the target workspace.
 	 */
-	private Map<String, IPath> inputFileToTargetMap = new HashMap<String, IPath>();
+	private Map<String, IPath> inputFileToTargetMap;
 
-	private Set<NumberedBugInstance> expectedBugInstances = new HashSet<NumberedBugInstance>();
+	private Set<NumberedBugInstance> expectedBugInstances;
 
 	private BugInstances bugInstances;
 
@@ -81,7 +84,9 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugPattern getBugPattern();
 
-	protected abstract void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
+	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
+	//FixInformation makes part of a BugInstance and if it is not provided (i.e. null), then we should not neither fix nor check for the fix.
+	protected abstract boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
@@ -103,15 +108,21 @@ public abstract class AbstractTestCase {
 
 	protected void setupProjectAndAnalyze(String testNumber, String... inputFileNames) throws Exception {
 		this.testNumber = testNumber;
+		inputFileToTargetMap = new HashMap<String, IPath>();
+		expectedBugInstances = new HashSet<NumberedBugInstance>();
 		setUpProject(getTestID());
 		for (String inputFileName : inputFileNames) {
 			addFile(inputFileName);
 		}
+		parseExpectedBugInstances(inputFileNames);
+		findBugs();
+	}
+
+	private void parseExpectedBugInstances(String... inputFileNames) throws IOException {
 		for (String inputFileName : inputFileNames) {
 			BugInstanceParser bugInstanceParser = new BugInstanceParser(getBugInstanceCreator(), getTargetPathForInputFile(inputFileName));
 			expectedBugInstances.addAll(bugInstanceParser.parseExpectedBugInstances());
 		}
-		findBugs();
 	}
 
 	private String getTestID() {
@@ -143,8 +154,12 @@ public abstract class AbstractTestCase {
 	private void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
 		if (bugInstances.size() == 1)
 			bugInstanceNumber = "";
-		fixBugInstance(bugInstances.find(bugInstance));
-		checkFix(bugInstanceNumber);
+		BugInstance actualBugInstance = bugInstances.find(bugInstance);
+		Assert.assertNotNull("Could not find bug instance.", actualBugInstance);
+		boolean wasFixed = fixBugInstance(actualBugInstance);
+		if (wasFixed) {
+			checkFix(bugInstanceNumber);
+		}
 	}
 
 	private void checkFix(String bugInstanceNumber) throws IOException {
@@ -162,6 +177,25 @@ public abstract class AbstractTestCase {
 			}
 		}
 		Assert.assertTrue(String.format("Could not find bug instance number %s.", bugInstanceNumber), foundBugInstance);
+	}
+
+	@Before
+	public abstract void setup() throws Exception;
+
+	private Collection<String> getExpectedBugInstanceNumbers() {
+		Collection<String> expectedBugInstanceNumbers = new LinkedList<String>();
+		for (NumberedBugInstance numberedBugInstance : expectedBugInstances) {
+			expectedBugInstanceNumbers.add(numberedBugInstance.getNumber());
+		}
+		return expectedBugInstanceNumbers;
+	}
+
+	@Test
+	public void tryFixExpectedBugInstances() throws Exception {
+		for (String bugInstanceNumber : getExpectedBugInstanceNumbers()) {
+			setup();
+			tryFix(bugInstanceNumber);
+		}
 	}
 
 	protected static abstract class GeneralBugInstanceCreator implements BugInstanceCreator {

@@ -23,6 +23,7 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -40,6 +41,7 @@ import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
@@ -94,8 +96,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
 			if (!actuallyUnsafeInstructions.isEmpty()) {
 				TypeName enclosingClassName = unsafeSynchronizedBlock.getCGNode().getMethod().getDeclaringClass().getName();
-				bugInstances
-						.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), null));
+				bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)),
+						new LCK06JFixInformation()));
 			}
 			Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
 		}
@@ -114,7 +116,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	//TODO: Refactor the method.
 	private Collection<InstructionInfo> getActuallyUnsafeInstructions(final BitVectorSolver<CGNode> bitVectorSolver, final InstructionInfo unsafeSynchronizedBlock) {
 		Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
 		CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
@@ -132,17 +133,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				continue;
 			InstructionInfo instructionInfo = new InstructionInfo(cgNode, instructionIndex);
 			if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
-				if (instruction instanceof SSAPutInstruction && ((SSAPutInstruction) instruction).isStatic()) {
+				if (canModifyStaticField(defUse, instruction)) {
 					unsafeInstructions.add(instructionInfo);
-				} else if (instruction instanceof SSAAbstractInvokeInstruction) {
-					for (int i = 0; i < instruction.getNumberOfUses(); i++) {
-						SSAInstruction defInstruction = defUse.getDef(instruction.getUse(i));
-						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
-							// Add method invocations that involve static fields. 
-							unsafeInstructions.add(instructionInfo);
-							break;
-						}
-					}
+				}
+				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 					Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
 					for (CGNode possibleTarget : possibleTargets) {
@@ -190,8 +184,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			//TODO: Should we look for bugs in JDK usage as well?
-			if (!isJDKClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -224,20 +217,29 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 			@Override
 			public boolean accept(SSAInstruction ssaInstruction) {
-				if (ssaInstruction instanceof SSAPutInstruction && ((SSAPutInstruction) ssaInstruction).isStatic()) {
-					return true;
-				} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
-					for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-						SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-						if (defInstruction instanceof SSAGetInstruction && ((SSAGetInstruction) defInstruction).isStatic()) {
-							return true;
-						}
-					}
-				}
-				return false;
+				return canModifyStaticField(defUse, ssaInstruction);
 			}
 		});
 		return modifyingStaticFieldsInstructions;
+	}
+
+	private boolean canModifyStaticField(final DefUse defUse, SSAInstruction ssaInstruction) {
+		if (ssaInstruction instanceof SSAPutInstruction) {
+			return isStaticNonFinal((SSAFieldAccessInstruction) ssaInstruction);
+		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
+			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
+				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
+				if (defInstruction instanceof SSAGetInstruction && isStaticNonFinal((SSAFieldAccessInstruction) defInstruction)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
+		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
 	}
 
 	//TODO: A synchronized block that is nested inside a safe one is safe. So, this method should not return such synchronized blocks. 
@@ -246,7 +248,9 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
-			populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
+			}
 		}
 		return unsafeSynchronizedBlocks;
 	}
@@ -298,15 +302,18 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<IClass> classIterator = basicAnalysisData.classHierarchy.iterator();
 		while (classIterator.hasNext()) {
 			IClass klass = classIterator.next();
-			if (!isJDKClass(klass)) {
+			if (!isIgnoredClass(klass)) {
 				staticFields.addAll(klass.getAllStaticFields());
 			}
 		}
 		return staticFields;
 	}
 
-	private boolean isJDKClass(IClass klass) {
-		return klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+	private boolean isIgnoredClass(IClass klass) {
+		//TODO: Should we look for bugs in JDK usage as well?
+		//TODO: !!!What about other bytecodes, e.g. from the libraries, which will not allow to get the source position?
+		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+		return isJDKClass;
 	}
 
 }
