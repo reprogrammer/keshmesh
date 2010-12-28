@@ -20,3 +20,4 @@ Export-Package: edu.illinois.keshmesh.detector,
  edu.illinois.keshmesh.detector.bugs,
  edu.illinois.keshmesh.detector.exception,
  edu.illinois.keshmesh.detector.util
+Bundle-Vendor: University of Illinois
