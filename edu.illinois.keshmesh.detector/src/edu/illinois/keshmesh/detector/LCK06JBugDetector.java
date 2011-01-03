@@ -57,7 +57,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		SAFE, UNSAFE
 	}
 
-	private static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
+	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
 	private final Set<InstanceKey> instancesPointedByStaticFields = new HashSet<InstanceKey>();
 
@@ -314,8 +314,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private boolean isIgnoredClass(IClass klass) {
 		//TODO: Should we look for bugs in JDK usage as well?
 		//TODO: !!!What about other bytecodes, e.g. from the libraries, which will not allow to get the source position?
-		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
-		return isJDKClass;
+		return AnalysisUtils.isJDKClass(klass);
 	}
 
 }

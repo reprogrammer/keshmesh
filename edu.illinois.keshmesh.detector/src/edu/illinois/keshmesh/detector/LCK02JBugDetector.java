@@ -10,6 +10,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.AbstractTypeInNode;
@@ -18,6 +19,7 @@ import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.callgraph.propagation.ReceiverInstanceContext;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
@@ -39,8 +41,6 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 public class LCK02JBugDetector extends BugPatternDetector {
 
 	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class"; //$NON-NLS-1$
-
-	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
@@ -102,8 +102,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	}
 
 	private static boolean isReturnedByGetClass(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals(JAVA_LANG_CLASS)
-				&& normalAllocationInNode.getNode().getMethod().getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
+		return normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals(JAVA_LANG_CLASS) && AnalysisUtils.isObjectGetClass(normalAllocationInNode.getNode().getMethod());
 	}
 
 	private Set<String> getSynchronizedClassTypeNames(SSAMonitorInstruction monitorInstruction, CGNode cgNode) {
@@ -116,19 +115,47 @@ public class LCK02JBugDetector extends BugPatternDetector {
 			if (instanceKey instanceof NormalAllocationInNode) {
 				NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 				if (isReturnedByGetClass(normalAllocationInNode)) {
-					result.add(getReceiverTypeName(normalAllocationInNode));
+					addSynchronizedClassTypeNames(result, normalAllocationInNode);
+					//					result.add(getReceiverTypeName(normalAllocationInNode));
 				}
 			}
 		}
 		return result;
 	}
 
+	private void addSynchronizedClassTypeNames(Set<String> result, NormalAllocationInNode normalAllocationInNode) {
+		{
+			CGNode normalAllocationCGNode = normalAllocationInNode.getNode();
+			Iterator<CGNode> predNodesIterator = basicAnalysisData.callGraph.getPredNodes(normalAllocationCGNode);
+			while (predNodesIterator.hasNext()) {
+				CGNode predNode = predNodesIterator.next();
+				Iterator<CallSiteReference> possibleSitesIterator = basicAnalysisData.callGraph.getPossibleSites(predNode, normalAllocationCGNode);
+				while (possibleSitesIterator.hasNext()) {
+					CallSiteReference possibleSite = possibleSitesIterator.next();
+					SSAAbstractInvokeInstruction[] calls = predNode.getIR().getCalls(possibleSite);
+					for (SSAAbstractInvokeInstruction invokeInstruction : calls) {
+						int invocationReceiverValueNumber = invokeInstruction.getReceiver();
+						PointerKey pointerKeyForReceiver = getPointerForValueNumber(predNode, invocationReceiverValueNumber);
+						OrdinalSet<InstanceKey> receiverObjects = basicAnalysisData.pointerAnalysis.getPointsToSet(pointerKeyForReceiver);
+						for (InstanceKey receiverInstanceKey : receiverObjects) {
+							result.add(getJavaClassName(receiverInstanceKey.getConcreteType().getName()));
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private static String getReceiverTypeName(AbstractTypeInNode node) {
 		TypeName typeName = ((ReceiverInstanceContext) (node.getNode().getContext())).getReceiver().getConcreteType().getName();
+		return getJavaClassName(typeName);
+	}
+
+	private static String getJavaClassName(TypeName typeName) {
 		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName() + ".class";
 
 		//WALA uses $ to refers to inner classes. We have to replace $ by . to make it a valid class name in Java source code.
-		return fullyQualifiedName.replace("$", ".");
+		return fullyQualifiedName.replace("$", ".").replace("/", ".");
 	}
 
 }

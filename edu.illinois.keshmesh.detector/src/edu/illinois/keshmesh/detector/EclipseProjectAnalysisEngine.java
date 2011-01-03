@@ -48,8 +48,10 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-//		ContextSelector contextSelector = new CustomContextSelector();
+		//		ContextSelector contextSelector = new CustomReceiverInstanceContextSelector();
 		ContextSelector contextSelector = new ContextInsensitiveSelector();
+		//		ContextSelector contextSelector = new ReceiverTypeContextSelector();
+		//		ContextSelector contextSelector = new CustomReceiverTypeContextSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, scope, Util.class.getClassLoader(), classHierarchy);
 		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
@@ -57,7 +59,8 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
-		return Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		Iterable<Entrypoint> mainEntrypoints = Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		return mainEntrypoints;
 	}
 
 }

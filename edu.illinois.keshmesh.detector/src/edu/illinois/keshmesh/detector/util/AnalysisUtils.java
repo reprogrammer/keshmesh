@@ -7,6 +7,8 @@ import java.util.Collection;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
@@ -14,6 +16,7 @@ import com.ibm.wala.types.TypeName;
 
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
+import edu.illinois.keshmesh.detector.LCK06JBugDetector;
 
 /**
  * 
@@ -22,6 +25,8 @@ import edu.illinois.keshmesh.detector.InstructionInfo;
  * 
  */
 public class AnalysisUtils {
+
+	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
 	public static boolean isProtectedByAnySynchronizedBlock(Collection<InstructionInfo> safeSynchronizedBlocks, InstructionInfo instruction) {
 		for (InstructionInfo safeSynchronizedBlock : safeSynchronizedBlocks) {
@@ -66,6 +71,15 @@ public class AnalysisUtils {
 			return packageName.substring(0, indexOfLastPackageSeparator);
 		}
 		return packageName + "." + typeName.getClassName();
+	}
+
+	public static boolean isJDKClass(IClass klass) {
+		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(LCK06JBugDetector.PRIMORDIAL_CLASSLOADER_NAME);
+		return isJDKClass;
+	}
+
+	public static boolean isObjectGetClass(IMethod method) {
+		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
 	}
 
 }
