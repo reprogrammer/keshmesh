@@ -62,7 +62,8 @@ public class DetectorJavaSourceAnalysisEngine extends JDTJavaSourceAnalysisEngin
 		//		ContextSelector contextSelector = new CustomContextSelector();
 		//		ContextSelector contextSelector = new ContextInsensitiveSelector();
 		//		ContextSelector contextSelector = new ReceiverTypeContextSelector();
-		ContextSelector contextSelector = new CustomReceiverTypeContextSelector();
+		//		ContextSelector contextSelector = new CustomReceiverTypeContextSelector();
+		ContextSelector contextSelector = null;
 		Util.addDefaultSelectors(options, cha);
 		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
 		return new KeshmeshCFABuilder(cha, options, cache, contextSelector, null);

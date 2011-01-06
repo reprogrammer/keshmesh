@@ -5,6 +5,7 @@ package edu.illinois.keshmesh.detector;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -59,10 +60,9 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-		//		ContextSelector contextSelector = new CustomReceiverInstanceContextSelector();
-//		ContextSelector contextSelector = new ContextInsensitiveSelector();
-		//		ContextSelector contextSelector = new ReceiverTypeContextSelector();
-				ContextSelector contextSelector = new CustomReceiverTypeContextSelector();
+		ContextSelector contextSelector = new CustomReceiverInstanceContextSelector();
+		//		ContextSelector contextSelector = new ContextInsensitiveSelector();
+		//				ContextSelector contextSelector = new CustomReceiverTypeContextSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, scope, Util.class.getClassLoader(), classHierarchy);
 		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
@@ -79,10 +79,20 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 		//org.apache.catalina.startup.TestTomcat.testEnableNamingGlobal
 		final HashSet<Entrypoint> result = HashSetFactory.make();
 		ClassLoaderReference applicationLoader = analysisScope.getApplicationLoader();
-		TypeReference declaringClassReference = TypeReference.findOrCreateClass(applicationLoader, "org/apache/catalina/startup", "TestTomcat");
-		Atom testMethodName = Atom.findOrCreateAsciiAtom("testEnableNamingGlobal");
-		MethodReference testMehodReference = MethodReference.findOrCreate(declaringClassReference, testMethodName, Descriptor.findOrCreateUTF8("()V"));
+		//		TypeReference declaringClassReference = TypeReference.findOrCreateClass(applicationLoader, "org/apache/catalina/startup", "TestTomcat");
+//		TypeReference declaringClassReference = TypeReference.findOrCreateClass(applicationLoader, "javax/servlet/http", "HttpServlet");
+		TypeReference declaringClassReference = TypeReference.findOrCreateClass(applicationLoader, "org/apache/catalina/startup", "TestTomcat$HelloWorldJndi");
+		//		TypeReference declaringClassReference = TypeReference.findOrCreateClass(applicationLoader, "org/apache/naming/java", "javaURLContextFactory");
+//		Atom testMethodName = Atom.findOrCreateAsciiAtom("service");
+//		MethodReference testMehodReference = MethodReference.findOrCreate(declaringClassReference, testMethodName, Descriptor.findOrCreateUTF8("(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V"));
+		Atom testMethodName = Atom.findOrCreateAsciiAtom("doGet");
+		MethodReference testMehodReference = MethodReference.findOrCreate(declaringClassReference, testMethodName, Descriptor.findOrCreateUTF8("(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V"));
+		//		Atom testMethodName = Atom.findOrCreateAsciiAtom("getInitialContext");
+		//		MethodReference testMehodReference = MethodReference.findOrCreate(declaringClassReference, testMethodName, Descriptor.findOrCreateUTF8("(Ljava/util/Hashtable;)Ljavax/naming/Context;"));
 		IClass declaringClass = classHierarchy.lookupClass(declaringClassReference);
+		//		for (IMethod method : declaringClass.getAllMethods()){
+		//			System.out.println("Signature:" + method.getSignature());
+		//		}
 		IMethod testMethod = declaringClass.getMethod(testMehodReference.getSelector());
 		System.out.println("testMethod:" + testMethod.getSignature());
 		result.add(new DefaultEntrypoint(testMethod, classHierarchy));

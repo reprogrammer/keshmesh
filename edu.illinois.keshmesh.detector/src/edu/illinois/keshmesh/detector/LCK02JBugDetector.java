@@ -51,9 +51,14 @@ public class LCK02JBugDetector extends BugPatternDetector {
 			final CGNode cgNode = cgNodesIterator.next();
 			IMethod method = cgNode.getMethod();
 			Logger.log("CGNode:" + cgNode);
+			if (AnalysisUtils.isJDKClass(method.getDeclaringClass()))
+				continue;
 			IR ir = cgNode.getIR();
 			if (ir != null) {
-				Logger.log("IR:" + ir);
+				if (method.getName().toString().contains("getInitialContext")) {
+					System.out.println("FOUND");
+				}
+				//				Logger.log("IR:" + ir);
 				//				Collection<InstructionInfo> synchronizedBlocksOnGetClassInstructions = new HashSet<InstructionInfo>();
 				//				AnalysisUtils.filter(javaProject, synchronizedBlocksOnGetClassInstructions, cgNode, new InstructionFilter() {
 				//					@Override
@@ -115,8 +120,8 @@ public class LCK02JBugDetector extends BugPatternDetector {
 			if (instanceKey instanceof NormalAllocationInNode) {
 				NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 				if (isReturnedByGetClass(normalAllocationInNode)) {
-					addSynchronizedClassTypeNames(result, normalAllocationInNode);
-					//					result.add(getReceiverTypeName(normalAllocationInNode));
+					//					addSynchronizedClassTypeNames(result, normalAllocationInNode);
+					result.add(getReceiverTypeName(normalAllocationInNode));
 				}
 			}
 		}
