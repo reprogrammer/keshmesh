@@ -54,19 +54,21 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
-		CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
-		CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
-		Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
-		IR dstIR = dst.getIR();
-		while (callSitesIterator.hasNext()) {
-			CallSiteReference callSiteReference = callSitesIterator.next();
-			IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
-			IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
-			while (instructionIndicesIterator.hasNext()) {
-				int invokeInstructionIndex = instructionIndicesIterator.next();
-				InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
-				if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
-					return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+		if (!AnalysisUtils.isSafeSynchronized(dst.getMethod())) {
+			CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
+			CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
+			Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
+			IR dstIR = dst.getIR();
+			while (callSitesIterator.hasNext()) {
+				CallSiteReference callSiteReference = callSitesIterator.next();
+				IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
+				IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
+				while (instructionIndicesIterator.hasNext()) {
+					int invokeInstructionIndex = instructionIndicesIterator.next();
+					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
+						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+					}
 				}
 			}
 		}

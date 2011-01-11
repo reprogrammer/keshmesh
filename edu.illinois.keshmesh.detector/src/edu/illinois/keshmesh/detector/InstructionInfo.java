@@ -6,7 +6,6 @@ package edu.illinois.keshmesh.detector;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
@@ -31,8 +30,6 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class InstructionInfo {
 
-	private static final IPath workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation();
-
 	private final IJavaProject javaProject;
 	private final CGNode cgNode;
 	private final SSAInstruction ssaInstruction;
@@ -55,7 +52,7 @@ public class InstructionInfo {
 			TypeName typeName = shrikeMethod.getDeclaringClass().getName();
 			String fullyQualifiedName = AnalysisUtils.getEnclosingNonanonymousClassName(typeName);
 			try {
-				IPath fullPath = workspaceLocation.append(javaProject.findType(fullyQualifiedName).getCompilationUnit().getPath());
+				IPath fullPath = AnalysisUtils.getWorkspaceLocation().append(javaProject.findType(fullyQualifiedName).getCompilationUnit().getPath());
 				URL url = new URL("file:" + fullPath);
 				return new LineNumberPosition(url, url, shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex)));
 			} catch (JavaModelException e) {

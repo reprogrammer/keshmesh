@@ -13,8 +13,12 @@ import java.util.Set;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.ibm.wala.cast.loader.AstMethod;
+import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
+import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
 import com.ibm.wala.fixpoint.BitVectorVariable;
@@ -47,6 +51,10 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
  * 
+ * An unsafe instruction of a CGNode is an unsafe modification of a static
+ * field. This modification occurs directly or indirectly inside the CGNode.
+ * 
+ * 
  * @author Mohsen Vakilian
  * @author Stas Negara
  * 
@@ -71,8 +79,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		basicAnalysisData = analysisData;
 		populateAllInstancesPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
-		Collection<InstructionInfo> unsafeSynchronizedBlocks = getUnsafeSynchronizedBlocks();
-		if (unsafeSynchronizedBlocks.isEmpty()) {
+		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
+		Collection<CGNode> unsafeSynchronizedMethods = new HashSet<CGNode>();
+		populatedUnsafeSynchronizedStructures(unsafeSynchronizedBlocks, unsafeSynchronizedMethods);
+		if (unsafeSynchronizedBlocks.isEmpty() && unsafeSynchronizedMethods.isEmpty()) {
 			return bugInstances;
 		}
 
@@ -94,19 +104,81 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			}
 		}
 
-		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
-			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
-			if (!actuallyUnsafeInstructions.isEmpty()) {
-				TypeName enclosingClassName = unsafeSynchronizedBlock.getCGNode().getMethod().getDeclaringClass().getName();
-				bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(unsafeSynchronizedBlock.getPosition(), AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)),
-						new LCK06JFixInformation()));
-			}
-			Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
-		}
+		reportActuallyUnsafeInstructions(bugInstances, unsafeSynchronizedBlocks, unsafeSynchronizedMethods, bitVectorSolver);
 
 		return bugInstances;
 	}
 
+	/*
+	 * If an unsafe instruction i is inside an unsafe synchronized block b in a
+	 * method m, then, if m is safe, we don't report i. Also, if i is inside
+	 * some safe synchronized block in m, then we don't report it as well. But
+	 * we report i for all other cases, including scenarios, where method m is
+	 * called inside a safe synchronized block in some other method m2 (or m2 is
+	 * a safe synchronized method).
+	 */
+	private void reportActuallyUnsafeInstructions(BugInstances bugInstances, Collection<InstructionInfo> unsafeSynchronizedBlocks, Collection<CGNode> unsafeSynchronizedMethods,
+			BitVectorSolver<CGNode> bitVectorSolver) {
+		reportActuallyUnsafeInstructionsOfSynchronizedBlocks(bugInstances, unsafeSynchronizedBlocks, bitVectorSolver);
+		reportActuallyUnsafeInstructionsOfMethods(bugInstances, unsafeSynchronizedMethods, bitVectorSolver);
+	}
+
+	/*
+	 * Report the instructions of synchronized instance methods that have unsafe
+	 * instructions.
+	 */
+	private void reportActuallyUnsafeInstructionsOfMethods(BugInstances bugInstances, Collection<CGNode> unsafeSynchronizedMethods, BitVectorSolver<CGNode> bitVectorSolver) {
+		for (CGNode unsafeSynchronizedMethod : unsafeSynchronizedMethods) {
+			Collection<InstructionInfo> actuallyUnsafeInstructions = new HashSet<InstructionInfo>();
+			addSolverResults(actuallyUnsafeInstructions, bitVectorSolver, unsafeSynchronizedMethod);
+			reportActuallyUnsafeInstructionsOfMethod(unsafeSynchronizedMethod, actuallyUnsafeInstructions, bugInstances);
+		}
+	}
+
+	/*
+	 * Report the instructions of synchronized blocks that take a nonstatic lock
+	 * but has unsafe instructions.
+	 */
+	private void reportActuallyUnsafeInstructionsOfSynchronizedBlocks(BugInstances bugInstances, Collection<InstructionInfo> unsafeSynchronizedBlocks, BitVectorSolver<CGNode> bitVectorSolver) {
+		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
+			IMethod method = unsafeSynchronizedBlock.getCGNode().getMethod();
+
+			// If the method is safe, i.e. static and synchronized, we report no instances of LCK06J in that method. Therefore, we ignore the unsafe synchronized blocks in it.
+			if (AnalysisUtils.isSafeSynchronized(method)) {
+				continue;
+			}
+
+			Collection<InstructionInfo> actuallyUnsafeInstructions = getActuallyUnsafeInstructions(bitVectorSolver, unsafeSynchronizedBlock);
+			reportActuallyUnsafeInstructionsOfSynchronizedBlock(unsafeSynchronizedBlock, actuallyUnsafeInstructions, bugInstances);
+		}
+	}
+
+	private void reportActuallyUnsafeInstructionsOfSynchronizedBlock(InstructionInfo unsafeSynchronizedBlock, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
+		reportActuallyUnsafeInstructions(unsafeSynchronizedBlock.getCGNode(), unsafeSynchronizedBlock.getPosition(), actuallyUnsafeInstructions, bugInstances);
+		Logger.log("Unsafe instructions of " + unsafeSynchronizedBlock + " are " + actuallyUnsafeInstructions.toString());
+	}
+
+	private void reportActuallyUnsafeInstructionsOfMethod(CGNode unsafeSynchronizedMethod, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
+		reportActuallyUnsafeInstructions(unsafeSynchronizedMethod, getPosition(unsafeSynchronizedMethod), actuallyUnsafeInstructions, bugInstances);
+		Logger.log("Unsafe instructions of " + unsafeSynchronizedMethod + " are " + actuallyUnsafeInstructions.toString());
+	}
+
+	private void reportActuallyUnsafeInstructions(CGNode cgNode, Position position, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
+		if (!actuallyUnsafeInstructions.isEmpty()) {
+			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
+			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
+		}
+	}
+
+	/**
+	 * @param results
+	 *            The unsafe instructions of the CGNode will get added to this
+	 *            collection.
+	 * @param bitVectorSolver
+	 *            It maps every CGNode to a collection of its unsafe
+	 *            instructions.
+	 * @param cgNode
+	 */
 	public void addSolverResults(Collection<InstructionInfo> results, BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
 		IntSet value = bitVectorSolver.getIn(cgNode).getValue();
 		if (value != null) {
@@ -118,6 +190,18 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
+	/**
+	 * After we propagate statements that modify static fields through the call
+	 * graph, we have to filter the result just to keep the modifications that
+	 * occur inside an unsafe synchronized block. Direct modifications to static
+	 * fields or indirect ones through method calls inside an unsafe
+	 * synchronized block are called actual unsafe modifications.
+	 * 
+	 * @return a collection of instructions that modify static fields and are
+	 *         directly or indirectly inside the given unsafeSynchronizedBlock
+	 *         but are not directly or indirectly inside a safe synchronized
+	 *         block.
+	 */
 	private Collection<InstructionInfo> getActuallyUnsafeInstructions(final BitVectorSolver<CGNode> bitVectorSolver, final InstructionInfo unsafeSynchronizedBlock) {
 		Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
 		CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
@@ -140,6 +224,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				}
 				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
+					// Add the unsafe modifications of the methods that are the targets of the invocation instruction. 
 					Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
 					for (CGNode possibleTarget : possibleTargets) {
 						// Add unsafe operations coming from callees.
@@ -186,7 +271,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!AnalysisUtils.isSafeSynchronized(cgNode.getMethod()) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -244,17 +329,25 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
 	}
 
-	//TODO: A synchronized block that is nested inside a safe one is safe. So, this method should not return such synchronized blocks. 
-	private Collection<InstructionInfo> getUnsafeSynchronizedBlocks() {
-		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
+	/*
+	 * FIXME: A synchronized block that is nested inside a safe one is
+	 * considered safe (See edu.illinois.keshmesh.detector.LCK06JBugDetector.
+	 * getActuallyUnsafeInstructions(BitVectorSolver<CGNode>, InstructionInfo)).
+	 * So, this method should not return such synchronized blocks.
+	 */
+	private void populatedUnsafeSynchronizedStructures(Collection<InstructionInfo> unsafeSynchronizedBlocks, Collection<CGNode> unsafeSynchronizedMethods) {
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
-			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+			Logger.log("IR is:" + cgNode.getIR());
+			IMethod method = cgNode.getMethod();
+			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
+				if (AnalysisUtils.isUnsafeSynchronized(method)) {
+					unsafeSynchronizedMethods.add(cgNode);
+				}
 			}
 		}
-		return unsafeSynchronizedBlocks;
 	}
 
 	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
@@ -315,6 +408,32 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		//TODO: Should we look for bugs in JDK usage as well?
 		//TODO: !!!What about other bytecodes, e.g. from the libraries, which will not allow to get the source position?
 		return AnalysisUtils.isJDKClass(klass);
+	}
+
+	private Position getPosition(CGNode cgNode) {
+		IMethod method = cgNode.getMethod();
+		if (method instanceof AstMethod) {
+			AstMethod astMethod = (AstMethod) method;
+			return astMethod.getSourcePosition();
+		} else if (method instanceof ShrikeCTMethod) {
+			//FIXME: Find the line number of a method in the byte code.
+			throw new UnsupportedOperationException();
+			//			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
+			//			TypeName typeName = shrikeMethod.getDeclaringClass().getName();
+			//			String fullyQualifiedName = AnalysisUtils.getEnclosingNonanonymousClassName(typeName);
+			//			try {
+			//				IPath fullPath = AnalysisUtils.getWorkspaceLocation().append(javaProject.findType(fullyQualifiedName).getCompilationUnit().getPath());
+			//				URL url = new URL("file:" + fullPath);
+			//				return new LineNumberPosition(url, url, shrikeMethod.getLineNumber());
+			//			} catch (JavaModelException e) {
+			//				throw new RuntimeException(e);
+			//			} catch (InvalidClassFileException e) {
+			//				throw new RuntimeException(e);
+			//			} catch (MalformedURLException e) {
+			//				throw new RuntimeException(e);
+			//			}
+		}
+		throw new UnsupportedOperationException();
 	}
 
 }

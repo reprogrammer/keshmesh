@@ -106,7 +106,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 
 	public KeshmeshFindBugsDetector(BugReporter bugReporter) {
 		this.bugReporter = bugReporter;
-		Logger.log("LCK02JFindBugsDetector(BugReporter bugReporter)");
+		Logger.log("KeshmeshFindBugsDetector(BugReporter bugReporter)");
 	}
 
 }

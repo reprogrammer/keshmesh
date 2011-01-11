@@ -72,7 +72,8 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
 		//Iterable<Entrypoint> mainEntrypoints = Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
 		//		return new FilteredIterable(mainEntrypoints);
-		return makeCustomEntryPointes(analysisScope, classHierarchy);
+		//return makeCustomEntryPointes(analysisScope, classHierarchy);
+		return Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
 	}
 
 	private Iterable<Entrypoint> makeCustomEntryPointes(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {

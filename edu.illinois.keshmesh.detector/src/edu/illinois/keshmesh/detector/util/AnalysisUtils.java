@@ -5,6 +5,8 @@ package edu.illinois.keshmesh.detector.util;
 
 import java.util.Collection;
 
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.classLoader.IClass;
@@ -28,6 +30,10 @@ public class AnalysisUtils {
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
+	public static IPath getWorkspaceLocation() {
+		return ResourcesPlugin.getWorkspace().getRoot().getLocation();
+	}
+	
 	public static boolean isProtectedByAnySynchronizedBlock(Collection<InstructionInfo> safeSynchronizedBlocks, InstructionInfo instruction) {
 		for (InstructionInfo safeSynchronizedBlock : safeSynchronizedBlocks) {
 			if (instruction.isInside(safeSynchronizedBlock)) {
@@ -80,6 +86,14 @@ public class AnalysisUtils {
 
 	public static boolean isObjectGetClass(IMethod method) {
 		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
+	}
+
+	public static boolean isUnsafeSynchronized(IMethod method) {
+		return method.isSynchronized() && !method.isStatic();
+	}
+
+	public static boolean isSafeSynchronized(IMethod method) {
+		return method.isSynchronized() && method.isStatic();
 	}
 
 }
