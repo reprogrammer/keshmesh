@@ -128,6 +128,22 @@ public class LCK02JBugDetector extends BugPatternDetector {
 		return result;
 	}
 
+	/*
+	 * The method Object.getClass() has a normal allocation instruction. This
+	 * method look for the predecessors of the CGNode containing the normal
+	 * allocation instruction. These predecessors make calls to
+	 * Object.getClass(). This method iterates over all such invocations and
+	 * returns the type names of the receivers of all such method invocations.
+	 * This method is an attempt to make the analysis independent of receiver
+	 * instance context. But, we encountered several problems while using this
+	 * method on contexts lighter than the receiver instance context. For
+	 * example, cheaper contexts are less precise and thus report too many
+	 * predecessors for a the CGNode of Object.getClass(). And, too many
+	 * predecessors result in too many type names to be reported as potential
+	 * receivers of a call to getClass. Specifically, several exception classes
+	 * get reported as the type names of the receivers of the call to
+	 * Object.getClass.
+	 */
 	private void addSynchronizedClassTypeNames(Set<String> result, NormalAllocationInNode normalAllocationInNode) {
 		{
 			CGNode normalAllocationCGNode = normalAllocationInNode.getNode();
