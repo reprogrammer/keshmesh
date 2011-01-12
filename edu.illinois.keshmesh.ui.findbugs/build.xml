@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details. -->
 <project default="create_findbugs_jar" name="Create FindBugs Detector Jar for Project edu.illinois.keshmesh.ui.findbugs">
 	<target name="create_findbugs_jar">
 		<mkdir dir="lib" />
