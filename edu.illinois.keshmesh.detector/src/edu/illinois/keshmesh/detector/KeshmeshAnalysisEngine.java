@@ -9,6 +9,7 @@ import java.util.Iterator;
 import com.ibm.wala.cast.java.ipa.callgraph.JavaSourceAnalysisScope;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.AnalysisCache;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.AnalysisScope;
@@ -21,9 +22,14 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.types.Descriptor;
 import com.ibm.wala.types.MethodReference;
+import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
+import com.ibm.wala.types.annotations.Annotation;
 import com.ibm.wala.util.collections.HashSetFactory;
 import com.ibm.wala.util.strings.Atom;
+
+import edu.illinois.keshmesh.annotations.EntryPoint;
+import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
  * 
@@ -36,7 +42,8 @@ public class KeshmeshAnalysisEngine {
 	public static Iterable<Entrypoint> makeDefaultEntrypoints(ClassLoaderReference classLoaderReference, IClassHierarchy classHierarchy) {
 		//Iterable<Entrypoint> mainEntrypoints = Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
 		//		return new FilteredIterable(mainEntrypoints);
-		return Util.makeMainEntrypoints(classLoaderReference, classHierarchy);
+		//		return Util.makeMainEntrypoints(classLoaderReference, classHierarchy);
+		return makeAnnotatedEntryPoints(classHierarchy);
 	}
 
 	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
@@ -44,6 +51,43 @@ public class KeshmeshAnalysisEngine {
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
 		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
+	}
+
+	public static Iterable<Entrypoint> makeAnnotatedEntryPoints(IClassHierarchy classHierarchy) {
+		final HashSet<Entrypoint> result = HashSetFactory.make();
+		Iterator<IClass> classIterator = classHierarchy.iterator();
+		while (classIterator.hasNext()) {
+			IClass klass = classIterator.next();
+			if (!AnalysisUtils.isJDKClass(klass)) {
+				// Logger.log("Visiting class " + klass);
+				for (IMethod method : klass.getDeclaredMethods()) {
+					try {
+						if (!(method instanceof ShrikeCTMethod)) {
+							throw new RuntimeException("@EntryPoint only works for byte code.");
+						}
+						// Logger.log("Visiting method " + method);
+						for (Annotation annotation : ((ShrikeCTMethod) method).getAnnotations(true)) {
+							//	Logger.log("Visiting annotation " + annotation);
+							if (isEntryPointClass(annotation.getType().getName())) {
+								result.add(new DefaultEntrypoint(method, classHierarchy));
+								break;
+							}
+						}
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}
+		}
+		return new Iterable<Entrypoint>() {
+			public Iterator<Entrypoint> iterator() {
+				return result.iterator();
+			}
+		};
+	}
+
+	private static boolean isEntryPointClass(TypeName typeName) {
+		return (AnalysisUtils.walaTypeNameToJavaName(typeName).equals(EntryPoint.class.getName()));
 	}
 
 	public static Iterable<Entrypoint> makeCustomEntryPoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {

@@ -33,7 +33,7 @@ public class AnalysisUtils {
 	public static IPath getWorkspaceLocation() {
 		return ResourcesPlugin.getWorkspace().getRoot().getLocation();
 	}
-	
+
 	public static boolean isProtectedByAnySynchronizedBlock(Collection<InstructionInfo> safeSynchronizedBlocks, InstructionInfo instruction) {
 		for (InstructionInfo safeSynchronizedBlock : safeSynchronizedBlocks) {
 			if (instruction.isInside(safeSynchronizedBlock)) {
@@ -94,6 +94,13 @@ public class AnalysisUtils {
 
 	public static boolean isSafeSynchronized(IMethod method) {
 		return method.isSynchronized() && method.isStatic();
+	}
+
+	public static String walaTypeNameToJavaName(TypeName typeName) {
+		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName();
+
+		//WALA uses $ to refers to inner classes. We have to replace "$" by "." to make it a valid class name in Java source code.
+		return fullyQualifiedName.replace("$", ".").replace("/", ".");
 	}
 
 }

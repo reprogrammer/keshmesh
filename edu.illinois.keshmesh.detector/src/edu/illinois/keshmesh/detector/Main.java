@@ -30,7 +30,7 @@ public class Main {
 
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
 		BugInstances bugInstances = new BugInstances();
-		BasicAnalysisData basicAnalysisData = initSourceAnalysis(javaProject);
+		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject);
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();

@@ -55,12 +55,12 @@ public abstract class TestSetupHelper {
 	static IJavaProject createAndInitializeProject(String projectName, String baseProjectName) throws CoreException {
 		IJavaProject project;
 		project = JavaProjectHelper.createJavaProject(projectName, "bin");
-		TestSetupHelper.addJREContainer(project);
+		addJREContainer(project);
 		// set compiler options on projectOriginal
 		Map options = project.getOptions(false);
 		JavaProjectHelper.set15CompilerOptions(options);
 		project.setOptions(options);
-
+		JavaProjectHelper.addLibrary(project, new Path(Activator.getDefault().getFileInPlugin(new Path(join("lib", "annotations.jar"))).getAbsolutePath()));
 		return project;
 	}
 
@@ -164,7 +164,7 @@ public abstract class TestSetupHelper {
 
 	/**
 	 * 
-	 * @see Martin Aeschlimann, Dirk Bäumer, and Jerome Lanneluc. 2005. Java
+	 * @see Martin Aeschlimann, Dirk BÃ¤umer, and Jerome Lanneluc. 2005. Java
 	 *      Tool Smithing Extending the Eclipse Java Development Tools. In
 	 *      EclipseCon, 1-51. http://www.eclipsecon.org/2005/presentations/
 	 *      EclipseCON2005_Tutorial29.pdf.

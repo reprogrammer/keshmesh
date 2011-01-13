@@ -173,10 +173,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	}
 
 	private static String getJavaClassName(TypeName typeName) {
-		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName() + ".class";
-
-		//WALA uses $ to refers to inner classes. We have to replace $ by . to make it a valid class name in Java source code.
-		return fullyQualifiedName.replace("$", ".").replace("/", ".");
+		return AnalysisUtils.walaTypeNameToJavaName(typeName) + ".class";
 	}
 
 }

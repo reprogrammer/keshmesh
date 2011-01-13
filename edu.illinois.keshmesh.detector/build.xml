@@ -1,0 +1,23 @@
+<!-- This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details. -->
+<project name="keshmesh" default="annotations">
+	<target name="annotations">
+		<mkdir dir="lib" />
+		<jar destfile="lib/annotations.jar">
+			<fileset dir="bin">
+				<include name="**/annotations/*.class" />
+			</fileset>
+			<!--
+			<fileset dir="src">
+				<include name="**/annotations/*.java" />
+			</fileset>
+			-->
+		</jar>
+		<mkdir dir="../edu.illinois.keshmesh.detector.tests/lib" />
+		<copy file="lib/annotations.jar" todir="../edu.illinois.keshmesh.detector.tests/lib" />
+	</target>
+
+	<target name="clean">
+		<delete dir="lib" />
+		<delete dir="../edu.illinois.keshmesh.detector.tests/lib" />
+	</target>
+</project>

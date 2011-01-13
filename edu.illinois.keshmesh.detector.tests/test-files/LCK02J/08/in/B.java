@@ -3,10 +3,13 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class B {
 
 	static int counter = 0;
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new B().m();
 	}

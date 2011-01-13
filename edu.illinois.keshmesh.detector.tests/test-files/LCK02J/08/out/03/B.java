@@ -3,7 +3,11 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class B {
+	
+	@EntryPoint
 	public static void main(String args[]) {
 		new B().m();
 	}
