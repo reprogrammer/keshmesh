@@ -19,7 +19,7 @@ import org.eclipse.core.runtime.IPath;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 
 /**
  * 
@@ -74,9 +74,9 @@ public class BugInstanceParser {
 				//TODO: Maybe make a setter for BugPosition to return a new instance.
 				NumberedBugInstance numberedBugInstance = stack.removeLast();
 				BugInstance testBugInstance = numberedBugInstance.getBugInstance();
-				BugPosition testBugPosition = testBugInstance.getBugPosition();
-				BugInstance testBugInstanceWithLastLineNumber = new BugInstance(testBugInstance.getBugPattern(), new BugPosition(testBugPosition.getFirstLine(), currentLineNumber,
-						testBugPosition.getSourcePath()), testBugInstance.getFixInformation());
+				CodePosition testBugPosition = testBugInstance.getBugPosition();
+				BugInstance testBugInstanceWithLastLineNumber = new BugInstance(testBugInstance.getBugPattern(), new CodePosition(testBugPosition.getFirstLine(), currentLineNumber,
+						testBugPosition.getSourcePath(), null), testBugInstance.getFixInformation());
 				numberedBugInstances.add(new NumberedBugInstance(testBugInstanceWithLastLineNumber, numberedBugInstance.getNumber()));
 			}
 		}

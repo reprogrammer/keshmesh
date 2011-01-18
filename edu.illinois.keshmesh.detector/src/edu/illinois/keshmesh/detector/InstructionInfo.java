@@ -3,23 +3,13 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaModelException;
 
-import com.ibm.wala.cast.loader.AstMethod;
-import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.cast.tree.impl.LineNumberPosition;
 import com.ibm.wala.classLoader.IMethod;
-import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.SSAInstruction;
-import com.ibm.wala.types.TypeName;
 
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
@@ -42,28 +32,9 @@ public class InstructionInfo {
 		this.ssaInstruction = cgNode.getIR().getInstructions()[instructionIndex];
 	}
 
-	public Position getPosition() {
+	public CodePosition getPosition() {
 		IMethod method = cgNode.getMethod();
-		if (method instanceof AstMethod) {
-			AstMethod astMethod = (AstMethod) method;
-			return astMethod.getSourcePosition(instructionIndex);
-		} else if (method instanceof ShrikeCTMethod) {
-			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
-			TypeName typeName = shrikeMethod.getDeclaringClass().getName();
-			String fullyQualifiedName = AnalysisUtils.getEnclosingNonanonymousClassName(typeName);
-			try {
-				IPath fullPath = AnalysisUtils.getWorkspaceLocation().append(javaProject.findType(fullyQualifiedName).getCompilationUnit().getPath());
-				URL url = new URL("file:" + fullPath);
-				return new LineNumberPosition(url, url, shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex)));
-			} catch (JavaModelException e) {
-				throw new RuntimeException(e);
-			} catch (InvalidClassFileException e) {
-				throw new RuntimeException(e);
-			} catch (MalformedURLException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		throw new RuntimeException("Unexpected method class: " + method.getClass());
+		return AnalysisUtils.getPosition(javaProject, method, instructionIndex);
 	}
 
 	public CGNode getCGNode() {
@@ -77,8 +48,8 @@ public class InstructionInfo {
 	public boolean isInside(InstructionInfo that) {
 		if (cgNode != that.cgNode)
 			return false;
-		Position thisPosition = this.getPosition();
-		Position thatPosition = that.getPosition();
+		CodePosition thisPosition = this.getPosition();
+		CodePosition thatPosition = that.getPosition();
 		return thatPosition.getFirstOffset() <= thisPosition.getFirstOffset() && thatPosition.getLastOffset() >= thisPosition.getLastOffset();
 	}
 

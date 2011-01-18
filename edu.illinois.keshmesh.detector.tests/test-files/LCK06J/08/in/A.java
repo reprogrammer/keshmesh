@@ -3,8 +3,11 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class A {
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new A().m1();
 		new A().m2();
@@ -12,9 +15,9 @@ public class A {
 
 	static int f;
 	
-	private /*[LCK06J,01*/synchronized void m1() {
-		f = 0;
-	}/*]*/
+	private synchronized void m1() {
+		/*[LCK06J,02*/f = 0;/*]*/
+	}
 	
 	private void m2() {
 		/*[LCK06J,02*/synchronized (this) {

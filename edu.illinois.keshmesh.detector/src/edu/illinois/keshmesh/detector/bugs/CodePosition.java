@@ -14,7 +14,7 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
  * @author Stas Negara
  * 
  */
-public class BugPosition {
+public class CodePosition {
 
 	// [firstOffset, lastOffset)
 	private int firstOffset, lastOffset;
@@ -23,31 +23,23 @@ public class BugPosition {
 
 	private IPath sourcePath;
 
-	private String fullyQualifiedClassName;
+	private String fullyQualifiedEnclosingClassName;
 
-	public BugPosition(Position position, String fullyQualifiedClassName) {
+	public CodePosition(Position position, String fullyQualifiedEnclosingClassName) {
 		this.firstOffset = position.getFirstOffset();
 		this.lastOffset = position.getLastOffset();
 		this.firstLine = position.getFirstLine();
 		this.lastLine = position.getLastLine();
 		this.sourcePath = Path.fromPortableString(position.getURL().getFile());
-		this.fullyQualifiedClassName = fullyQualifiedClassName;
+		this.fullyQualifiedEnclosingClassName = fullyQualifiedEnclosingClassName;
 	}
 
-	public BugPosition(Position position) {
-		this(position, null);
-	}
-
-	public BugPosition(int firstLine, int lastLine, IPath sourcePath, String fullyQualifiedClassName) {
+	public CodePosition(int firstLine, int lastLine, IPath sourcePath, String fullyQualifiedClassName) {
 		super();
 		this.firstLine = firstLine;
 		this.lastLine = lastLine;
 		this.sourcePath = sourcePath;
-		this.fullyQualifiedClassName = fullyQualifiedClassName;
-	}
-
-	public BugPosition(int firstLine, int lastLine, IPath sourcePath) {
-		this(firstLine, lastLine, sourcePath, null);
+		this.fullyQualifiedEnclosingClassName = fullyQualifiedClassName;
 	}
 
 	public int getFirstOffset() {
@@ -75,7 +67,7 @@ public class BugPosition {
 	}
 
 	public String getFullyQualifiedClassName() {
-		return fullyQualifiedClassName;
+		return fullyQualifiedEnclosingClassName;
 	}
 
 	@Override
@@ -84,7 +76,7 @@ public class BugPosition {
 		int result = 1;
 		result = prime * result + firstLine;
 		result = prime * result + firstOffset;
-		result = prime * result + ((fullyQualifiedClassName == null) ? 0 : fullyQualifiedClassName.hashCode());
+		result = prime * result + ((fullyQualifiedEnclosingClassName == null) ? 0 : fullyQualifiedEnclosingClassName.hashCode());
 		result = prime * result + lastLine;
 		result = prime * result + lastOffset;
 		result = prime * result + ((sourcePath == null) ? 0 : sourcePath.toPortableString().hashCode());
@@ -94,7 +86,7 @@ public class BugPosition {
 	@Override
 	public boolean equals(Object obj) {
 		if (portableEquals(obj)) {
-			BugPosition other = (BugPosition) obj;
+			CodePosition other = (CodePosition) obj;
 			if (firstOffset != other.firstOffset)
 				return false;
 			if (lastOffset != other.lastOffset)
@@ -110,7 +102,7 @@ public class BugPosition {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		BugPosition other = (BugPosition) obj;
+		CodePosition other = (CodePosition) obj;
 		if (firstLine != other.firstLine)
 			return false;
 		//		if (lastLine != other.lastLine)
@@ -125,7 +117,7 @@ public class BugPosition {
 
 	@Override
 	public String toString() {
-		return sourcePath.toPortableString() + " / " + fullyQualifiedClassName + " @ [" + firstLine + "--" + lastLine + "(" + firstOffset + ", " + lastOffset + ")" + "]";
+		return sourcePath.toPortableString() + " / " + fullyQualifiedEnclosingClassName + " @ [" + firstLine + "--" + lastLine + "(" + firstOffset + ", " + lastOffset + ")" + "]";
 	}
 
 }

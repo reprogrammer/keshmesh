@@ -13,11 +13,11 @@ public class BugInstance {
 
 	BugPattern bugPattern;
 
-	BugPosition bugPosition;
+	CodePosition bugPosition;
 
 	FixInformation fixInformation;
 
-	public BugInstance(BugPattern bugPattern, BugPosition bugPosition, FixInformation fixInformation) {
+	public BugInstance(BugPattern bugPattern, CodePosition bugPosition, FixInformation fixInformation) {
 		this.bugPattern = bugPattern;
 		this.bugPosition = bugPosition;
 		this.fixInformation = fixInformation;
@@ -27,7 +27,7 @@ public class BugInstance {
 		return bugPattern;
 	}
 
-	public BugPosition getBugPosition() {
+	public CodePosition getBugPosition() {
 		return bugPosition;
 	}
 

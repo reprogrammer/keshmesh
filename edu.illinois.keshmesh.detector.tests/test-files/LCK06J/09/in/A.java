@@ -3,6 +3,8 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 /**
  * 
  * This class tests the LCK06J detector with respect to nestings of synchronized
@@ -15,6 +17,7 @@ public class A {
 	Object nonStaticLock = new Object();
 	static int staticField;
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new A().m1();
 		new A().m2();

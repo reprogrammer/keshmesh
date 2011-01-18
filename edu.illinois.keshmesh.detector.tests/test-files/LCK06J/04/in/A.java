@@ -3,10 +3,13 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class A {
 
 	final static A a = new A();
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
 	}

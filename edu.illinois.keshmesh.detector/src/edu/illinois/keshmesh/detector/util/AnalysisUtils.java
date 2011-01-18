@@ -8,10 +8,14 @@ import java.util.Collection;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaModelException;
 
+import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.types.TypeName;
@@ -19,6 +23,7 @@ import com.ibm.wala.types.TypeName;
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
 import edu.illinois.keshmesh.detector.LCK06JBugDetector;
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 
 /**
  * 
@@ -101,6 +106,26 @@ public class AnalysisUtils {
 
 		//WALA uses $ to refers to inner classes. We have to replace "$" by "." to make it a valid class name in Java source code.
 		return fullyQualifiedName.replace("$", ".").replace("/", ".");
+	}
+
+	public static CodePosition getPosition(IJavaProject javaProject, IMethod method, int instructionIndex) {
+		String enclosingClassName = getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
+		if (method instanceof AstMethod) {
+			AstMethod astMethod = (AstMethod) method;
+			return new CodePosition(astMethod.getSourcePosition(instructionIndex), enclosingClassName);
+		} else if (method instanceof ShrikeCTMethod) {
+			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
+			try {
+				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName).getCompilationUnit().getPath());
+				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
+				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
+			} catch (JavaModelException e) {
+				throw new RuntimeException(e);
+			} catch (InvalidClassFileException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		throw new RuntimeException("Unexpected method class: " + method.getClass());
 	}
 
 }

@@ -3,6 +3,8 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class A {
 
 	private static int counter = 0;
@@ -12,6 +14,7 @@ public class A {
 	private B instance_unassigned;
 	private static A a;
 
+	@EntryPoint
 	public static void main(String args[]) {
 		a = new A();
 		a.m2();

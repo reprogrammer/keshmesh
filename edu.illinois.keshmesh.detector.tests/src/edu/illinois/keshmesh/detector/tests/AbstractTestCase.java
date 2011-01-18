@@ -32,7 +32,7 @@ import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
@@ -238,7 +238,7 @@ public abstract class AbstractTestCase {
 
 		@Override
 		public BugInstance createTestBugInstance(BugPattern bugPattern, int firstLine, int lastLine, IPath targetFilePath, String... replacements) {
-			return new BugInstance(bugPattern, new BugPosition(firstLine, lastLine, targetFilePath), createFixInformation(replacements));
+			return new BugInstance(bugPattern, new CodePosition(firstLine, lastLine, targetFilePath, null), createFixInformation(replacements));
 		}
 
 		@Override

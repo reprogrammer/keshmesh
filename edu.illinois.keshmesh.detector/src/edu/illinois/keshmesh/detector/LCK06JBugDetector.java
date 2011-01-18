@@ -13,12 +13,9 @@ import java.util.Set;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.ibm.wala.cast.loader.AstMethod;
-import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
-import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
 import com.ibm.wala.fixpoint.BitVectorVariable;
@@ -33,7 +30,6 @@ import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
-import com.ibm.wala.types.TypeName;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.graph.impl.GraphInverter;
 import com.ibm.wala.util.intset.BitVector;
@@ -45,7 +41,7 @@ import com.ibm.wala.util.intset.OrdinalSetMapping;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
@@ -74,9 +70,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
 
 	@Override
-	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
+	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		this.javaProject = javaProject;
-		basicAnalysisData = analysisData;
+		this.basicAnalysisData = basicAnalysisData;
+		Iterator<CGNode> cgNodesIter = this.basicAnalysisData.callGraph.iterator();
+		while (cgNodesIter.hasNext()) {
+			CGNode cgNode = cgNodesIter.next();
+			Logger.log("CGNode: " + cgNode.getIR());
+		}
 		populateAllInstancesPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
@@ -90,7 +91,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions();
 
-		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIterator = this.basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
 			IntSet value = bitVectorSolver.getIn(cgNode).getValue();
@@ -163,10 +164,11 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Logger.log("Unsafe instructions of " + unsafeSynchronizedMethod + " are " + actuallyUnsafeInstructions.toString());
 	}
 
-	private void reportActuallyUnsafeInstructions(CGNode cgNode, Position position, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
+	private void reportActuallyUnsafeInstructions(CGNode cgNode, CodePosition position, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
 		if (!actuallyUnsafeInstructions.isEmpty()) {
-			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
-			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new BugPosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
+			//			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
+			//			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new CodePosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
+			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, new LCK06JFixInformation()));
 		}
 	}
 
@@ -410,30 +412,9 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return AnalysisUtils.isJDKClass(klass);
 	}
 
-	private Position getPosition(CGNode cgNode) {
+	private CodePosition getPosition(CGNode cgNode) {
 		IMethod method = cgNode.getMethod();
-		if (method instanceof AstMethod) {
-			AstMethod astMethod = (AstMethod) method;
-			return astMethod.getSourcePosition();
-		} else if (method instanceof ShrikeCTMethod) {
-			//FIXME: Find the line number of a method in the byte code.
-			throw new UnsupportedOperationException();
-			//			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
-			//			TypeName typeName = shrikeMethod.getDeclaringClass().getName();
-			//			String fullyQualifiedName = AnalysisUtils.getEnclosingNonanonymousClassName(typeName);
-			//			try {
-			//				IPath fullPath = AnalysisUtils.getWorkspaceLocation().append(javaProject.findType(fullyQualifiedName).getCompilationUnit().getPath());
-			//				URL url = new URL("file:" + fullPath);
-			//				return new LineNumberPosition(url, url, shrikeMethod.getLineNumber());
-			//			} catch (JavaModelException e) {
-			//				throw new RuntimeException(e);
-			//			} catch (InvalidClassFileException e) {
-			//				throw new RuntimeException(e);
-			//			} catch (MalformedURLException e) {
-			//				throw new RuntimeException(e);
-			//			}
-		}
-		throw new UnsupportedOperationException();
+		return AnalysisUtils.getPosition(javaProject, method, 0);
 	}
 
 }

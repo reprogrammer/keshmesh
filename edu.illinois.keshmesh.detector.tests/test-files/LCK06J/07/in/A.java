@@ -4,9 +4,12 @@
 package p;
 
 import java.util.Random;
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 
 public class A {
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
 	}
