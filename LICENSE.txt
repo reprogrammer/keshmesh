@@ -3,7 +3,7 @@ Keshmesh Release License
  
 University of Illinois/NCSA Open Source License
  
-Copyright (c) 2008-2010 University of Illinois at Urbana-Champaign. All rights
+Copyright (c) 2008-2011 University of Illinois at Urbana-Champaign. All rights
 reserved.
  
 Developed by:
