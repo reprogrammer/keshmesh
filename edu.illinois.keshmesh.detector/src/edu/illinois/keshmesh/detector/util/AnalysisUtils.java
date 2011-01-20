@@ -18,6 +18,7 @@ import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAInstruction;
+import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
 
 import edu.illinois.keshmesh.detector.InstructionFilter;
@@ -57,8 +58,9 @@ public class AnalysisUtils {
 		SSAInstruction[] instructions = ir.getInstructions();
 		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
 			SSAInstruction instruction = instructions[instructionIndex];
-			if (instructionFilter == null || instructionFilter.accept(instruction)) {
-				instructionInfos.add(new InstructionInfo(javaProject, cgNode, instructionIndex));
+			InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
+			if (instruction != null && (instructionFilter == null || instructionFilter.accept(instructionInfo))) {
+				instructionInfos.add(instructionInfo);
 			}
 		}
 	}
@@ -126,6 +128,14 @@ public class AnalysisUtils {
 			}
 		}
 		throw new RuntimeException("Unexpected method class: " + method.getClass());
+	}
+
+	public static boolean isMonitorEnter(SSAInstruction ssaInstruction) {
+		return ssaInstruction instanceof SSAMonitorInstruction && ((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
+	}
+
+	public static boolean isMonitorExit(SSAInstruction ssaInstruction) {
+		return ssaInstruction instanceof SSAMonitorInstruction && !((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
 	}
 
 }

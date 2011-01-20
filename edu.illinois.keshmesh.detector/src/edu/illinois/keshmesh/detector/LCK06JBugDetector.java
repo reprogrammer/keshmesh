@@ -205,36 +205,36 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	 *         block.
 	 */
 	private Collection<InstructionInfo> getActuallyUnsafeInstructions(final BitVectorSolver<CGNode> bitVectorSolver, final InstructionInfo unsafeSynchronizedBlock) {
-		Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
-		CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
-		Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
+		final Collection<InstructionInfo> unsafeInstructions = new HashSet<InstructionInfo>();
+		final CGNode cgNode = unsafeSynchronizedBlock.getCGNode();
+		final Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
 		populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 		IR ir = cgNode.getIR();
 		if (ir == null) {
 			return unsafeInstructions; //should not really be null here
 		}
-		DefUse defUse = new DefUse(ir);
-		SSAInstruction[] instructions = ir.getInstructions();
-		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
-			SSAInstruction instruction = instructions[instructionIndex];
-			if (instruction == null)
-				continue;
-			InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
-			if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
-				if (canModifyStaticField(defUse, instruction)) {
-					unsafeInstructions.add(instructionInfo);
-				}
-				if (instruction instanceof SSAAbstractInvokeInstruction) {
-					SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
-					// Add the unsafe modifications of the methods that are the targets of the invocation instruction. 
-					Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
-					for (CGNode possibleTarget : possibleTargets) {
-						// Add unsafe operations coming from callees.
-						addSolverResults(unsafeInstructions, bitVectorSolver, possibleTarget);
+		final DefUse defUse = new DefUse(ir);
+		AnalysisUtils.filter(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
+			@Override
+			public boolean accept(InstructionInfo instructionInfo) {
+				SSAInstruction instruction = instructionInfo.getInstruction();
+				if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
+					if (canModifyStaticField(defUse, instruction)) {
+						unsafeInstructions.add(instructionInfo);
+					}
+					if (instruction instanceof SSAAbstractInvokeInstruction) {
+						SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
+						// Add the unsafe modifications of the methods that are the targets of the invocation instruction. 
+						Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
+						for (CGNode possibleTarget : possibleTargets) {
+							// Add unsafe operations coming from callees.
+							addSolverResults(unsafeInstructions, bitVectorSolver, possibleTarget);
+						}
 					}
 				}
+				return false;
 			}
-		}
+		});
 		return unsafeInstructions;
 	}
 
@@ -255,8 +255,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		try {
 			bitVectorSolver.solve(new NullProgressMonitor());
 		} catch (CancelException ex) {
-			//FIXME: Handle the exception (log or rethrow).
-			ex.printStackTrace();
+			throw new RuntimeException("Bitvector solver was stopped", ex);
 		}
 		return bitVectorSolver;
 	}
@@ -305,8 +304,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		AnalysisUtils.filter(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
 
 			@Override
-			public boolean accept(SSAInstruction ssaInstruction) {
-				return canModifyStaticField(defUse, ssaInstruction);
+			public boolean accept(InstructionInfo instructionInfo) {
+				return canModifyStaticField(defUse, instructionInfo.getInstruction());
 			}
 		});
 		return modifyingStaticFieldsInstructions;
@@ -356,15 +355,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
-			public boolean accept(SSAInstruction ssaInstruction) {
-				if (ssaInstruction instanceof SSAMonitorInstruction) {
-					SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) ssaInstruction;
-					if (monitorInstruction.isMonitorEnter()) {
-						if (synchronizedBlockKind == SynchronizedBlockKind.SAFE) {
-							return isSafe(cgNode, monitorInstruction);
-						} else {
-							return !isSafe(cgNode, monitorInstruction);
-						}
+			public boolean accept(InstructionInfo instructionInfo) {
+				SSAInstruction instruction = instructionInfo.getInstruction();
+				if (AnalysisUtils.isMonitorEnter(instruction)) {
+					SSAMonitorInstruction monitorEnterInstruction = (SSAMonitorInstruction) instruction;
+					if (synchronizedBlockKind == SynchronizedBlockKind.SAFE) {
+						return isSafe(cgNode, monitorEnterInstruction);
+					} else {
+						return !isSafe(cgNode, monitorEnterInstruction);
 					}
 				}
 				return false;
