@@ -37,6 +37,7 @@ import edu.illinois.keshmesh.detector.util.SetUtils;
  * 
  * @author Mohsen Vakilian
  * @author Stas Negara
+ * @author Samira Tasharofi
  * 
  */
 public class LCK02JFixer extends Refactoring {
@@ -93,7 +94,29 @@ public class LCK02JFixer extends Refactoring {
 			CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(progressMonitor);
 
 			//Rewriting the AST
-			ASTNode monitorNode = NodeFinder.perform(compilationUnit, bugPosition.getFirstOffset(), bugPosition.getLength());
+			int bugLineOffset = document.getLineInformation(bugPosition.getFirstLine() - 1).getOffset();
+			int bugLineLength = document.getLineInformation(bugPosition.getFirstLine() - 1).getLength();
+			String bugLineContent = document.get(bugLineOffset, bugLineLength);
+			String syncCommand = "synchronized(";
+			int myFirstOffset = bugLineOffset + bugLineContent.indexOf(syncCommand);
+			int index = bugLineContent.indexOf(syncCommand) + syncCommand.length();
+			//			int begin = bugLineContent.indexOf(syncCommand) + syncCommand.length();
+			int pcounter = 1;
+			while (pcounter != 0 && index < bugLineLength) {
+				if (bugLineContent.charAt(index) == ')') {
+					pcounter--;
+				} else if (bugLineContent.charAt(index) == '(') {
+					pcounter++;
+				}
+				index++;
+			}
+
+			int myLastOffset = bugLineOffset + index;
+			//			String syncStr = bugLineContent.substring(begin, index - 1);
+			//			System.out.println("Bug Line Content = " + bugLineContent);
+			//			System.out.println("begin, end, begin offset, end offset = " + myFirstOffset + " " + myLastOffset + " " + bugPosition.getFirstOffset() + " " + bugLineOffset);
+			//ASTNode monitorNode = NodeFinder.perform(compilationUnit, bugPosition.getFirstOffset(), bugPosition.getLength());
+			ASTNode monitorNode = NodeFinder.perform(compilationUnit, myFirstOffset, myLastOffset - myFirstOffset);
 			SynchronizedStatement synchronizedStatement = (SynchronizedStatement) monitorNode;
 			AST ast = synchronizedStatement.getAST();
 			ASTRewrite rewriter = ASTRewrite.create(ast);
@@ -114,6 +137,9 @@ public class LCK02JFixer extends Refactoring {
 
 			//Committing changes to the source file
 			textFileBuffer.commit(progressMonitor, true);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			textFileBufferManager.disconnect(bugPosition.getSourcePath(), LocationKind.LOCATION, progressMonitor);
 		}
