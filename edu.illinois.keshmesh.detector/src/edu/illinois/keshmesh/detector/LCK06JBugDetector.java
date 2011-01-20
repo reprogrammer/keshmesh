@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.classLoader.IClass;
@@ -253,7 +252,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			}
 		};
 		try {
-			bitVectorSolver.solve(new NullProgressMonitor());
+			bitVectorSolver.solve(null);
 		} catch (CancelException ex) {
 			throw new RuntimeException("Bitvector solver was stopped", ex);
 		}
