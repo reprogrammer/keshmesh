@@ -10,5 +10,5 @@ Keshmesh uses [WALA](http://wala.sf.net) to analyze the program precisely, and
 thus produces few false alarms. And, it uses [Findbugs](http://findbugs.sf.net) to report bugs and offer automated fixes to the users of [Eclipse](http://eclipse.org).
 
 Keshmesh is developed at the University of Illinois, and is licensed under the
-Illinois/NCSA Open Source License. See LICENSE.txt for more details.
+Illinois/NCSA Open Source License. See [LICENSE.txt](https://github.com/reprogrammer/keshmesh/raw/master/LICENSE.txt) for more details.
 
