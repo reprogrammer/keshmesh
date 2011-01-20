@@ -77,7 +77,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 			if (!getProjectName(classContext.getAnalysisContext()).equals(projectName)) {
 				projectName = getProjectName(classContext.getAnalysisContext());
 				IJavaProject javaProject = getProject(projectName);
-				Logger.log("The java project under analyais is " + javaProject.getElementName());
+				Logger.log("The java project under analysis is " + javaProject.getElementName());
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
 					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());
@@ -116,7 +116,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 
 	public KeshmeshFindBugsDetector(BugReporter bugReporter) {
 		this.bugReporter = bugReporter;
-		Logger.log("LCK02JFindBugsDetector(BugReporter bugReporter)");
+		Logger.log("KeshmeshFindBugsDetector(BugReporter bugReporter)");
 	}
 
 }

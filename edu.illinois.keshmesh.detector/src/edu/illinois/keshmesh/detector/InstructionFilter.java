@@ -3,7 +3,6 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import com.ibm.wala.ssa.SSAInstruction;
 
 /**
  * 
@@ -12,5 +11,5 @@ import com.ibm.wala.ssa.SSAInstruction;
  * 
  */
 public interface InstructionFilter {
-	public boolean accept(SSAInstruction ssaInstruction);
+	public boolean accept(InstructionInfo instructionInfo);
 }

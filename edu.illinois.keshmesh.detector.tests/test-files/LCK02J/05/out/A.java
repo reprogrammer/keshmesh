@@ -3,9 +3,12 @@
  */
 package p;
 
+import edu.illinois.keshmesh.annotations.EntryPoint;
+
 public class A {
 	static B b;
 
+	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
 	}

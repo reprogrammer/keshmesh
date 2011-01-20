@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.eclipse.jdt.core.IJavaProject;
+
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
@@ -21,6 +23,8 @@ import edu.illinois.keshmesh.detector.bugs.BugInstances;
  */
 public abstract class BugPatternDetector {
 
+	protected IJavaProject javaProject = null;
+
 	protected BasicAnalysisData basicAnalysisData = null;
 
 	/**
@@ -30,7 +34,7 @@ public abstract class BugPatternDetector {
 	 * @param basicAnalysisData
 	 * @return
 	 */
-	public abstract BugInstances performAnalysis(BasicAnalysisData basicAnalysisData);
+	public abstract BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData);
 
 	protected PointerKey getPointerForValueNumber(CGNode cgNode, int valueNumber) {
 		return basicAnalysisData.heapModel.getPointerKeyForLocal(cgNode, valueNumber);

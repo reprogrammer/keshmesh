@@ -16,9 +16,7 @@ import com.ibm.wala.ipa.callgraph.AnalysisCache;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
-import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
-import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.config.FileOfClasses;
 
@@ -51,16 +49,13 @@ public class DetectorJavaSourceAnalysisEngine extends JDTJavaSourceAnalysisEngin
 	}
 
 	@Override
-	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope scope, IClassHierarchy cha) {
-		return com.ibm.wala.ipa.callgraph.impl.Util.makeMainEntrypoints(JavaSourceAnalysisScope.SOURCE, cha);
+	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
+		return KeshmeshAnalysisEngine.getCallGraphBuilder(scope, classHierarchy, analysisOptions, analysisCache);
 	}
 
 	@Override
-	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, AnalysisCache cache) {
-		ContextSelector contextSelector = new CustomContextSelector();
-		Util.addDefaultSelectors(options, cha);
-		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
-		return new KeshmeshCFABuilder(cha, options, cache, contextSelector, null);
+	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope scope, IClassHierarchy classHierarchy) {
+		return KeshmeshAnalysisEngine.makeDefaultEntrypoints(JavaSourceAnalysisScope.SOURCE, classHierarchy);
 	}
 
 }

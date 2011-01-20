@@ -11,8 +11,11 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -21,6 +24,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.Logger;
@@ -28,12 +32,14 @@ import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
-import edu.illinois.keshmesh.detector.bugs.BugPosition;
+import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
+
+	private boolean isBuildDone = false;
 
 	private IJavaProject javaProject;
 
@@ -90,14 +96,14 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
-	private void bugInstanceShouldExist(BugInstance bugInstance) {
-		boolean bugInstanceExists = bugInstances.contains(bugInstance);
+	private void bugInstanceShouldExist(BugInstance expectedBugInstance) {
+		boolean bugInstanceExists = bugInstances.contains(expectedBugInstance);
 		if (!bugInstanceExists) {
-			Set<BugInstance> actualBugInstanceInSet = new HashSet<BugInstance>();
-			actualBugInstanceInSet.add(bugInstance);
-			Assert.assertEquals(bugInstances.toString(), actualBugInstanceInSet.toString());
+			Set<BugInstance> expectedBugInstanceInSet = new HashSet<BugInstance>();
+			expectedBugInstanceInSet.add(expectedBugInstance);
+			Assert.assertEquals(expectedBugInstanceInSet.toString(), bugInstances.toString());
 		}
-		Assert.assertTrue(String.format("Expected bug instance %s was not found.", bugInstance), bugInstanceExists);
+		Assert.assertTrue(String.format("Expected bug instance %s was not found.", expectedBugInstance), bugInstanceExists);
 	}
 
 	private String getPathForInputFile(String inputFileName) {
@@ -115,7 +121,18 @@ public abstract class AbstractTestCase {
 			addFile(inputFileName);
 		}
 		parseExpectedBugInstances(inputFileNames);
+		buildSynchronously();
 		findBugs();
+	}
+
+	private void buildSynchronously() throws CoreException, InterruptedException {
+		final Object lock = new Object();
+		ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, new BuildProgressMonitor(lock));
+		synchronized (lock) {
+			if (!isBuildDone) {
+				lock.wait();
+			}
+		}
 	}
 
 	private void parseExpectedBugInstances(String... inputFileNames) throws IOException {
@@ -190,6 +207,7 @@ public abstract class AbstractTestCase {
 		return expectedBugInstanceNumbers;
 	}
 
+	@Ignore
 	@Test
 	public void tryFixExpectedBugInstances() throws Exception {
 		for (String bugInstanceNumber : getExpectedBugInstanceNumbers()) {
@@ -198,11 +216,29 @@ public abstract class AbstractTestCase {
 		}
 	}
 
+	private final class BuildProgressMonitor extends NullProgressMonitor {
+		private final Object lock;
+
+		private BuildProgressMonitor(Object lock) {
+			this.lock = lock;
+		}
+
+		@Override
+		public void done() {
+			synchronized (lock) {
+				if (!isBuildDone) {
+					isBuildDone = true;
+					lock.notify();
+				}
+			}
+		}
+	}
+
 	protected static abstract class GeneralBugInstanceCreator implements BugInstanceCreator {
 
 		@Override
 		public BugInstance createTestBugInstance(BugPattern bugPattern, int firstLine, int lastLine, IPath targetFilePath, String... replacements) {
-			return new BugInstance(bugPattern, new BugPosition(firstLine, lastLine, targetFilePath), createFixInformation(replacements));
+			return new BugInstance(bugPattern, new CodePosition(firstLine, lastLine, targetFilePath, null), createFixInformation(replacements));
 		}
 
 		@Override

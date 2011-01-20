@@ -6,6 +6,8 @@ package edu.illinois.keshmesh.detector;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.eclipse.jdt.core.IJavaProject;
+
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.dataflow.graph.AbstractMeetOperator;
 import com.ibm.wala.dataflow.graph.BitVectorUnion;
@@ -30,10 +32,12 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider<CGNode, BitVectorVariable> {
 
+	private final IJavaProject javaProject;
 	private final CallGraph callGraph;
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap;
 
-	public LCK06JTransferFunctionProvider(CallGraph callGraph, Map<CGNode, CGNodeInfo> cgNodeInfoMap) {
+	public LCK06JTransferFunctionProvider(IJavaProject javaProject, CallGraph callGraph, Map<CGNode, CGNodeInfo> cgNodeInfoMap) {
+		this.javaProject = javaProject;
 		this.callGraph = callGraph;
 		this.cgNodeInfoMap = cgNodeInfoMap;
 	}
@@ -50,19 +54,21 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
-		CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
-		CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
-		Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
-		IR dstIR = dst.getIR();
-		while (callSitesIterator.hasNext()) {
-			CallSiteReference callSiteReference = callSitesIterator.next();
-			IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
-			IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
-			while (instructionIndicesIterator.hasNext()) {
-				int invokeInstructionIndex = instructionIndicesIterator.next();
-				InstructionInfo instructionInfo = new InstructionInfo(dst, invokeInstructionIndex);
-				if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
-					return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+		if (!AnalysisUtils.isSafeSynchronized(dst.getMethod())) {
+			CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
+			CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
+			Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
+			IR dstIR = dst.getIR();
+			while (callSitesIterator.hasNext()) {
+				CallSiteReference callSiteReference = callSitesIterator.next();
+				IntSet callInstructionIndices = dstIR.getCallInstructionIndices(callSiteReference);
+				IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
+				while (instructionIndicesIterator.hasNext()) {
+					int invokeInstructionIndex = instructionIndicesIterator.next();
+					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
+						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+					}
 				}
 			}
 		}

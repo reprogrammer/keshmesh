@@ -76,4 +76,31 @@ public class LCK06JTests {
 
 	}
 
+	public static class LCK06JTest08 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("08", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest09 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("09", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest10 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("10", "A.java");
+		}
+
+	}
+
 }
