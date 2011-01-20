@@ -7,8 +7,7 @@ concurrent Java programs, offers automated fixes to the programmer whenever
 possible.
 
 Keshmesh uses [WALA](http://wala.sf.net) to analyze the program precisely, and
-thus produces few false alarms. We have packaged Keshmesh as an add-on to
-[Findbugs](http://findbugs.sf.net) for [Eclipse](http://eclipse.org).
+thus produces few false alarms. And, it uses [Findbugs](http://findbugs.sf.net) to report bugs and offer automated fixes to the users of [Eclipse](http://eclipse.org).
 
 Keshmesh is developed at the University of Illinois, and is licensed under the
 Illinois/NCSA Open Source License. See LICENSE.txt for more details.
