@@ -92,7 +92,7 @@ public abstract class AbstractTestCase {
 
 	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
 	//FixInformation makes part of a BugInstance and if it is not provided (i.e. null), then we should not neither fix nor check for the fix.
-	protected abstract boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
+	protected abstract void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
@@ -173,8 +173,8 @@ public abstract class AbstractTestCase {
 			bugInstanceNumber = "";
 		BugInstance actualBugInstance = bugInstances.find(bugInstance);
 		Assert.assertNotNull("Could not find bug instance.", actualBugInstance);
-		boolean wasFixed = fixBugInstance(actualBugInstance);
-		if (wasFixed) {
+		fixBugInstance(actualBugInstance);
+		if (bugInstance.getBugPattern().hasFixer()) {
 			checkFix(bugInstanceNumber);
 		}
 	}

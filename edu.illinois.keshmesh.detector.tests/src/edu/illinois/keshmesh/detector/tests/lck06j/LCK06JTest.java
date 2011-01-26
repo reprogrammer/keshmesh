@@ -30,9 +30,8 @@ abstract public class LCK06JTest extends AbstractTestCase {
 	}
 
 	@Override
-	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
+	protected void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
-		return false; //nothing was fixed
 	}
 
 	@Override

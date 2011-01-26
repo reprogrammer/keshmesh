@@ -16,4 +16,10 @@ public class LCK02JBugPattern extends BugPattern {
 	public LCK02JBugPattern() {
 		super("LCK02J", "Do not synchronize on the class object returned by getClass()", new LCK02JBugDetector());
 	}
+
+	@Override
+	public boolean hasFixer() {
+		return true;
+	}
+
 }
