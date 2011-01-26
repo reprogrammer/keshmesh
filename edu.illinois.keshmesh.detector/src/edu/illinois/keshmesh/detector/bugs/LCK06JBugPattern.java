@@ -16,4 +16,10 @@ public class LCK06JBugPattern extends BugPattern {
 	public LCK06JBugPattern() {
 		super("LCK06J", "Do not use an instance lock to protect shared static data", new LCK06JBugDetector());
 	}
+
+	@Override
+	public boolean hasFixer() {
+		return false;
+	}
+
 }

@@ -35,6 +35,8 @@ abstract public class BugPattern {
 		return bugPatternDetector;
 	}
 
+	public abstract boolean hasFixer();
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

@@ -7,6 +7,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 public class A {
 	static B b;
+	static int counter = 0;
 
 	@EntryPoint
 	public static void main(String args[]) {
@@ -18,14 +19,19 @@ public class A {
 	}
 
 	private void m() {
-		Class l = b.getClass();
-		if (1 < 2) {
-			l = new C().getClass();
-		}
+		Class l = getArbitraryClass();
 		/*[LCK02J,01,p.A.B.class,p.A.C.class*/synchronized (l) {
 			System.out
 					.println("multiple replacements: p.A.B.class, p.A.C.class");
 		}/*]*/
+	}
+
+	private Class getArbitraryClass() {
+		if (counter++ == 0) {
+			return b.getClass();
+		} else {
+			return new C().getClass();
+		}
 	}
 
 	class B {
