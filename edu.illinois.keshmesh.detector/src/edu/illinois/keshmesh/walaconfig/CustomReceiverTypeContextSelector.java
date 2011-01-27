@@ -1,7 +1,7 @@
 /**
  * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
  */
-package edu.illinois.keshmesh.detector;
+package edu.illinois.keshmesh.walaconfig;
 
 import com.ibm.wala.analysis.reflection.JavaTypeContext;
 import com.ibm.wala.analysis.typeInference.PointType;

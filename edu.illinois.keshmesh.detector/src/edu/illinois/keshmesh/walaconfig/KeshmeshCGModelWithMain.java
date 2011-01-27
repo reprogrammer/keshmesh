@@ -1,4 +1,4 @@
-package edu.illinois.keshmesh.detector;
+package edu.illinois.keshmesh.walaconfig;
 
 import java.io.IOException;
 import java.util.Collection;

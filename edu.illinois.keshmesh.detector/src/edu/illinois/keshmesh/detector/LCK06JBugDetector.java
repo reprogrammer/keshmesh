@@ -43,6 +43,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
+import edu.illinois.keshmesh.util.Logger;
 
 /**
  * 
@@ -213,7 +214,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			return unsafeInstructions; //should not really be null here
 		}
 		final DefUse defUse = new DefUse(ir);
-		AnalysisUtils.filter(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
@@ -300,7 +301,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 		final DefUse defUse = new DefUse(ir);
 
-		AnalysisUtils.filter(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
@@ -351,7 +352,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
-		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {

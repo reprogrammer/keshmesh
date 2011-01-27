@@ -27,11 +27,11 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
-import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.util.SetUtils;
+import edu.illinois.keshmesh.util.Logger;
 
 /**
  * 

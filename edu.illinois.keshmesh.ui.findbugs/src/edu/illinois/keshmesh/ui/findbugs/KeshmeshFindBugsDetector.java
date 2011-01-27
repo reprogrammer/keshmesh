@@ -13,10 +13,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.Detector;

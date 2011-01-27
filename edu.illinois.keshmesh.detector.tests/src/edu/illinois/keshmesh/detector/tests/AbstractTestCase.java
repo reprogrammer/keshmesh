@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
@@ -35,6 +34,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.util.Logger;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {

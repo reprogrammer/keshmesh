@@ -49,8 +49,11 @@ public class AnalysisUtils {
 		return false;
 	}
 
-	public static void filter(IJavaProject javaProject, Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
-		assert instructionInfos != null;
+	public static void collect(IJavaProject javaProject, Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
+		if (instructionInfos != null) {
+			throw new RuntimeException("Expected a valid collection to store the results in.");
+		}
+
 		IR ir = cgNode.getIR();
 		if (ir == null) {
 			return;
@@ -63,6 +66,31 @@ public class AnalysisUtils {
 				instructionInfos.add(instructionInfo);
 			}
 		}
+	}
+
+	/**
+	 * Remove the code duplication in
+	 * 
+	 * {@link #collect(IJavaProject, Collection, CGNode, InstructionFilter)}
+	 * 
+	 * and
+	 * 
+	 * {@link #contains(IJavaProject, CGNode, InstructionFilter)}.
+	 */
+	public static boolean contains(IJavaProject javaProject, CGNode cgNode, InstructionFilter instructionFilter) {
+		IR ir = cgNode.getIR();
+		if (ir == null) {
+			return false;
+		}
+		SSAInstruction[] instructions = ir.getInstructions();
+		for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
+			SSAInstruction instruction = instructions[instructionIndex];
+			InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
+			if (instruction != null && (instructionFilter == null || instructionFilter.accept(instructionInfo))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
