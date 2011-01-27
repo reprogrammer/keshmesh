@@ -55,15 +55,14 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		IClass declaringClass = cgNode.getMethod().getDeclaringClass();
 		if (implementsRunnableInterface(declaringClass) || extendsThreadClass(declaringClass)) {
 			return true;
-		} else if (AnalysisUtils.contains(javaProject, cgNode, new InstructionFilter() {
-			@Override
-			public boolean accept(InstructionInfo instructionInfo) {
-				return instructionInfo.getInstruction() instanceof SSAMonitorInstruction;
-			}
-		})) {
-			return true;
+		} else {
+			return AnalysisUtils.contains(javaProject, cgNode, new InstructionFilter() {
+				@Override
+				public boolean accept(InstructionInfo instructionInfo) {
+					return instructionInfo.getInstruction() instanceof SSAMonitorInstruction;
+				}
+			});
 		}
-		return false;
 	}
 
 	private boolean extendsThreadClass(IClass klass) {
@@ -88,11 +87,10 @@ public class VNA00JBugDetector extends BugPatternDetector {
 
 	private boolean isRunnableInterface(IClass interfaceClass) {
 		return AnalysisUtils.getEnclosingNonanonymousClassName(interfaceClass.getName()).equals("java.lang.Runnable");
-
 	}
 
 	private boolean isThreadClass(IClass klass) {
 		return AnalysisUtils.getEnclosingNonanonymousClassName(klass.getName()).equals("java.lang.Thread");
-
 	}
+
 }
