@@ -50,7 +50,7 @@ public class AnalysisUtils {
 	}
 
 	public static void collect(IJavaProject javaProject, Collection<InstructionInfo> instructionInfos, CGNode cgNode, InstructionFilter instructionFilter) {
-		if (instructionInfos != null) {
+		if (instructionInfos == null) {
 			throw new RuntimeException("Expected a valid collection to store the results in.");
 		}
 
