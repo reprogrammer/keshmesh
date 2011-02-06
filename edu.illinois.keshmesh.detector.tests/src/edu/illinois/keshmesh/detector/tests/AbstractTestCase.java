@@ -1,5 +1,10 @@
 package edu.illinois.keshmesh.detector.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -8,8 +13,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -23,9 +26,12 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.internal.matchers.IsCollectionContaining;
 
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
@@ -72,7 +78,7 @@ public abstract class AbstractTestCase {
 
 	@Test
 	public void shouldFindAllBugInstances() {
-		Assert.assertEquals(expectedBugInstances.size(), bugInstances.size());
+		assertEquals(expectedBugInstances.size(), bugInstances.size());
 	}
 
 	@Test
@@ -96,19 +102,37 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
-	private void bugInstanceShouldExist(BugInstance expectedBugInstance) {
-		boolean bugInstanceExists = bugInstances.contains(expectedBugInstance);
-		if (!bugInstanceExists) {
-			Set<BugInstance> expectedBugInstanceInSet = new HashSet<BugInstance>();
-			expectedBugInstanceInSet.add(expectedBugInstance);
-			Assert.assertEquals(expectedBugInstanceInSet.toString(), bugInstances.toString());
+	class BugInstanceMatcher extends BaseMatcher<BugInstance> {
+		private final BugInstance bugInstance;
+
+		public BugInstanceMatcher(BugInstance expectedBugInstance) {
+			bugInstance = expectedBugInstance;
 		}
-		Assert.assertTrue(String.format("Expected bug instance %s was not found.", expectedBugInstance), bugInstanceExists);
+
+		@Override
+		public boolean matches(Object arg) {
+			if (bugInstance == null || arg == null) {
+				return bugInstance == null && arg == null;
+			} else {
+				return bugInstance.portableEquals(arg);
+			}
+		}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendValue(bugInstance);
+		}
+
+	}
+
+	private void bugInstanceShouldExist(BugInstance expectedBugInstance) {
+		IsCollectionContaining<BugInstance> collectionContainsExpectedBugInstance = new IsCollectionContaining<BugInstance>(new BugInstanceMatcher(expectedBugInstance));
+		assertThat(bugInstances, collectionContainsExpectedBugInstance);
 	}
 
 	private String getPathForInputFile(String inputFileName) {
 		String prefix = TestSetupHelper.join("test-files", getBugPattern().getName(), testNumber);
-		Assert.assertTrue(String.format("The path %s contains \"in\"", prefix), !prefix.contains("in"));
+		assertTrue(String.format("The path %s contains \"in\"", prefix), !prefix.contains("in"));
 		return TestSetupHelper.join(prefix, "in", inputFileName);
 	}
 
@@ -172,7 +196,7 @@ public abstract class AbstractTestCase {
 		if (bugInstances.size() == 1)
 			bugInstanceNumber = "";
 		BugInstance actualBugInstance = bugInstances.find(bugInstance);
-		Assert.assertNotNull("Could not find bug instance.", actualBugInstance);
+		assertNotNull("Could not find bug instance.", actualBugInstance);
 		boolean wasFixed = fixBugInstance(actualBugInstance);
 		if (wasFixed) {
 			checkFix(bugInstanceNumber);
@@ -193,7 +217,7 @@ public abstract class AbstractTestCase {
 				foundBugInstance = true;
 			}
 		}
-		Assert.assertTrue(String.format("Could not find bug instance number %s.", bugInstanceNumber), foundBugInstance);
+		assertTrue(String.format("Could not find bug instance number %s.", bugInstanceNumber), foundBugInstance);
 	}
 
 	@Before
