@@ -69,6 +69,17 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
 
+	private LCK06JIntermediateResults intermediateResults;
+
+	public LCK06JBugDetector() {
+		this.intermediateResults = new LCK06JIntermediateResults();
+	}
+
+	@Override
+	public LCK06JIntermediateResults getIntermediateResults() {
+		return intermediateResults;
+	}
+
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		this.javaProject = javaProject;
@@ -401,6 +412,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				staticFields.addAll(klass.getAllStaticFields());
 			}
 		}
+		intermediateResults.setStaticFields(staticFields);
 		return staticFields;
 	}
 

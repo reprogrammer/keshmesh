@@ -20,6 +20,10 @@ public class LCK06JTests {
 			setupProjectAndAnalyze("01", "A.java", "B.java");
 		}
 
+		@Override
+		protected String getExpecptedIntermediateResults() {
+			return "LCK06JIntermediateResults [staticFields=[< Application, Lp/A, counter, <Primordial,I> >, < Application, Lp/A, a, <Application,Lp/A> >, < Application, Lp/A, static_assigned, <Application,Lp/B> >, < Application, Lp/A, static_unassigned, <Application,Lp/B> >]]";
+		}
 	}
 
 	public static class LCK06JTest02 extends LCK06JTest {

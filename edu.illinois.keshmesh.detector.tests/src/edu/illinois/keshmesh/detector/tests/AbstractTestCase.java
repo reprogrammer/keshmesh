@@ -1,5 +1,7 @@
 package edu.illinois.keshmesh.detector.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -27,6 +29,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.IntermediateResults;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
@@ -35,6 +38,7 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.util.Logger;
+import edu.illinois.keshmesh.util.Modes;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
@@ -89,6 +93,21 @@ public abstract class AbstractTestCase {
 	}
 
 	protected abstract BugPattern getBugPattern();
+
+	protected String getExpecptedIntermediateResults() {
+		return null;
+	}
+
+	protected IntermediateResults getIntermediateResults() {
+		return getBugPattern().getBugPatternDetector().getIntermediateResults();
+	}
+
+	@Test
+	public void testIntermediateResults() {
+		if (getExpecptedIntermediateResults() != null) {
+			assertEquals(getExpecptedIntermediateResults(), getIntermediateResults().toString());
+		}
+	}
 
 	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
 	//FixInformation makes part of a BugInstance and if it is not provided (i.e. null), then we should not neither fix nor check for the fix.
@@ -164,6 +183,7 @@ public abstract class AbstractTestCase {
 	}
 
 	private void findBugs() throws WALAInitializationException {
+		Modes.setInTestMode(true);
 		bugInstances = Main.initAndPerformAnalysis(javaProject);
 		Logger.log(bugInstances.toString());
 	}
