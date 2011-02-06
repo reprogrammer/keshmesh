@@ -3,6 +3,8 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Set;
 
 import com.ibm.wala.classLoader.IField;
@@ -17,19 +19,32 @@ import edu.illinois.keshmesh.util.Modes;
  */
 public class LCK06JIntermediateResults implements IntermediateResults {
 
-	private Set<IField> staticFields;
+	private IField[] staticFields;
 
 	public void setStaticFields(Set<IField> staticFields) {
 		if (!Modes.isInProductionMode() && this.staticFields == null) {
-			this.staticFields = staticFields;
+			this.staticFields = setToSortedArray(staticFields);
 		}
+	}
+
+	private IField[] setToSortedArray(Set<IField> staticFields) {
+		IField[] sortedArray = staticFields.toArray(new IField[] {});
+		Arrays.sort(sortedArray, new Comparator<IField>() {
+
+			@Override
+			public int compare(IField o1, IField o2) {
+				return o1.toString().compareTo(o2.toString());
+			}
+
+		});
+		return sortedArray;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("LCK06JIntermediateResults [staticFields=");
-		builder.append(staticFields);
+		builder.append(Arrays.toString(staticFields));
 		builder.append("]");
 		return builder.toString();
 	}

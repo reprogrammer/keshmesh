@@ -94,7 +94,7 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugPattern getBugPattern();
 
-	protected String getExpecptedIntermediateResults() {
+	protected String getExpectedIntermediateResults() {
 		return null;
 	}
 
@@ -104,8 +104,8 @@ public abstract class AbstractTestCase {
 
 	@Test
 	public void testIntermediateResults() {
-		assumeNotNull(getExpecptedIntermediateResults());
-		assertEquals(getExpecptedIntermediateResults(), getIntermediateResults().toString());
+		assumeNotNull(getExpectedIntermediateResults());
+		assertEquals(getExpectedIntermediateResults(), getIntermediateResults().toString());
 	}
 
 	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
