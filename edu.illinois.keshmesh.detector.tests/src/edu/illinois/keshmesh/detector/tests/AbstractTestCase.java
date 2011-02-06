@@ -1,6 +1,7 @@
 package edu.illinois.keshmesh.detector.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,8 +11,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -25,6 +24,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -104,9 +104,8 @@ public abstract class AbstractTestCase {
 
 	@Test
 	public void testIntermediateResults() {
-		if (getExpecptedIntermediateResults() != null) {
-			assertEquals(getExpecptedIntermediateResults(), getIntermediateResults().toString());
-		}
+		assumeNotNull(getExpecptedIntermediateResults());
+		assertEquals(getExpecptedIntermediateResults(), getIntermediateResults().toString());
 	}
 
 	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
