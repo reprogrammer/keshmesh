@@ -3,11 +3,15 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck06j;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.junit.Assert;
+import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.LCK06JIntermediateResults;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -33,6 +37,17 @@ abstract public class LCK06JTest extends AbstractTestCase {
 	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
 		return false; //nothing was fixed
+	}
+
+	protected String getExpectedStaticFields() {
+		return null;
+	}
+
+	@Test
+	public void testStaticFields() {
+		assumeNotNull(getExpectedStaticFields());
+		LCK06JIntermediateResults actualIntermediateResults = (LCK06JIntermediateResults) getIntermediateResults();
+		assertEquals(getExpectedStaticFields(), actualIntermediateResults.getStaticFields());
 	}
 
 	@Override

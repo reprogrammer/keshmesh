@@ -36,6 +36,15 @@ public abstract class BugPatternDetector {
 	 */
 	public abstract BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData);
 
+	/**
+	 * Tests can perform more rigorous checks if the detectors collect more fine
+	 * grained information along their way.
+	 * 
+	 * @return an object that contains the results while analyzing the code for
+	 *         a bug pattern.
+	 */
+	public abstract IntermediateResults getIntermediateResults();
+
 	protected PointerKey getPointerForValueNumber(CGNode cgNode, int valueNumber) {
 		return basicAnalysisData.heapModel.getPointerKeyForLocal(cgNode, valueNumber);
 	}

@@ -27,6 +27,11 @@ import edu.illinois.keshmesh.util.Logger;
 public class VNA00JBugDetector extends BugPatternDetector {
 
 	@Override
+	public IntermediateResults getIntermediateResults() {
+		return null;
+	}
+
+	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		this.javaProject = javaProject;
 		this.basicAnalysisData = basicAnalysisData;

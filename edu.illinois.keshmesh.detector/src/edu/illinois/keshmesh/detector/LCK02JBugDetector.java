@@ -43,6 +43,11 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class"; //$NON-NLS-1$
 
 	@Override
+	public IntermediateResults getIntermediateResults() {
+		return null;
+	}
+
+	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
 		basicAnalysisData = analysisData;
 		final BugInstances bugInstances = new BugInstances();
