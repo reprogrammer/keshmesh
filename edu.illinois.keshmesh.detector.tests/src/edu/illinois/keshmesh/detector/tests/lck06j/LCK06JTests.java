@@ -21,8 +21,8 @@ public class LCK06JTests {
 		}
 
 		@Override
-		protected String getExpectedIntermediateResults() {
-			return "LCK06JIntermediateResults [staticFields=[< Application, Lp/A, a, <Application,Lp/A> >, < Application, Lp/A, counter, <Primordial,I> >, < Application, Lp/A, static_assigned, <Application,Lp/B> >, < Application, Lp/A, static_unassigned, <Application,Lp/B> >]]";
+		protected String getExpectedStaticFields() {
+			return "[< Application, Lp/A, a, <Application,Lp/A> >, < Application, Lp/A, counter, <Primordial,I> >, < Application, Lp/A, static_assigned, <Application,Lp/B> >, < Application, Lp/A, static_unassigned, <Application,Lp/B> >]";
 		}
 	}
 

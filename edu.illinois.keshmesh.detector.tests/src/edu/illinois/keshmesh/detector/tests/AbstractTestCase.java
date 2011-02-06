@@ -1,8 +1,5 @@
 package edu.illinois.keshmesh.detector.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeNotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -94,18 +91,8 @@ public abstract class AbstractTestCase {
 
 	protected abstract BugPattern getBugPattern();
 
-	protected String getExpectedIntermediateResults() {
-		return null;
-	}
-
 	protected IntermediateResults getIntermediateResults() {
 		return getBugPattern().getBugPatternDetector().getIntermediateResults();
-	}
-
-	@Test
-	public void testIntermediateResults() {
-		assumeNotNull(getExpectedIntermediateResults());
-		assertEquals(getExpectedIntermediateResults(), getIntermediateResults().toString());
 	}
 
 	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  

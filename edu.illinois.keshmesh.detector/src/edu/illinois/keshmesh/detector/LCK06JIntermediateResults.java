@@ -40,13 +40,8 @@ public class LCK06JIntermediateResults implements IntermediateResults {
 		return sortedArray;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("LCK06JIntermediateResults [staticFields=");
-		builder.append(Arrays.toString(staticFields));
-		builder.append("]");
-		return builder.toString();
+	public String getStaticFields() {
+		return Arrays.toString(staticFields);
 	}
 
 }
