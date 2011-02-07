@@ -4,11 +4,11 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Set;
 
 import com.ibm.wala.classLoader.IField;
 
+import edu.illinois.keshmesh.detector.util.CollectionUtils;
 import edu.illinois.keshmesh.util.Modes;
 
 /**
@@ -19,29 +19,16 @@ import edu.illinois.keshmesh.util.Modes;
  */
 public class LCK06JIntermediateResults implements IntermediateResults {
 
-	private IField[] staticFields;
+	private String staticFields;
 
 	public void setStaticFields(Set<IField> staticFields) {
 		if (!Modes.isInProductionMode() && this.staticFields == null) {
-			this.staticFields = setToSortedArray(staticFields);
+			this.staticFields = Arrays.toString(CollectionUtils.collectionToSortedArray(staticFields));
 		}
 	}
 
-	private IField[] setToSortedArray(Set<IField> staticFields) {
-		IField[] sortedArray = staticFields.toArray(new IField[] {});
-		Arrays.sort(sortedArray, new Comparator<IField>() {
-
-			@Override
-			public int compare(IField o1, IField o2) {
-				return o1.toString().compareTo(o2.toString());
-			}
-
-		});
-		return sortedArray;
-	}
-
 	public String getStaticFields() {
-		return Arrays.toString(staticFields);
+		return staticFields;
 	}
 
 }
