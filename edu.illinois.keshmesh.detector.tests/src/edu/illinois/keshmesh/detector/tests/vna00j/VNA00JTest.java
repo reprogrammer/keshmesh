@@ -3,11 +3,15 @@
  */
 package edu.illinois.keshmesh.detector.tests.vna00j;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.VNA00JIntermediateResults;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -33,6 +37,17 @@ abstract public class VNA00JTest extends AbstractTestCase {
 	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
 		return false; //nothing was fixed
+	}
+
+	protected String getExpectedThreadSafeClasses() {
+		return null;
+	}
+
+	@Test
+	public void testThreadSafeClasses() {
+		assumeNotNull(getExpectedThreadSafeClasses());
+		VNA00JIntermediateResults actualIntermediateResults = (VNA00JIntermediateResults) getIntermediateResults();
+		assertEquals(getExpectedThreadSafeClasses(), actualIntermediateResults.getThreadSafeClasses());
 	}
 
 	@Override

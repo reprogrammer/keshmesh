@@ -25,9 +25,11 @@ import edu.illinois.keshmesh.util.Logger;
  */
 public class VNA00JBugDetector extends BugPatternDetector {
 
+	VNA00JIntermediateResults intermediateResults = new VNA00JIntermediateResults();
+
 	@Override
 	public IntermediateResults getIntermediateResults() {
-		return null;
+		return intermediateResults;
 	}
 
 	@Override
@@ -40,12 +42,14 @@ public class VNA00JBugDetector extends BugPatternDetector {
 			Logger.log("CGNode: " + cgNode.getIR());
 		}
 		BugInstances bugInstances = new BugInstances();
+		Collection<IClass> threadSafeClasses = getThreadSafeClasses();
+		intermediateResults.setThreadSafeClasses(threadSafeClasses);
 		return bugInstances;
 	}
 
 	private Collection<IClass> getThreadSafeClasses() {
 		Collection<IClass> threadSafeClasses = new HashSet<IClass>();
-		Iterator<CGNode> cgNodesIter = this.basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
 			if (isThreadSafe(cgNode)) {

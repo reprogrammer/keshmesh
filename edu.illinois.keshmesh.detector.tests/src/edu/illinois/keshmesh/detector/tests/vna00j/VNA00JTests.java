@@ -20,6 +20,10 @@ public class VNA00JTests {
 			setupProjectAndAnalyze("01", "A.java");
 		}
 
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/A>]";
+		}
 	}
 
 }
