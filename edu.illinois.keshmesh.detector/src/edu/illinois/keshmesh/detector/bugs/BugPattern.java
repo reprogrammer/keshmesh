@@ -15,12 +15,11 @@ abstract public class BugPattern {
 
 	private final String name;
 	private final String description;
-	private final BugPatternDetector bugPatternDetector;
+	protected BugPatternDetector bugPatternDetector;
 
-	public BugPattern(String name, String description, BugPatternDetector bugPatternDetector) {
+	public BugPattern(String name, String description) {
 		this.name = name;
 		this.description = description;
-		this.bugPatternDetector = bugPatternDetector;
 	}
 
 	public String getName() {
@@ -30,6 +29,8 @@ abstract public class BugPattern {
 	public String getDescription() {
 		return description;
 	}
+
+	abstract public BugPatternDetector createBugPatternDetector();
 
 	public BugPatternDetector getBugPatternDetector() {
 		return bugPatternDetector;

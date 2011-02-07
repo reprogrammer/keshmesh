@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import edu.illinois.keshmesh.detector.BugPatternDetector;
 import edu.illinois.keshmesh.detector.VNA00JBugDetector;
 
 /**
@@ -14,6 +15,13 @@ import edu.illinois.keshmesh.detector.VNA00JBugDetector;
 public class VNA00JBugPattern extends BugPattern {
 
 	public VNA00JBugPattern() {
-		super("VNA00J", "Ensure visibility when accessing shared primitive variables", new VNA00JBugDetector());
+		super("VNA00J", "Ensure visibility when accessing shared primitive variables");
 	}
+
+	@Override
+	public BugPatternDetector createBugPatternDetector() {
+		bugPatternDetector = new VNA00JBugDetector();
+		return bugPatternDetector;
+	}
+
 }

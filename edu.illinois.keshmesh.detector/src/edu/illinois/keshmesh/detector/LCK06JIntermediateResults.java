@@ -9,7 +9,6 @@ import java.util.Set;
 import com.ibm.wala.classLoader.IField;
 
 import edu.illinois.keshmesh.detector.util.CollectionUtils;
-import edu.illinois.keshmesh.util.Modes;
 
 /**
  * 
@@ -17,12 +16,12 @@ import edu.illinois.keshmesh.util.Modes;
  * @author Stas Negara
  * 
  */
-public class LCK06JIntermediateResults implements IntermediateResults {
+public class LCK06JIntermediateResults extends IntermediateResults {
 
 	private String staticFields;
 
 	public void setStaticFields(Set<IField> staticFields) {
-		if (!Modes.isInProductionMode() && this.staticFields == null) {
+		if (canSaveIntermediateResult(this.staticFields)) {
 			this.staticFields = Arrays.toString(CollectionUtils.collectionToSortedArray(staticFields));
 		}
 	}
