@@ -3,12 +3,11 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import com.ibm.wala.classLoader.IClass;
-
-import edu.illinois.keshmesh.detector.util.CollectionUtils;
+import com.ibm.wala.ipa.callgraph.CGNode;
 
 /**
  * 
@@ -20,14 +19,22 @@ public class VNA00JIntermediateResults extends IntermediateResults {
 
 	private String threadSafeClasses;
 
+	private String unsafeInstructionsThatAccessUnprotectedFields;
+
 	public void setThreadSafeClasses(Collection<IClass> threadSafeClasses) {
-		if (canSaveIntermediateResult(this.threadSafeClasses)) {
-			this.threadSafeClasses = Arrays.toString(CollectionUtils.collectionToSortedArray(threadSafeClasses));
-		}
+		this.threadSafeClasses = getIntermediateResult(this.threadSafeClasses, threadSafeClasses);
+	}
+
+	public void setUnsafeInstructionsThatAccessUnprotectedFields(Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnsafeInstructions) {
+		this.unsafeInstructionsThatAccessUnprotectedFields = getIntermediateResult(this.unsafeInstructionsThatAccessUnprotectedFields, intermediateMapOfUnsafeInstructions);
 	}
 
 	public String getThreadSafeClasses() {
 		return threadSafeClasses;
+	}
+
+	public String getUnsafeInstructionsThatAccessUnprotectedFields() {
+		return unsafeInstructionsThatAccessUnprotectedFields;
 	}
 
 }

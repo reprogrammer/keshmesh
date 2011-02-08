@@ -123,14 +123,6 @@ public class AnalysisUtils {
 		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
 	}
 
-	public static boolean isUnsafeSynchronized(IMethod method) {
-		return method.isSynchronized() && !method.isStatic();
-	}
-
-	public static boolean isSafeSynchronized(IMethod method) {
-		return method.isSynchronized() && method.isStatic();
-	}
-
 	public static String walaTypeNameToJavaName(TypeName typeName) {
 		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName();
 

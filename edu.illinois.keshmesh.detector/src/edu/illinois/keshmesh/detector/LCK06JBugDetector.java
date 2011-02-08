@@ -156,7 +156,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			IMethod method = unsafeSynchronizedBlock.getCGNode().getMethod();
 
 			// If the method is safe, i.e. static and synchronized, we report no instances of LCK06J in that method. Therefore, we ignore the unsafe synchronized blocks in it.
-			if (AnalysisUtils.isSafeSynchronized(method)) {
+			if (LCK06JBugDetector.isSafeSynchronized(method)) {
 				continue;
 			}
 
@@ -283,7 +283,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			if (!AnalysisUtils.isSafeSynchronized(cgNode.getMethod()) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!LCK06JBugDetector.isSafeSynchronized(cgNode.getMethod()) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -355,7 +355,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			IMethod method = cgNode.getMethod();
 			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
-				if (AnalysisUtils.isUnsafeSynchronized(method)) {
+				if (LCK06JBugDetector.isUnsafeSynchronized(method)) {
 					unsafeSynchronizedMethods.add(cgNode);
 				}
 			}
@@ -425,6 +425,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private CodePosition getPosition(CGNode cgNode) {
 		IMethod method = cgNode.getMethod();
 		return AnalysisUtils.getPosition(javaProject, method, 0);
+	}
+
+	private static boolean isUnsafeSynchronized(IMethod method) {
+		return method.isSynchronized() && !method.isStatic();
+	}
+
+	static boolean isSafeSynchronized(IMethod method) {
+		return method.isSynchronized() && method.isStatic();
 	}
 
 }

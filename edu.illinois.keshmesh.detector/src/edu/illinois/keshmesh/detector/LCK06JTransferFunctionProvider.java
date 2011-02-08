@@ -54,7 +54,7 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
-		if (!AnalysisUtils.isSafeSynchronized(dst.getMethod())) {
+		if (!LCK06JBugDetector.isSafeSynchronized(dst.getMethod())) {
 			CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
 			CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
 			Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);

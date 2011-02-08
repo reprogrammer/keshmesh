@@ -3,12 +3,9 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.util.Collection;
 
 import com.ibm.wala.classLoader.IField;
-
-import edu.illinois.keshmesh.detector.util.CollectionUtils;
 
 /**
  * 
@@ -20,10 +17,8 @@ public class LCK06JIntermediateResults extends IntermediateResults {
 
 	private String staticFields;
 
-	public void setStaticFields(Set<IField> staticFields) {
-		if (canSaveIntermediateResult(this.staticFields)) {
-			this.staticFields = Arrays.toString(CollectionUtils.collectionToSortedArray(staticFields));
-		}
+	public void setStaticFields(Collection<IField> staticFields) {
+		this.staticFields = getIntermediateResult(this.staticFields, staticFields);
 	}
 
 	public String getStaticFields() {

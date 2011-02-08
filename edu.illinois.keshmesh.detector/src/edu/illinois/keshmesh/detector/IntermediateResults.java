@@ -3,6 +3,13 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
+
+import edu.illinois.keshmesh.detector.util.CollectionUtils;
 import edu.illinois.keshmesh.util.Modes;
 
 /**
@@ -23,4 +30,29 @@ public abstract class IntermediateResults {
 		return false;
 	}
 
+	protected String getIntermediateResult(String currentIntermediateResult, Collection<? extends Object> newIntermediateResult) {
+		if (canSaveIntermediateResult(currentIntermediateResult)) {
+			return Arrays.toString(CollectionUtils.collectionToSortedArray(newIntermediateResult));
+		} else {
+			return currentIntermediateResult;
+		}
+	}
+
+	protected String getIntermediateResult(String currentIntermediateResult, Map<? extends Object, ? extends Collection<? extends Object>> newIntermediateResult) {
+		if (canSaveIntermediateResult(currentIntermediateResult)) {
+			TreeMap<Object, Object> orderedMap = new TreeMap<Object, Object>(new Comparator<Object>() {
+
+				@Override
+				public int compare(Object o1, Object o2) {
+					return o1.toString().compareTo(o2.toString());
+				}
+			});
+			for (Map.Entry<? extends Object, ? extends Collection<? extends Object>> entry : newIntermediateResult.entrySet()) {
+				orderedMap.put(entry.getKey(), Arrays.toString(CollectionUtils.collectionToSortedArray(entry.getValue())));
+			}
+			return orderedMap.toString();
+		} else {
+			return currentIntermediateResult;
+		}
+	}
 }
