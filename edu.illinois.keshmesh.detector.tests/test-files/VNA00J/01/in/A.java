@@ -12,12 +12,12 @@ public class A {
 	@EntryPoint
 	public static void main(String args[]) {
 		A a = new A();
-		a.m();
+		/* [VNA00J,01 */a.m(); /* ] */
 	}
 
 	void m() {
-		/* [VNA00J,01 */counter++;/* ] */
-		/* [VNA00J,02 */increment();/* ] */
+		/* [VNA00J,02 */counter++;/* ] */
+		/* [VNA00J,03 */increment();/* ] */
 		synchronized (new Object()) {
 			counter++;
 			increment();
@@ -25,7 +25,7 @@ public class A {
 	}
 
 	void increment() {
-		/* [VNA00J,03 */counter++;/* ] */
+		/* [VNA00J,04 */counter++;/* ] */
 	}
 
 }

@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.JavaCore;
 
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
@@ -77,6 +78,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 				projectName = getProjectName(classContext.getAnalysisContext());
 				IJavaProject javaProject = getProject(projectName);
 				Logger.log("The java project under analysis is " + javaProject.getElementName());
+				BugPatterns.enableAllBugPatterns();
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
 					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());

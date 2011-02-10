@@ -6,6 +6,9 @@ package edu.illinois.keshmesh.detector;
 import java.util.Collection;
 
 import com.ibm.wala.util.intset.BitVector;
+import com.ibm.wala.util.intset.BitVectorIntSet;
+import com.ibm.wala.util.intset.IntIterator;
+import com.ibm.wala.util.intset.OrdinalSetMapping;
 
 /**
  * 
@@ -29,6 +32,15 @@ public class CGNodeInfo {
 
 	public BitVector getBitVector() {
 		return bitVector;
+	}
+
+	public <T> void getBitVectorContents(Collection<T> result, OrdinalSetMapping<T> globalValues) {
+		BitVectorIntSet bitVectorIntSet = new BitVectorIntSet(bitVector);
+		IntIterator intIterator = bitVectorIntSet.intIterator();
+		while (intIterator.hasNext()) {
+			T instructionInfo = globalValues.getMappedObject(intIterator.next());
+			result.add(instructionInfo);
+		}
 	}
 
 }

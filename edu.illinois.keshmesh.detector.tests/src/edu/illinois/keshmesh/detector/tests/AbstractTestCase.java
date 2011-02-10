@@ -38,6 +38,7 @@ import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
@@ -195,6 +196,7 @@ public abstract class AbstractTestCase {
 
 	private void findBugs() throws WALAInitializationException {
 		Modes.setInTestMode(true);
+		BugPatterns.enableBugPatterns(getBugPattern());
 		bugInstances = Main.initAndPerformAnalysis(javaProject);
 		Logger.log(bugInstances.toString());
 	}
