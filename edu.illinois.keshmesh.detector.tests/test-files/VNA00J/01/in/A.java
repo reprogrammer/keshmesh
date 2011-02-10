@@ -16,8 +16,8 @@ public class A {
 	}
 
 	void m() {
-		/* [VNA00J,02 */counter++;/* ] */
-		/* [VNA00J,03 */increment();/* ] */
+		/* [VNA00J,01 */counter++;/* ] */
+		/* [VNA00J,02 */increment();/* ] */
 		synchronized (new Object()) {
 			counter++;
 			increment();
@@ -25,7 +25,7 @@ public class A {
 	}
 
 	void increment() {
-		/* [VNA00J,04 */counter++;/* ] */
+		/* [VNA00J,03 */counter++;/* ] */
 	}
 
 }
