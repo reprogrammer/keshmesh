@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -23,7 +24,6 @@ import com.ibm.wala.types.TypeName;
 
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
-import edu.illinois.keshmesh.detector.LCK06JBugDetector;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 
 /**
@@ -115,7 +115,7 @@ public class AnalysisUtils {
 	}
 
 	public static boolean isJDKClass(IClass klass) {
-		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(LCK06JBugDetector.PRIMORDIAL_CLASSLOADER_NAME);
+		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(AnalysisUtils.PRIMORDIAL_CLASSLOADER_NAME);
 		return isJDKClass;
 	}
 
@@ -138,7 +138,11 @@ public class AnalysisUtils {
 		} else if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
-				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName).getCompilationUnit().getPath());
+				ICompilationUnit compilationUnit = javaProject.findType(enclosingClassName).getCompilationUnit();
+				if (compilationUnit == null) {
+					throw new RuntimeException("Could not find a compilation unit for the class: " + enclosingClassName);
+				}
+				IPath fullPath = getWorkspaceLocation().append(compilationUnit.getPath());
 				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
 				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
 			} catch (JavaModelException e) {
@@ -157,5 +161,7 @@ public class AnalysisUtils {
 	public static boolean isMonitorExit(SSAInstruction ssaInstruction) {
 		return ssaInstruction instanceof SSAMonitorInstruction && !((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
 	}
+
+	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
 }

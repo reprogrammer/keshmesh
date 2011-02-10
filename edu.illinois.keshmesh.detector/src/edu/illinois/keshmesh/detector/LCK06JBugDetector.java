@@ -61,8 +61,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		SAFE, UNSAFE
 	}
 
-	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
-
 	private final Set<InstanceKey> instancesPointedByStaticFields = new HashSet<InstanceKey>();
 
 	private final OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();

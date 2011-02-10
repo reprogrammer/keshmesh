@@ -87,7 +87,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
-			if (isThreadSafe(cgNode)) {
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass()) && isThreadSafe(cgNode)) {
 				threadSafeClasses.add(cgNode.getMethod().getDeclaringClass());
 			}
 		}
@@ -402,7 +402,9 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		final Collection<InstructionInfo> instructionsThatAccessUnprotectedFields = new HashSet<InstructionInfo>();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
-			instructionsThatAccessUnprotectedFields.addAll(getInstructionsToReport(bitVectorSolver, cgNode));
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+				instructionsThatAccessUnprotectedFields.addAll(getInstructionsToReport(bitVectorSolver, cgNode));
+			}
 		}
 		return instructionsThatAccessUnprotectedFields;
 	}

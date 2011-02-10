@@ -12,7 +12,7 @@ public class A {
 	@EntryPoint
 	public static void main(String args[]) {
 		A a = new A();
-		/* [VNA00J,01 */a.m(); /* ] */
+		a.m();
 	}
 
 	void m() {

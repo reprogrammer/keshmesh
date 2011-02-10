@@ -58,6 +58,8 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 	 * This method is the same as
 	 * LCK06JTransferFunctionProvider#getEdgeTransferFunction except that the
 	 * conditions of the if statements are different.
+	 * 
+	 * This method propagates from some instructions from src to dst.
 	 */
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
