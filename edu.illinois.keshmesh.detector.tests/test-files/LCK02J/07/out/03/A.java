@@ -7,6 +7,8 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 public class A {
 
+	private static int counter = 0;
+
 	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
@@ -16,23 +18,30 @@ public class A {
 		A a = new A();
 		Class l1 = a.new B().getClass();
 		Class l2 = a.new C().getClass();
-		/*[LCK02J,01,p.A.B.class*/synchronized (l1) {
+		/* [LCK02J,01,p.A.B.class */synchronized (l1) {
 			System.out.println("replace with p.A.B.class");
-		}/*]*/
+		}/* ] */
 		synchronized (this) {
 			System.err.println("do not replace");
 		}
-		/*[LCK02J,02,p.A.class*/synchronized (this.getClass()) {
+		/* [LCK02J,02,p.A.class */synchronized (this.getClass()) {
 			System.err.println("replace with p.A.class");
-		}/*]*/
-		/*[LCK02J,03,p.A.C.class*/synchronized (p.A.C.class) {
+		}/* ] */
+		/* [LCK02J,03,p.A.C.class */synchronized (p.A.C.class) {
 			System.out.println("replace with p.A.C.class");
-		}/*]*/
-		Class l = (1 > 2) ? l1 : l2;
-		/*[LCK02J,04,p.A.B.class,p.A.C.class*/synchronized (l) {
+		}/* ] */
+		Class l = pickOne(l1, l2);
+		/* [LCK02J,04,p.A.B.class,p.A.C.class */synchronized (l) {
 			System.err
 					.println("multiple replacements: p.A.B.class, p.A.C.class");
-		}/*]*/
+		}/* ] */
+	}
+
+	private Class pickOne(Class l1, Class l2) {
+		if (counter++ == 0) {
+			return l1;
+		}
+		return l2;
 	}
 
 	class B {

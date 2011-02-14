@@ -97,26 +97,44 @@ public class LCK02JFixer extends Refactoring {
 			int bugLineOffset = document.getLineInformation(bugPosition.getFirstLine() - 1).getOffset();
 			int bugLineLength = document.getLineInformation(bugPosition.getFirstLine() - 1).getLength();
 			String bugLineContent = document.get(bugLineOffset, bugLineLength);
-			String syncCommand = "synchronized(";
-			int myFirstOffset = bugLineOffset + bugLineContent.indexOf(syncCommand);
-			int index = bugLineContent.indexOf(syncCommand) + syncCommand.length();
-			//			int begin = bugLineContent.indexOf(syncCommand) + syncCommand.length();
+			String syncCommand = "synchronized";
+
+			int syncIndex = bugLineContent.indexOf(syncCommand);
+			int start_comment_index = bugLineContent.indexOf("/*");
+			int end_comment_index = bugLineContent.indexOf("*/");
+			String temp_bugLineContent = bugLineContent;
+			int temp_syncIndex = syncIndex;
+			int temp_beginIndex = 0;
+
+			// there is a possibility of having synchronized word within comments
+			while (start_comment_index >= 0 && end_comment_index > 0 && temp_bugLineContent.length() > 0 && temp_syncIndex > start_comment_index) {
+				temp_beginIndex += (end_comment_index + 2);
+				temp_bugLineContent = temp_bugLineContent.substring(end_comment_index + 2);
+				temp_syncIndex = temp_bugLineContent.indexOf(syncCommand);
+				start_comment_index = temp_bugLineContent.indexOf("/*");
+				end_comment_index = temp_bugLineContent.indexOf("*/");
+				syncIndex = temp_beginIndex + temp_syncIndex;
+				System.out.println(syncIndex);
+
+			}
+
+			String bugLineContentAfterSynch = bugLineContent.substring(syncIndex + syncCommand.length());
+			int openParenthesisIndex = bugLineContentAfterSynch.indexOf('(') + syncIndex + syncCommand.length();
+			int myFirstOffset = bugLineOffset + syncIndex;
+			int index = openParenthesisIndex;
 			int pcounter = 1;
 			while (pcounter != 0 && index < bugLineLength) {
+				index++;
 				if (bugLineContent.charAt(index) == ')') {
 					pcounter--;
 				} else if (bugLineContent.charAt(index) == '(') {
 					pcounter++;
 				}
-				index++;
 			}
 
 			int myLastOffset = bugLineOffset + index;
-			//			String syncStr = bugLineContent.substring(begin, index - 1);
-			//			System.out.println("Bug Line Content = " + bugLineContent);
-			//			System.out.println("begin, end, begin offset, end offset = " + myFirstOffset + " " + myLastOffset + " " + bugPosition.getFirstOffset() + " " + bugLineOffset);
-			//ASTNode monitorNode = NodeFinder.perform(compilationUnit, bugPosition.getFirstOffset(), bugPosition.getLength());
-			ASTNode monitorNode = NodeFinder.perform(compilationUnit, myFirstOffset, myLastOffset - myFirstOffset);
+			//System.out.println("synch block = " + document.get(myFirstOffset, myLastOffset - myFirstOffset + 1));
+			ASTNode monitorNode = NodeFinder.perform(compilationUnit, myFirstOffset, myLastOffset - myFirstOffset + 1);
 			SynchronizedStatement synchronizedStatement = (SynchronizedStatement) monitorNode;
 			AST ast = synchronizedStatement.getAST();
 			ASTRewrite rewriter = ASTRewrite.create(ast);

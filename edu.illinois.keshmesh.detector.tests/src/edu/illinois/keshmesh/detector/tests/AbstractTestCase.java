@@ -1,3 +1,6 @@
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package edu.illinois.keshmesh.detector.tests;
 
 import java.io.File;
@@ -24,7 +27,6 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.illinois.keshmesh.detector.Logger;
@@ -35,6 +37,14 @@ import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+
+/**
+ * 
+ * For each detected bug in the test input file, a number is assigned. For each
+ * bug number, in the output folder a sub folder with that number is created
+ * which contains the input file with that bug fixed
+ * 
+ */
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
@@ -207,7 +217,6 @@ public abstract class AbstractTestCase {
 		return expectedBugInstanceNumbers;
 	}
 
-	@Ignore
 	@Test
 	public void tryFixExpectedBugInstances() throws Exception {
 		for (String bugInstanceNumber : getExpectedBugInstanceNumbers()) {

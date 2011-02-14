@@ -89,7 +89,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 						sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
 
 					} else {
-						sourceLineAnnotation.setDescription(null);
+						sourceLineAnnotation.setDescription("");
 
 					}
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(sourceLineAnnotation));
