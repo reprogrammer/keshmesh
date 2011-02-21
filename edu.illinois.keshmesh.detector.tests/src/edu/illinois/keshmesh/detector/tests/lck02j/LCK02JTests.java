@@ -105,4 +105,12 @@ public class LCK02JTests {
 		}
 	}
 
+	public static class LCK02JTest11 extends LCK02JTest {
+
+		@Before
+		@Override
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("11", "A.java");
+		}
+	}
 }

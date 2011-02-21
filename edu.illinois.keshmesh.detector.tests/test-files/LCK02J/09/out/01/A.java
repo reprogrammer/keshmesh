@@ -5,6 +5,10 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * The intention of this test is to check if the fixer works correctly if there is any synchronized 
+ * statement within the comments in the line that contains synchronized block
+ */
 public class A {
 
 	@EntryPoint

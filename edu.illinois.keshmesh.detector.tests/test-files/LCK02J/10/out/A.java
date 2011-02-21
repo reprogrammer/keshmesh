@@ -5,6 +5,11 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * The intention of this test is to check if the fixer works correctly if there
+ * is synchronized statement within the comments in the line that contains
+ * synchronized block and also within the comments in the synchronized block
+ */
 public class A {
 
 	@EntryPoint
@@ -13,8 +18,8 @@ public class A {
 	}
 
 	private void m() {
-		/*[LCK02J,01,p.A.class*/synchronized (p.A.class) {
+		/* [LCK02J,01,p.A.class */synchronized (p.A.class) {
 			System.out.println("replace by p.A.class");
-		}/*]*/
+		}/* ] */
 	}
 }
