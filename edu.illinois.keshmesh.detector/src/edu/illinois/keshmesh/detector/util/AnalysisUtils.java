@@ -111,7 +111,12 @@ public class AnalysisUtils {
 			int indexOfLastPackageSeparator = packageName.lastIndexOf('.', indexOfOpenParen);
 			return packageName.substring(0, indexOfLastPackageSeparator);
 		}
-		return packageName + "." + typeName.getClassName();
+		String className = typeName.getClassName().toString();
+		int indexOfDollarSign = className.indexOf('$');
+		if (indexOfDollarSign != -1 && Character.isDigit(className.charAt(indexOfDollarSign + 1))) {
+			className = className.substring(0, indexOfDollarSign);
+		}
+		return packageName + "." + className;
 	}
 
 	public static boolean isJDKClass(IClass klass) {

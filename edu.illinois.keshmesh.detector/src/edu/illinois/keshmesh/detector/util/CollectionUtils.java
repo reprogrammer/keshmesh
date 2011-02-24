@@ -41,8 +41,4 @@ public class CollectionUtils {
 		return sortedArray;
 	}
 
-	//	public static String deterministicMapToString(Map<? extends Object, ? extends Object> map) {
-	//
-	//	}
-
 }
