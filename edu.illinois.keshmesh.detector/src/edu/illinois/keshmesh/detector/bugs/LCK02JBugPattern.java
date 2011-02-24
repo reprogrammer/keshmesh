@@ -24,4 +24,8 @@ public class LCK02JBugPattern extends BugPattern {
 		return bugPatternDetector;
 	}
 
+	public boolean hasFixer() {
+		return true;
+	}
+
 }

@@ -6,7 +6,7 @@ package p;
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
 public class C {
-	
+
 	@EntryPoint
 	public static void main(String[] args) {
 		System.err.println("aaa");

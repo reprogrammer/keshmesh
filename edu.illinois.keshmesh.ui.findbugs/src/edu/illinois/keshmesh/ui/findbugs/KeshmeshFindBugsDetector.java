@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.JavaCore;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
+import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
@@ -82,9 +83,18 @@ public class KeshmeshFindBugsDetector implements Detector {
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
 					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());
-					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(
-							new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath().toString(), bugInstance.getBugPosition()
-									.getFirstLine(), bugInstance.getBugPosition().getLastLine(), 0, 0)));
+					SourceLineAnnotation sourceLineAnnotation = new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath()
+							.toString(), bugInstance.getBugPosition().getFirstLine(), bugInstance.getBugPosition().getLastLine(), bugInstance.getBugPosition().getFirstOffset(), bugInstance
+							.getBugPosition().getLastOffset());
+					if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1) {
+
+						sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
+
+					} else {
+						sourceLineAnnotation.setDescription("");
+
+					}
+					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(sourceLineAnnotation));
 				}
 			}
 		} catch (ProjectNotFoundException e) {

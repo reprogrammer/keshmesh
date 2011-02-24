@@ -1,0 +1,114 @@
+Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml
+===================================================================
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(revision 13128)
++++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(working copy)
+@@ -1,5 +1,10 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <findbugs-resolutions>
++    <bug type="KESHMESH_LCK02J">
++        <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.KeshmeshResolution">
++            <attr name="label">Use valueOf(...) instead</attr>
++		</resolution>
++    </bug>
+     <bug type="DM_BOOLEAN_CTOR">
+         <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.UseValueOfResolution">
+             <attr name="label">Use valueOf(...) instead</attr>
+Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java
+===================================================================
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java	(revision 0)
++++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java	(revision 0)
+@@ -0,0 +1,75 @@
++package edu.umd.cs.findbugs.plugin.eclipse.quickfix;
++
++import java.util.HashSet;
++import java.util.Set;
++
++import org.eclipse.core.runtime.CoreException;
++import org.eclipse.core.runtime.NullProgressMonitor;
++import org.eclipse.core.runtime.OperationCanceledException;
++import org.eclipse.jdt.core.dom.CompilationUnit;
++import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
++
++import com.ibm.wala.cast.java.translator.jdt.JDTJava2CAstTranslator.JdtPosition;
++
++import edu.illinois.keshmesh.detector.bugs.BugPatterns;
++import edu.illinois.keshmesh.detector.bugs.CodePosition;
++import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
++import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
++import edu.umd.cs.findbugs.BugInstance;
++
++public class KeshmeshResolution extends BugResolution {
++
++    @Override
++    protected boolean resolveBindings() {
++        return true;
++    }
++
++    @Override
++    protected void repairBug(ASTRewrite rewrite, CompilationUnit workingUnit, BugInstance bug) {
++        assert rewrite != null;
++        assert workingUnit != null;
++        assert bug != null;
++
++        edu.illinois.keshmesh.detector.bugs.CodePosition keshmeshPosition = new CodePosition(new JdtPosition(bug
++                .getPrimarySourceLineAnnotation().getStartBytecode(), bug.getPrimarySourceLineAnnotation().getEndBytecode(), bug
++                .getPrimarySourceLineAnnotation().getStartLine(), bug.getPrimarySourceLineAnnotation().getEndLine(), bug
++                .getPrimarySourceLineAnnotation().getSourceFile()), null);
++        Set<String> typeNames = new HashSet<String>();
++        if (!bug.getPrimarySourceLineAnnotation().getDescription().equals("")) {
++            typeNames.add(bug.getPrimarySourceLineAnnotation().getDescription());
++        }
++        edu.illinois.keshmesh.detector.bugs.BugInstance keshmeshBugInstance = new edu.illinois.keshmesh.detector.bugs.BugInstance(
++                BugPatterns.LCK02J, keshmeshPosition, new LCK02JFixInformation(typeNames));
++        // edu.illinois.keshmesh.detector.bugs.BugInstance(bug.getBugPattern(),bug.g)
++
++        LCK02JFixer fixer = new LCK02JFixer(keshmeshBugInstance);
++        try {
++            if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
++                fixer.createChange(new NullProgressMonitor());
++            }
++        } catch (OperationCanceledException e) {
++            e.printStackTrace();
++        } catch (CoreException e) {
++            e.printStackTrace();
++        }
++
++        System.out.println("Resolved");
++        // throw new
++        // Exception("No matching oddness check found at the specified source line.");
++
++        // InfixExpression oddnessCheck =
++        // findOddnessCheck(getASTNode(workingUnit,
++        // bug.getPrimarySourceLineAnnotation()));
++        // if (oddnessCheck == null) {
++        // throw new
++        // BugResolutionException("No matching oddness check found at the specified source line.");
++        // }
++        // Expression numberExpression = findNumberExpression(oddnessCheck);
++        // if (numberExpression == null) {
++        // throw new BugResolutionException();
++        // }
++        // InfixExpression correctOddnessCheck =
++        // createCorrectOddnessCheck(rewrite, numberExpression);
++        // rewrite.replace(oddnessCheck, correctOddnessCheck, null);
++    }
++}
+Index: META-INF/MANIFEST.MF
+===================================================================
+--- META-INF/MANIFEST.MF	(revision 13128)
++++ META-INF/MANIFEST.MF	(working copy)
+@@ -40,7 +40,13 @@
+  org.eclipse.ui.views.properties.tabbed,
+  org.eclipse.ui.console,
+  org.eclipse.core.filesystem,
+- findbugs;resolution:=optional;visibility:=reexport
++ findbugs;resolution:=optional;visibility:=reexport,
++ edu.illinois.keshmesh.detector;bundle-version="1.0.0",
++ edu.illinois.keshmesh.transformer.core;bundle-version="1.0.0",
++ com.ibm.wala.cast;bundle-version="1.0.0",
++ org.eclipse.ltk.core.refactoring;bundle-version="3.5.100",
++ com.ibm.wala.cast.java;bundle-version="1.0.0",
++ com.ibm.wala.cast.java.jdt;bundle-version="1.0.0"
+ Bundle-ActivationPolicy: lazy
+ Eclipse-BuddyPolicy: registered
+ Bundle-RequiredExecutionEnvironment: J2SE-1.5

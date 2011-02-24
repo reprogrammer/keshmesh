@@ -34,9 +34,8 @@ abstract public class VNA00JTest extends AbstractTestCase {
 	}
 
 	@Override
-	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
+	protected void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
-		return false; //nothing was fixed
 	}
 
 	protected String getExpectedThreadSafeClasses() {

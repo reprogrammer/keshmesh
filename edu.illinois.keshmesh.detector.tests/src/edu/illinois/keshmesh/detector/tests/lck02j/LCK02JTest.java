@@ -31,12 +31,11 @@ abstract public class LCK02JTest extends AbstractTestCase {
 	}
 
 	@Override
-	protected boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
+	protected void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException {
 		LCK02JFixer fixer = new LCK02JFixer(bugInstance);
 		if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
 			fixer.createChange(new NullProgressMonitor());
 		}
-		return true;
 	}
 
 	@Override

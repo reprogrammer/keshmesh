@@ -24,4 +24,9 @@ public class VNA00JBugPattern extends BugPattern {
 		return bugPatternDetector;
 	}
 
+	@Override
+	public boolean hasFixer() {
+		return false;
+	}
+
 }

@@ -85,7 +85,24 @@ public class LCK02JTests {
 		public void setup() throws Exception {
 			setupProjectAndAnalyze("08", "A.java", "B.java", "C.java");
 		}
+	}
 
+	public static class LCK02JTest09 extends LCK02JTest {
+
+		@Before
+		@Override
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("09", "A.java");
+		}
+	}
+
+	public static class LCK02JTest10 extends LCK02JTest {
+
+		@Before
+		@Override
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("10", "A.java");
+		}
 	}
 
 }

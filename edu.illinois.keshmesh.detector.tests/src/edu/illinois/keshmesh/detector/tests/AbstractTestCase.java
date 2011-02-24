@@ -1,7 +1,9 @@
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package edu.illinois.keshmesh.detector.tests;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -28,8 +30,8 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.matchers.IsCollectionContaining;
 
@@ -44,6 +46,14 @@ import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.util.Logger;
 import edu.illinois.keshmesh.util.Modes;
+
+/**
+ * 
+ * For each detected bug in the test input file, a number is assigned. For each
+ * bug number, in the output folder a sub folder with that number is created
+ * which contains the input file with that bug fixed
+ * 
+ */
 
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
@@ -103,9 +113,7 @@ public abstract class AbstractTestCase {
 		return getBugPattern().getBugPatternDetector().getIntermediateResults();
 	}
 
-	//TODO: Instead of returning a boolean telling whether the fixing was performed or not, we need to redesign such that  
-	//FixInformation makes part of a BugInstance and if it is not provided (i.e. null), then we should not neither fix nor check for the fix.
-	protected abstract boolean fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
+	protected abstract void fixBugInstance(BugInstance bugInstance) throws OperationCanceledException, CoreException;
 
 	protected abstract BugInstanceCreator getBugInstanceCreator();
 
@@ -205,9 +213,9 @@ public abstract class AbstractTestCase {
 		if (bugInstances.size() == 1)
 			bugInstanceNumber = "";
 		BugInstance actualBugInstance = bugInstances.find(bugInstance);
-		assertNotNull("Could not find bug instance.", actualBugInstance);
-		boolean wasFixed = fixBugInstance(actualBugInstance);
-		if (wasFixed) {
+		Assert.assertNotNull("Could not find bug instance.", actualBugInstance);
+		fixBugInstance(actualBugInstance);
+		if (bugInstance.getBugPattern().hasFixer()) {
 			checkFix(bugInstanceNumber);
 		}
 	}
@@ -240,7 +248,6 @@ public abstract class AbstractTestCase {
 		return expectedBugInstanceNumbers;
 	}
 
-	@Ignore
 	@Test
 	public void tryFixExpectedBugInstances() throws Exception {
 		for (String bugInstanceNumber : getExpectedBugInstanceNumbers()) {
