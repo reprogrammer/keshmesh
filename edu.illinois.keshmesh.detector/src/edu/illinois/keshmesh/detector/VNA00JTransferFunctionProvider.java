@@ -59,7 +59,7 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 	 * LCK06JTransferFunctionProvider#getEdgeTransferFunction except that the
 	 * conditions of the if statements are different.
 	 * 
-	 * This method propagates from some instructions from src to dst.
+	 * This method propagates some instructions from src to dst.
 	 */
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
@@ -75,7 +75,7 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 				while (instructionIndicesIterator.hasNext()) {
 					int invokeInstructionIndex = instructionIndicesIterator.next();
 					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
-					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo) && !AnalysisUtils.areAllArgumentsLocal(instructionInfo)) {
 						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
 					}
 				}

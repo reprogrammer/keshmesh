@@ -17,8 +17,11 @@ import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
+import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
+import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
 
@@ -168,5 +171,28 @@ public class AnalysisUtils {
 	}
 
 	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
+
+	public static boolean areAllArgumentsLocal(InstructionInfo instructionInfo) {
+		if (!(instructionInfo.getInstruction() instanceof SSAInvokeInstruction)) {
+			throw new RuntimeException("Expected an SSAInvokeInstruction.");
+		}
+		SSAInvokeInstruction invokeInstruction = (SSAInvokeInstruction) instructionInfo.getInstruction();
+		int numberOfParametersOfCaller = instructionInfo.getCGNode().getMethod().getNumberOfParameters();
+		DefUse defUse = instructionInfo.getCGNode().getDU();
+		for (int argumentIndex = 0; argumentIndex < invokeInstruction.getNumberOfUses(); ++argumentIndex) {
+			int argumentValueNumber = invokeInstruction.getUse(argumentIndex);
+			if (argumentValueNumber <= numberOfParametersOfCaller) {
+				// The argument to the callee is a parameter of the caller.
+				return false;
+			}
+			SSAInstruction instructionDefiningTheArgument = defUse.getDef(argumentValueNumber);
+			if (instructionDefiningTheArgument instanceof SSAGetInstruction) {
+				// The argument to the callee is a field.
+				// TODO: We're being imprecise here because the discovered field access instruction could be just accessing a field of a local variable. 
+				return false;
+			}
+		}
+		return true;
+	}
 
 }

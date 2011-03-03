@@ -19,6 +19,8 @@ import com.ibm.wala.util.intset.OrdinalSetMapping;
 public class CGNodeInfo {
 
 	private final Collection<InstructionInfo> safeSynchronizedBlocks;
+
+	// This bit vector is the initial set of the data flow analysis. That is, it contains the interesting instructions that are in the body of the given method.
 	private final BitVector bitVector;
 
 	public CGNodeInfo(Collection<InstructionInfo> safeSynchronizedBlocks, BitVector bitVector) {

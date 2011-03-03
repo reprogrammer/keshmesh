@@ -354,12 +354,14 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		CGNodeInfo cgNodeInfo = cgNodeInfoMap.get(cgNode);
 		cgNodeInfo.getBitVectorContents(instructionsThatAccessUnprotectedFields, globalValues);
 
+		//Add the instructions propagated from 
 		AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
-				if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo)) {
-					if (instruction instanceof SSAAbstractInvokeInstruction) {
+				if (instruction instanceof SSAAbstractInvokeInstruction) {
+					//FIXME: The following condition is similar to the one in edu.illinois.keshmesh.detector.VNA00JTransferFunctionProvider.getEdgeTransferFunction(CGNode, CGNode). We should consider removing this duplication.
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo) && !AnalysisUtils.areAllArgumentsLocal(instructionInfo)) {
 						SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 						// Add the unsafe accesses of the methods that are the targets of the invocation instruction. 
 						Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
