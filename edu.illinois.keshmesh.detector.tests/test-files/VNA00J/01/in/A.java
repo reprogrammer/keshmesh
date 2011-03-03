@@ -5,6 +5,13 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * This test ensures that the detector does not mark method invocations whose
+ * arguments are all local variables. Such methods do not access the fields of
+ * shared variables, and should not be marked as problematic.
+ * 
+ */
 public class A {
 
 	private int counter = 0;
