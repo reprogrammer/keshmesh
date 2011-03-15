@@ -13,12 +13,15 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
@@ -172,25 +175,81 @@ public class AnalysisUtils {
 
 	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
-	public static boolean areAllArgumentsLocal(InstructionInfo instructionInfo) {
+	public static boolean canAnyArgumentBeUnsafelyShared(InstructionInfo instructionInfo, IClassHierarchy classHierarchy) {
 		if (!(instructionInfo.getInstruction() instanceof SSAInvokeInstruction)) {
 			throw new RuntimeException("Expected an SSAInvokeInstruction.");
 		}
 		SSAInvokeInstruction invokeInstruction = (SSAInvokeInstruction) instructionInfo.getInstruction();
-		int numberOfParametersOfCaller = instructionInfo.getCGNode().getMethod().getNumberOfParameters();
-		DefUse defUse = instructionInfo.getCGNode().getDU();
 		for (int argumentIndex = 0; argumentIndex < invokeInstruction.getNumberOfUses(); ++argumentIndex) {
 			int argumentValueNumber = invokeInstruction.getUse(argumentIndex);
-			if (argumentValueNumber <= numberOfParametersOfCaller) {
-				// The argument to the callee is a parameter of the caller.
+			if (canBeUnsafelyShared(argumentValueNumber, instructionInfo.getCGNode(), classHierarchy)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	//FIXME: This method is called from two different methods: canAnyUseBeUnsafelyShared and canAnyArgumentBeUnsafelyShared, which expect
+	//different behavior from it. In the case of canAnyUseBeUnsafelyShared, if there is a direct access to a method's parameter (rather than 
+	//to a parameter's field), then it is not considered unsafe. At the same time, canAnyArgumentBeUnsafelyShared should consider as unsafe 
+	//even the direct accesses to the method's parameters.
+	public static boolean canBeUnsafelyShared(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		DefUse defUse = enclosingCGNode.getDU();
+		SSAInstruction defInstruction = defUse.getDef(valueNumber);
+		//		if (defInstruction instanceof SSAGetInstruction && !isFinalOrVolatile((SSAFieldAccessInstruction) defInstruction, classHierarchy)) {
+		//			return true;
+		//		}
+		return !isDirectlyOrIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy, true);
+	}
+
+	/**
+	 * This method checks that a particular value number represents a local
+	 * variable. The check is recursive, so a field access of a local variable
+	 * is also local.
+	 * 
+	 * @param valueNumber
+	 * @param enclosingCGNode
+	 * @return
+	 */
+	private static boolean isDirectlyOrIndirectlyLocal(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy, boolean isFirstCall) {
+		int numberOfParametersOfCaller = enclosingCGNode.getMethod().getNumberOfParameters();
+		DefUse defUse = enclosingCGNode.getDU();
+		if (valueNumber <= numberOfParametersOfCaller) {
+			// valueNumber represents a parameter of the enclosing method.
+			if (isFirstCall) {
+				return true;
+			} else {
 				return false;
 			}
-			SSAInstruction instructionDefiningTheArgument = defUse.getDef(argumentValueNumber);
-			if (instructionDefiningTheArgument instanceof SSAGetInstruction) {
-				// The argument to the callee is a field.
-				// TODO: We're being imprecise here because the discovered field access instruction could be just accessing a field of a local variable. 
-				return false;
+		}
+		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
+		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
+			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
+			if (getInstruction.isStatic()) {
+				// valueNumber is initialized from a static field.
+				if (isFirstCall) {
+					return isFinalOrVolatile(getInstruction, classHierarchy);
+				} else {
+					return false;
+				}
 			}
+			return isDirectlyOrIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy, false);
+		}
+		return true;
+	}
+
+	/**
+	 * 
+	 * @param fieldAccessInstruction
+	 * @return true if the changes to the given field are visible to other
+	 *         threads.
+	 */
+	private static boolean isFinalOrVolatile(SSAFieldAccessInstruction fieldAccessInstruction, IClassHierarchy classHierarchy) {
+		IField accessedField = classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+		//FIXME: We do not know why it could be null here, e.g. the field sun.security.util.SecurityConstants.GET_CLASSLOADER_PERMISSION 
+		//can not be resolved because its class can not be looked up.
+		if (accessedField != null) {
+			return accessedField.isFinal() || accessedField.isVolatile();
 		}
 		return true;
 	}

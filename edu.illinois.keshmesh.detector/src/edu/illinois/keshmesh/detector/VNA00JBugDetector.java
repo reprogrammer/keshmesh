@@ -14,17 +14,13 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.cast.ipa.callgraph.AstCallGraph.AstFakeRoot;
 import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
 import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
-import com.ibm.wala.ssa.SSAFieldAccessInstruction;
-import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.util.CancelException;
@@ -74,9 +70,9 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		Collection<IClass> threadSafeClasses = getThreadSafeClasses();
 		intermediateResults.setThreadSafeClasses(threadSafeClasses);
 
-		populateMapOfunsafeInstructionsThatAccessUnprotectedFields();
+		populateMapOfUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
 
-		BitVectorSolver<CGNode> bitVectorSolver = propagateInstructionThatAccessesUnprotectedFields();
+		BitVectorSolver<CGNode> bitVectorSolver = propagateUnprotectedInstructionThatMayAccessUnsafelySharedFields();
 		Collection<InstructionInfo> instructionInfosToReport = getInstructionsToReport(bitVectorSolver);
 
 		return createBugInstances(instructionInfosToReport);
@@ -166,11 +162,11 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * FIXME: This method is doing too much work and needs to be split into
 	 * smaller methods.
 	 */
-	private void populateMapOfunsafeInstructionsThatAccessUnprotectedFields() {
-		Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnsafeInstructions = null;
+	private void populateMapOfUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
+		Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnprotectedInstructions = null;
 
 		if (!Modes.isInProductionMode()) {
-			intermediateMapOfUnsafeInstructions = new HashMap<CGNode, Collection<InstructionInfo>>();
+			intermediateMapOfUnprotectedInstructions = new HashMap<CGNode, Collection<InstructionInfo>>();
 		}
 
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
@@ -178,36 +174,36 @@ public class VNA00JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> synchronizedBlocks = new HashSet<InstructionInfo>();
-			Collection<InstructionInfo> unsafeInstructionsThatAccessUnprotectedFields = new HashSet<InstructionInfo>();
-			if (canContainUnsafeAccesses(cgNode.getMethod())) {
-				Collection<InstructionInfo> instructionsThatAccessUnprotectedFields = getInstructionsThatAccessUnprotectedFields(cgNode);
+			Collection<InstructionInfo> unprotectedInstructionsThatMayAccessUnsafelySharedFields = new HashSet<InstructionInfo>();
+			if (canContainUnprotectedInstructions(cgNode.getMethod())) {
+				Collection<InstructionInfo> instructionsThatMayAccessUnsafelySharedFields = getInstructionsThatMayAccessUnsafelySharedFields(cgNode);
 				populateSynchronizedBlocksForNode(synchronizedBlocks, cgNode);
-				for (InstructionInfo instructionThatAccessesUnprotectedFields : instructionsThatAccessUnprotectedFields) {
-					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionThatAccessesUnprotectedFields)) {
-						unsafeInstructionsThatAccessUnprotectedFields.add(instructionThatAccessesUnprotectedFields);
+				for (InstructionInfo instructionThatMayAccessesUnsafelySharedFields : instructionsThatMayAccessUnsafelySharedFields) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionThatMayAccessesUnsafelySharedFields)) {
+						unprotectedInstructionsThatMayAccessUnsafelySharedFields.add(instructionThatMayAccessesUnsafelySharedFields);
 					}
 				}
-				for (InstructionInfo instructionThatAccessesUnprotectedFields : instructionsThatAccessUnprotectedFields) {
-					Logger.log("MODIFY: " + instructionThatAccessesUnprotectedFields);
+				for (InstructionInfo instructionThatMayAccessesUnsafelySharedFields : instructionsThatMayAccessUnsafelySharedFields) {
+					Logger.log("UNSAFE ACCESS: " + instructionThatMayAccessesUnsafelySharedFields);
 				}
-				for (InstructionInfo unsafeInstruction : unsafeInstructionsThatAccessUnprotectedFields) {
-					bitVector.set(globalValues.add(unsafeInstruction));
-					Logger.log("UNSAFE INSTRUCTION: " + unsafeInstruction);
+				for (InstructionInfo unprotectedInstruction : unprotectedInstructionsThatMayAccessUnsafelySharedFields) {
+					bitVector.set(globalValues.add(unprotectedInstruction));
+					Logger.log("UNPROTECTED INSTRUCTION: " + unprotectedInstruction);
 				}
 			}
 			cgNodeInfoMap.put(cgNode, new CGNodeInfo(synchronizedBlocks, bitVector));
 
-			if (!Modes.isInProductionMode() && intermediateMapOfUnsafeInstructions != null) {
-				intermediateMapOfUnsafeInstructions.put(cgNode, unsafeInstructionsThatAccessUnprotectedFields);
+			if (!Modes.isInProductionMode() && intermediateMapOfUnprotectedInstructions != null) {
+				intermediateMapOfUnprotectedInstructions.put(cgNode, unprotectedInstructionsThatMayAccessUnsafelySharedFields);
 			}
 		}
 
 		if (!Modes.isInProductionMode()) {
-			intermediateResults.setUnsafeInstructionsThatAccessUnprotectedFields(intermediateMapOfUnsafeInstructions);
+			intermediateResults.setUnprotectedInstructionsThatMayAccessUnsafelySharedFields(intermediateMapOfUnprotectedInstructions);
 		}
 	}
 
-	private boolean canContainUnsafeAccesses(IMethod method) {
+	private boolean canContainUnprotectedInstructions(IMethod method) {
 		return !method.isSynchronized() && !isIgnoredClass(method.getDeclaringClass());
 	}
 
@@ -229,67 +225,33 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * @param cgNode
 	 * @return
 	 */
-	private Collection<InstructionInfo> getInstructionsThatAccessUnprotectedFields(CGNode cgNode) {
-		Collection<InstructionInfo> instructionsThatAccessUnprotectedFields = new HashSet<InstructionInfo>();
-		IR ir = cgNode.getIR();
-		if (ir == null) {
-			return instructionsThatAccessUnprotectedFields;
-		}
-		final DefUse defUse = new DefUse(ir);
-
-		AnalysisUtils.collect(javaProject, instructionsThatAccessUnprotectedFields, cgNode, new InstructionFilter() {
+	private Collection<InstructionInfo> getInstructionsThatMayAccessUnsafelySharedFields(CGNode cgNode) {
+		Collection<InstructionInfo> instructionsThatMayAccessUnsafelySharedFields = new HashSet<InstructionInfo>();
+		AnalysisUtils.collect(javaProject, instructionsThatMayAccessUnsafelySharedFields, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
-				return doesAccessUnprotectedField(defUse, instructionInfo.getInstruction());
+				return canAnyUseBeUnsafelyShared(instructionInfo);
 			}
 		});
-		return instructionsThatAccessUnprotectedFields;
+		return instructionsThatMayAccessUnsafelySharedFields;
 	}
 
 	/**
 	 * 
 	 * See LCK06JBugDetector#canModifyStaticField.
 	 * 
-	 * @param defUse
-	 * @param ssaInstruction
+	 * @param instructionInfo
 	 * @return
 	 */
-	private boolean doesAccessUnprotectedField(final DefUse defUse, SSAInstruction ssaInstruction) {
+	private boolean canAnyUseBeUnsafelyShared(InstructionInfo instructionInfo) {
+		SSAInstruction ssaInstruction = instructionInfo.getInstruction();
 		for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-			SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-			if (defInstruction instanceof SSAGetInstruction && !isProtected((SSAFieldAccessInstruction) defInstruction)) {
+			if (AnalysisUtils.canBeUnsafelyShared(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
 				return true;
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * 
-	 * @param fieldAccessInstruction
-	 * @return true if the changes to the given field are visible to other
-	 *         threads.
-	 */
-	private boolean isProtected(SSAFieldAccessInstruction fieldAccessInstruction) {
-		return isFinal(fieldAccessInstruction) || isVolatile(fieldAccessInstruction);
-	}
-
-	/**
-	 * 
-	 * See LCK06JBugDetector#isStaticNonFinal.
-	 * 
-	 * @param fieldAccessInstruction
-	 * @return
-	 */
-	private boolean isFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
-		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		return accessedField.isFinal();
-	}
-
-	private boolean isVolatile(SSAFieldAccessInstruction fieldAccessInstruction) {
-		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		return accessedField.isVolatile();
 	}
 
 	/**
@@ -300,8 +262,8 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * 
 	 * @return
 	 */
-	private BitVectorSolver<CGNode> propagateInstructionThatAccessesUnprotectedFields() {
-		VNA00JTransferFunctionProvider transferFunctions = new VNA00JTransferFunctionProvider(javaProject, basicAnalysisData.callGraph, cgNodeInfoMap);
+	private BitVectorSolver<CGNode> propagateUnprotectedInstructionThatMayAccessUnsafelySharedFields() {
+		VNA00JTransferFunctionProvider transferFunctions = new VNA00JTransferFunctionProvider(javaProject, basicAnalysisData.callGraph, cgNodeInfoMap, basicAnalysisData.classHierarchy);
 
 		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
 				globalValues);
@@ -325,50 +287,54 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	/**
 	 * This method is based on LCK06JBugDetector#getActuallyUnsafeInstructions.
 	 * 
-	 * This methods returns a collection of instructions from the that we'll
-	 * report to the user. After we propagate the unprotected access along the
-	 * call graph, we look into the list of instructions propagated to each
-	 * method. Some of these instructions are immediate instructions of the
+	 * This methods returns a collection of instructions from the callees that
+	 * we'll report to the user. After we propagate the unprotected instructions
+	 * along the call graph, we look into the list of instructions propagated to
+	 * each method. Some of these instructions are immediate instructions of the
 	 * method itself, while others have originated from other methods. Let's say
 	 * we'd like to report the problematic instructions in method m. These
-	 * instructions will be the unprotected instructions that we computed for
-	 * method m plus some of the method invocations in m. The method invocations
-	 * that we include in our collection have the following criteria: the callee
-	 * has propagated some unprotected accesses and the method invocation is not
-	 * inside a synchronized block of the caller.
+	 * instructions will be the unprotected instructions that we have computed
+	 * for method m plus some of the method invocations in m. The method
+	 * invocations that we include in our collection have the following
+	 * criteria: the callee has propagated some unprotected instructions and the
+	 * method invocation is not inside a synchronized block of the caller.
+	 * 
+	 * TODO: Update the comment with how we handle local variables passed
+	 * through method invocations.
 	 * 
 	 * @param bitVectorSolver
 	 * @param unsafeSynchronizedBlock
 	 * @return
 	 */
 	private Collection<InstructionInfo> getInstructionsToReport(final BitVectorSolver<CGNode> bitVectorSolver, final CGNode cgNode) {
-		final Collection<InstructionInfo> instructionsThatAccessUnprotectedFields = new HashSet<InstructionInfo>();
+		final Collection<InstructionInfo> unprotectedInstructionsThatMayAccessUnsafelySharedFields = new HashSet<InstructionInfo>();
 		final Collection<InstructionInfo> synchronizedBlocks = new HashSet<InstructionInfo>();
 		populateSynchronizedBlocksForNode(synchronizedBlocks, cgNode);
 		IR ir = cgNode.getIR();
 		if (ir == null) {
-			return instructionsThatAccessUnprotectedFields; //should not really be null here
+			return unprotectedInstructionsThatMayAccessUnsafelySharedFields; //should not really be null here
 		}
 
 		//Add the initial set of the given CGNode.
 		CGNodeInfo cgNodeInfo = cgNodeInfoMap.get(cgNode);
-		cgNodeInfo.getBitVectorContents(instructionsThatAccessUnprotectedFields, globalValues);
+		cgNodeInfo.getBitVectorContents(unprotectedInstructionsThatMayAccessUnsafelySharedFields, globalValues);
 
-		//Add the instructions propagated from 
+		//Add the instructions propagated from the callees.
 		AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					//FIXME: The following condition is similar to the one in edu.illinois.keshmesh.detector.VNA00JTransferFunctionProvider.getEdgeTransferFunction(CGNode, CGNode). We should consider removing this duplication.
-					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo) && !AnalysisUtils.areAllArgumentsLocal(instructionInfo)) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo)
+							&& AnalysisUtils.canAnyArgumentBeUnsafelyShared(instructionInfo, basicAnalysisData.classHierarchy)) {
 						SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
-						// Add the unsafe accesses of the methods that are the targets of the invocation instruction. 
+						// Add the unprotected instructions of the methods that are the targets of the invocation instruction. 
 						Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
 						for (CGNode possibleTarget : possibleTargets) {
-							// Add unsafe operations coming from callees.
-							if (hasPropagatedUnprotectedAccesses(bitVectorSolver, possibleTarget)) {
-								instructionsThatAccessUnprotectedFields.add(instructionInfo);
+							// Add unprotected instructions coming from callees.
+							if (hasPropagatedUnprotectedInstructions(bitVectorSolver, possibleTarget)) {
+								unprotectedInstructionsThatMayAccessUnsafelySharedFields.add(instructionInfo);
 								break;
 							}
 						}
@@ -377,7 +343,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 				return false;
 			}
 		});
-		return instructionsThatAccessUnprotectedFields;
+		return unprotectedInstructionsThatMayAccessUnsafelySharedFields;
 	}
 
 	/**
@@ -387,7 +353,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * @param bitVectorSolver
 	 * @param cgNode
 	 */
-	private boolean hasPropagatedUnprotectedAccesses(BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
+	private boolean hasPropagatedUnprotectedInstructions(BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
 		IntSet value = bitVectorSolver.getIn(cgNode).getValue();
 		if (value != null) {
 			IntIterator intIterator = value.intIterator();
@@ -401,14 +367,14 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	private Collection<InstructionInfo> getInstructionsToReport(BitVectorSolver<CGNode> bitVectorSolver) {
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 
-		final Collection<InstructionInfo> instructionsThatAccessUnprotectedFields = new HashSet<InstructionInfo>();
+		final Collection<InstructionInfo> unprotectedInstructionsThatMayAccessUnsafelySharedFields = new HashSet<InstructionInfo>();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
 			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
-				instructionsThatAccessUnprotectedFields.addAll(getInstructionsToReport(bitVectorSolver, cgNode));
+				unprotectedInstructionsThatMayAccessUnsafelySharedFields.addAll(getInstructionsToReport(bitVectorSolver, cgNode));
 			}
 		}
-		return instructionsThatAccessUnprotectedFields;
+		return unprotectedInstructionsThatMayAccessUnsafelySharedFields;
 	}
 
 	private BugInstances createBugInstances(Collection<InstructionInfo> instructionInfosToReport) {

@@ -19,22 +19,22 @@ public class VNA00JIntermediateResults extends IntermediateResults {
 
 	private String threadSafeClasses;
 
-	private String unsafeInstructionsThatAccessUnprotectedFields;
+	private String unprotectedInstructionsThatMayAccessUnsafelySharedFields;
 
 	public void setThreadSafeClasses(Collection<IClass> threadSafeClasses) {
 		this.threadSafeClasses = getIntermediateResult(this.threadSafeClasses, threadSafeClasses);
 	}
 
-	public void setUnsafeInstructionsThatAccessUnprotectedFields(Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnsafeInstructions) {
-		this.unsafeInstructionsThatAccessUnprotectedFields = getIntermediateResult(this.unsafeInstructionsThatAccessUnprotectedFields, intermediateMapOfUnsafeInstructions);
+	public void setUnprotectedInstructionsThatMayAccessUnsafelySharedFields(Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnprotectedInstructions) {
+		this.unprotectedInstructionsThatMayAccessUnsafelySharedFields = getIntermediateResult(this.unprotectedInstructionsThatMayAccessUnsafelySharedFields, intermediateMapOfUnprotectedInstructions);
 	}
 
 	public String getThreadSafeClasses() {
 		return threadSafeClasses;
 	}
 
-	public String getUnsafeInstructionsThatAccessUnprotectedFields() {
-		return unsafeInstructionsThatAccessUnprotectedFields;
+	public String getUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
+		return unprotectedInstructionsThatMayAccessUnsafelySharedFields;
 	}
 
 }

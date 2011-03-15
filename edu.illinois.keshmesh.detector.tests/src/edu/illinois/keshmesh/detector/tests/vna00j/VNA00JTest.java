@@ -49,15 +49,15 @@ abstract public class VNA00JTest extends AbstractTestCase {
 		assertEquals(getExpectedThreadSafeClasses(), actualIntermediateResults.getThreadSafeClasses());
 	}
 
-	protected String getExpectedUnsafeInstructionsThatAccessUnprotectedFields() {
+	protected String getExpectedUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
 		return null;
 	}
 
 	@Test
-	public void testUnsafeInstructionsThatAccessUnprotectedFields() {
-		assumeNotNull(getExpectedUnsafeInstructionsThatAccessUnprotectedFields());
+	public void testUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
+		assumeNotNull(getExpectedUnprotectedInstructionsThatMayAccessUnsafelySharedFields());
 		VNA00JIntermediateResults actualIntermediateResults = (VNA00JIntermediateResults) getIntermediateResults();
-		assertEquals(getExpectedUnsafeInstructionsThatAccessUnprotectedFields(), actualIntermediateResults.getUnsafeInstructionsThatAccessUnprotectedFields());
+		assertEquals(getExpectedUnprotectedInstructionsThatMayAccessUnsafelySharedFields(), actualIntermediateResults.getUnprotectedInstructionsThatMayAccessUnsafelySharedFields());
 	}
 
 	@Override

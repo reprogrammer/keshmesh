@@ -17,6 +17,7 @@ import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.fixpoint.UnaryOperator;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
+import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.util.intset.BitVector;
 import com.ibm.wala.util.intset.IntIterator;
@@ -37,11 +38,13 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 	private final IJavaProject javaProject;
 	private final CallGraph callGraph;
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap;
+	private final IClassHierarchy classHierarchy;
 
-	public VNA00JTransferFunctionProvider(IJavaProject javaProject, CallGraph callGraph, Map<CGNode, CGNodeInfo> cgNodeInfoMap) {
+	public VNA00JTransferFunctionProvider(IJavaProject javaProject, CallGraph callGraph, Map<CGNode, CGNodeInfo> cgNodeInfoMap, IClassHierarchy classHierarchy) {
 		this.javaProject = javaProject;
 		this.callGraph = callGraph;
 		this.cgNodeInfoMap = cgNodeInfoMap;
+		this.classHierarchy = classHierarchy;
 	}
 
 	@Override
@@ -75,7 +78,8 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 				while (instructionIndicesIterator.hasNext()) {
 					int invokeInstructionIndex = instructionIndicesIterator.next();
 					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
-					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo) && !AnalysisUtils.areAllArgumentsLocal(instructionInfo)) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)
+							&& AnalysisUtils.canAnyArgumentBeUnsafelyShared(instructionInfo, classHierarchy)) {
 						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
 					}
 				}
