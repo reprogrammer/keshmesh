@@ -5,6 +5,12 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * This test case checks that the detector doesn't report accesses to volatile
+ * fields as instances of VNA00J.
+ * 
+ */
 public class A extends Thread {
 
 	private volatile int counter = 0;

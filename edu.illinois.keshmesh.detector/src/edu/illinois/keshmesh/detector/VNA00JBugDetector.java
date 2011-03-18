@@ -70,7 +70,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		Collection<IClass> threadSafeClasses = getThreadSafeClasses();
 		intermediateResults.setThreadSafeClasses(threadSafeClasses);
 
-		populateMapOfUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
+		collectUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
 
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnprotectedInstructionThatMayAccessUnsafelySharedFields();
 		Collection<InstructionInfo> instructionInfosToReport = getInstructionsToReport(bitVectorSolver);
@@ -159,10 +159,18 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * This method is based on
 	 * LCK06JBugDetector#populateUnsafeModifyingStaticFieldsInstructionsMap.
 	 * 
+	 * For every method of the input program, this method computes the set of
+	 * instructions that are protected by a synchronized block but may access a
+	 * field that is shared unsafely. A field that is neither volatile nor final
+	 * is shared unsafely.
+	 * 
+	 * The resulting instructions will be used as initial values of the data
+	 * flow problem corresponding to the interprocedural part of the detector.
+	 * 
 	 * FIXME: This method is doing too much work and needs to be split into
 	 * smaller methods.
 	 */
-	private void populateMapOfUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
+	private void collectUnprotectedInstructionsThatMayAccessUnsafelySharedFields() {
 		Map<CGNode, Collection<InstructionInfo>> intermediateMapOfUnprotectedInstructions = null;
 
 		if (!Modes.isInProductionMode()) {
@@ -231,7 +239,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
-				return canAnyUseBeUnsafelyShared(instructionInfo);
+				return mayAccessUnsafelySharedFields(instructionInfo);
 			}
 		});
 		return instructionsThatMayAccessUnsafelySharedFields;
@@ -244,10 +252,10 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * @param instructionInfo
 	 * @return
 	 */
-	private boolean canAnyUseBeUnsafelyShared(InstructionInfo instructionInfo) {
+	private boolean mayAccessUnsafelySharedFields(InstructionInfo instructionInfo) {
 		SSAInstruction ssaInstruction = instructionInfo.getInstruction();
 		for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-			if (AnalysisUtils.canBeUnsafelyShared(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
+			if (AnalysisUtils.mayBeUnsafelyShared(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
 				return true;
 			}
 		}

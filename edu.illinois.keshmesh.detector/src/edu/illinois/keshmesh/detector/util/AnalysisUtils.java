@@ -182,7 +182,7 @@ public class AnalysisUtils {
 		SSAInvokeInstruction invokeInstruction = (SSAInvokeInstruction) instructionInfo.getInstruction();
 		for (int argumentIndex = 0; argumentIndex < invokeInstruction.getNumberOfUses(); ++argumentIndex) {
 			int argumentValueNumber = invokeInstruction.getUse(argumentIndex);
-			if (canBeUnsafelyShared(argumentValueNumber, instructionInfo.getCGNode(), classHierarchy)) {
+			if (mayBeUnsafelyShared2(argumentValueNumber, instructionInfo.getCGNode(), classHierarchy)) {
 				return true;
 			}
 		}
@@ -193,7 +193,7 @@ public class AnalysisUtils {
 	//different behavior from it. In the case of canAnyUseBeUnsafelyShared, if there is a direct access to a method's parameter (rather than 
 	//to a parameter's field), then it is not considered unsafe. At the same time, canAnyArgumentBeUnsafelyShared should consider as unsafe 
 	//even the direct accesses to the method's parameters.
-	public static boolean canBeUnsafelyShared(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+	public static boolean mayBeUnsafelyShared(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
 		DefUse defUse = enclosingCGNode.getDU();
 		SSAInstruction defInstruction = defUse.getDef(valueNumber);
 		//		if (defInstruction instanceof SSAGetInstruction && !isFinalOrVolatile((SSAFieldAccessInstruction) defInstruction, classHierarchy)) {
@@ -215,23 +215,68 @@ public class AnalysisUtils {
 		int numberOfParametersOfCaller = enclosingCGNode.getMethod().getNumberOfParameters();
 		DefUse defUse = enclosingCGNode.getDU();
 		if (valueNumber <= numberOfParametersOfCaller) {
-			// valueNumber represents a parameter of the enclosing method.
+			// valueNumber represents a parameter of the enclosing method (We consider the receiver to be one of the parameter).
 			if (isFirstCall) {
-				return true;
+				return true; // the value number corresponds to a method parameter.
 			} else {
-				return false;
+				return false; // the value number corresponds to a field of a method parameter.
 			}
 		}
 		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
 		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
 			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
+
 			if (getInstruction.isStatic()) {
 				// valueNumber is initialized from a static field.
 				if (isFirstCall) {
-					return isFinalOrVolatile(getInstruction, classHierarchy);
+					return isFinalOrVolatile(getInstruction, classHierarchy); // immediate access of a static field that is neither final nor volatile is unsafe.
 				} else {
-					return false;
+					return false; // accessing a nonstatic field of a static field is unsafe.
 				}
+			} else {
+				if (isFirstCall && isFinalOrVolatile(getInstruction, classHierarchy)) {
+					return true;
+				}
+			}
+
+			return isDirectlyOrIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy, false);
+		}
+		return true;
+	}
+
+	//FIXME: This method is called from two different methods: canAnyUseBeUnsafelyShared and canAnyArgumentBeUnsafelyShared, which expect
+	//different behavior from it. In the case of canAnyUseBeUnsafelyShared, if there is a direct access to a method's parameter (rather than 
+	//to a parameter's field), then it is not considered unsafe. At the same time, canAnyArgumentBeUnsafelyShared should consider as unsafe 
+	//even the direct accesses to the method's parameters.
+	public static boolean mayBeUnsafelyShared2(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		DefUse defUse = enclosingCGNode.getDU();
+		SSAInstruction defInstruction = defUse.getDef(valueNumber);
+		//		if (defInstruction instanceof SSAGetInstruction && !isFinalOrVolatile((SSAFieldAccessInstruction) defInstruction, classHierarchy)) {
+		//			return true;
+		//		}
+		return !isDirectlyOrIndirectlyLocal2(valueNumber, enclosingCGNode, classHierarchy);
+	}
+
+	/**
+	 * This method checks that a particular value number represents a local
+	 * variable. The check is recursive, so a field access of a local variable
+	 * is also local.
+	 * 
+	 * @param valueNumber
+	 * @param enclosingCGNode
+	 * @return
+	 */
+	private static boolean isDirectlyOrIndirectlyLocal2(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		int numberOfParametersOfCaller = enclosingCGNode.getMethod().getNumberOfParameters();
+		DefUse defUse = enclosingCGNode.getDU();
+		if (valueNumber <= numberOfParametersOfCaller) {
+			return false;
+		}
+		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
+		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
+			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
+			if (getInstruction.isStatic()) {
+				return false;
 			}
 			return isDirectlyOrIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy, false);
 		}
