@@ -3,6 +3,10 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import java.util.Collection;
+
+import com.ibm.wala.classLoader.IField;
+
 /**
  * 
  * @author Mohsen Vakilian
@@ -10,6 +14,20 @@ package edu.illinois.keshmesh.detector.bugs;
  * 
  */
 public class LCK06JFixInformation implements FixInformation {
+
+	Collection<IField> unsafeStaticFields;
+
+	public LCK06JFixInformation(Collection<IField> unsafeStaticFields) {
+		this.unsafeStaticFields = unsafeStaticFields;
+	}
+
+	//TODO: remove this after fixing LCK06JTest
+	public LCK06JFixInformation() {
+	}
+
+	public Collection<IField> getStaticFieldNames() {
+		return this.unsafeStaticFields;
+	}
 
 	@Override
 	public boolean equals(Object obj) {

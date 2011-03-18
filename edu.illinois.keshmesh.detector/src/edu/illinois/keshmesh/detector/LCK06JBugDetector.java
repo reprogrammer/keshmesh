@@ -167,8 +167,52 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (!actuallyUnsafeInstructions.isEmpty()) {
 			//			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
 			//			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new CodePosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
-			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, new LCK06JFixInformation()));
+			Collection<IField> unsafeStaticFields = getUnsafeStaticFields(actuallyUnsafeInstructions);
+			//			for (IField unsafeStaticField : unsafeStaticFields) {
+			//				CGNode node = unsafeStaticField
+			//			}
+			LCK06JFixInformation fixInfo = new LCK06JFixInformation(getUnsafeStaticFields(actuallyUnsafeInstructions));
+			Collection<IField> fields = fixInfo.getStaticFieldNames();
+			for (IField field : fields) {
+				System.out.println(field.getName());
+			}
+			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, fixInfo));
 		}
+	}
+
+	//TODO: is modifiedStaticFields is enough to report or it is not?
+	private Collection<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
+		Collection<IField> unsafeStaticFieldNames = new HashSet<IField>();
+		for (InstructionInfo unsafeInstructionInfo : actuallyUnsafeInstructions) {
+			final DefUse defUse = unsafeInstructionInfo.getCGNode().getDU();
+			Collection<IField> modifiedStaticFields = getModifiedStaticFields(defUse, unsafeInstructionInfo.getInstruction());
+			unsafeStaticFieldNames.addAll(modifiedStaticFields);
+		}
+
+		return unsafeStaticFieldNames;
+	}
+
+	private Collection<IField> getModifiedStaticFields(final DefUse defUse, SSAInstruction ssaInstruction) {
+		Collection<IField> unsafeStaticFieldNames = new HashSet<IField>();
+		if (ssaInstruction instanceof SSAPutInstruction) {
+			IField accessedField = getStaticNonFinalField((SSAFieldAccessInstruction) ssaInstruction);
+			unsafeStaticFieldNames.add(accessedField);
+		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
+			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
+				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
+				if (defInstruction instanceof SSAGetInstruction) {
+					IField accessedField = getStaticNonFinalField((SSAFieldAccessInstruction) defInstruction);
+					unsafeStaticFieldNames.add(accessedField);
+				}
+			}
+		}
+		return unsafeStaticFieldNames;
+	}
+
+	private IField getStaticNonFinalField(SSAFieldAccessInstruction fieldAccessInstruction) {
+		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+		assert (fieldAccessInstruction.isStatic() && !accessedField.isFinal());
+		return accessedField;
 	}
 
 	/**
