@@ -79,7 +79,7 @@ public class VNA00JTransferFunctionProvider implements ITransferFunctionProvider
 					int invokeInstructionIndex = instructionIndicesIterator.next();
 					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
 					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)
-							&& AnalysisUtils.canAnyArgumentBeUnsafelyShared(instructionInfo, classHierarchy)) {
+							&& AnalysisUtils.doesAllowPropagation(instructionInfo, classHierarchy)) {
 						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
 					}
 				}

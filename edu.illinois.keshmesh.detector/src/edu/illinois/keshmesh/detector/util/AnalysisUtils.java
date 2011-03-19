@@ -175,112 +175,69 @@ public class AnalysisUtils {
 
 	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
-	public static boolean canAnyArgumentBeUnsafelyShared(InstructionInfo instructionInfo, IClassHierarchy classHierarchy) {
+	public static boolean doesAllowPropagation(InstructionInfo instructionInfo, IClassHierarchy classHierarchy) {
 		if (!(instructionInfo.getInstruction() instanceof SSAInvokeInstruction)) {
 			throw new RuntimeException("Expected an SSAInvokeInstruction.");
 		}
 		SSAInvokeInstruction invokeInstruction = (SSAInvokeInstruction) instructionInfo.getInstruction();
 		for (int argumentIndex = 0; argumentIndex < invokeInstruction.getNumberOfUses(); ++argumentIndex) {
 			int argumentValueNumber = invokeInstruction.getUse(argumentIndex);
-			if (mayBeUnsafelyShared2(argumentValueNumber, instructionInfo.getCGNode(), classHierarchy)) {
+			if (doesAllowPropagation(argumentValueNumber, instructionInfo.getCGNode(), classHierarchy)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	//FIXME: This method is called from two different methods: canAnyUseBeUnsafelyShared and canAnyArgumentBeUnsafelyShared, which expect
-	//different behavior from it. In the case of canAnyUseBeUnsafelyShared, if there is a direct access to a method's parameter (rather than 
-	//to a parameter's field), then it is not considered unsafe. At the same time, canAnyArgumentBeUnsafelyShared should consider as unsafe 
-	//even the direct accesses to the method's parameters.
-	public static boolean mayBeUnsafelyShared(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		DefUse defUse = enclosingCGNode.getDU();
-		SSAInstruction defInstruction = defUse.getDef(valueNumber);
-		//		if (defInstruction instanceof SSAGetInstruction && !isFinalOrVolatile((SSAFieldAccessInstruction) defInstruction, classHierarchy)) {
-		//			return true;
-		//		}
-		return !isDirectlyOrIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy, true);
-	}
-
 	/**
-	 * This method checks that a particular value number represents a local
-	 * variable. The check is recursive, so a field access of a local variable
-	 * is also local.
 	 * 
 	 * @param valueNumber
-	 * @param enclosingCGNode
-	 * @return
+	 * @param cgNode
+	 * @return true if the given value number is one of the parameters of the
+	 *         method corresponding to the given CGNode. Note that the receiver
+	 *         (if the method is not static) is the first parameter of the
+	 *         method.
 	 */
-	private static boolean isDirectlyOrIndirectlyLocal(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy, boolean isFirstCall) {
-		int numberOfParametersOfCaller = enclosingCGNode.getMethod().getNumberOfParameters();
+	private static boolean isParameterOf(int valueNumber, CGNode cgNode) {
+		int numberOfParametersOfCaller = cgNode.getMethod().getNumberOfParameters();
+		return valueNumber <= numberOfParametersOfCaller;
+	}
+
+	private static boolean doesAccessSafeFieldDirectly(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
 		DefUse defUse = enclosingCGNode.getDU();
-		if (valueNumber <= numberOfParametersOfCaller) {
-			// valueNumber represents a parameter of the enclosing method (We consider the receiver to be one of the parameter).
-			if (isFirstCall) {
-				return true; // the value number corresponds to a method parameter.
-			} else {
-				return false; // the value number corresponds to a field of a method parameter.
-			}
-		}
 		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
 		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
 			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
-
-			if (getInstruction.isStatic()) {
-				// valueNumber is initialized from a static field.
-				if (isFirstCall) {
-					return isFinalOrVolatile(getInstruction, classHierarchy); // immediate access of a static field that is neither final nor volatile is unsafe.
-				} else {
-					return false; // accessing a nonstatic field of a static field is unsafe.
-				}
-			} else {
-				if (isFirstCall && isFinalOrVolatile(getInstruction, classHierarchy)) {
-					return true;
-				}
-			}
-
-			return isDirectlyOrIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy, false);
+			return isFinalOrVolatile(getInstruction, classHierarchy);
 		}
-		return true;
+		return false;
 	}
 
-	//FIXME: This method is called from two different methods: canAnyUseBeUnsafelyShared and canAnyArgumentBeUnsafelyShared, which expect
-	//different behavior from it. In the case of canAnyUseBeUnsafelyShared, if there is a direct access to a method's parameter (rather than 
-	//to a parameter's field), then it is not considered unsafe. At the same time, canAnyArgumentBeUnsafelyShared should consider as unsafe 
-	//even the direct accesses to the method's parameters.
-	public static boolean mayBeUnsafelyShared2(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		DefUse defUse = enclosingCGNode.getDU();
-		SSAInstruction defInstruction = defUse.getDef(valueNumber);
-		//		if (defInstruction instanceof SSAGetInstruction && !isFinalOrVolatile((SSAFieldAccessInstruction) defInstruction, classHierarchy)) {
-		//			return true;
-		//		}
-		return !isDirectlyOrIndirectlyLocal2(valueNumber, enclosingCGNode, classHierarchy);
-	}
-
-	/**
-	 * This method checks that a particular value number represents a local
-	 * variable. The check is recursive, so a field access of a local variable
-	 * is also local.
-	 * 
-	 * @param valueNumber
-	 * @param enclosingCGNode
-	 * @return
-	 */
-	private static boolean isDirectlyOrIndirectlyLocal2(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		int numberOfParametersOfCaller = enclosingCGNode.getMethod().getNumberOfParameters();
-		DefUse defUse = enclosingCGNode.getDU();
-		if (valueNumber <= numberOfParametersOfCaller) {
+	public static boolean isPotentiallyUnsafe(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		if (isParameterOf(valueNumber, enclosingCGNode) || doesAccessSafeFieldDirectly(valueNumber, enclosingCGNode, classHierarchy)) {
 			return false;
 		}
+		return !isIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy);
+	}
+
+	private static boolean isIndirectlyLocal(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		if (isParameterOf(valueNumber, enclosingCGNode)) {
+			return false;
+		}
+		DefUse defUse = enclosingCGNode.getDU();
 		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
 		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
 			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
 			if (getInstruction.isStatic()) {
-				return false;
+				return false; // indirectly accesses a static field
 			}
-			return isDirectlyOrIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy, false);
+			return isIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy);
 		}
 		return true;
+	}
+
+	private static boolean doesAllowPropagation(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+		return !isIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy);
 	}
 
 	/**
@@ -291,12 +248,13 @@ public class AnalysisUtils {
 	 */
 	private static boolean isFinalOrVolatile(SSAFieldAccessInstruction fieldAccessInstruction, IClassHierarchy classHierarchy) {
 		IField accessedField = classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		//FIXME: We do not know why it could be null here, e.g. the field sun.security.util.SecurityConstants.GET_CLASSLOADER_PERMISSION 
-		//can not be resolved because its class can not be looked up.
-		if (accessedField != null) {
-			return accessedField.isFinal() || accessedField.isVolatile();
-		}
-		return true;
+		//TODO: We do not know why it could be null here, e.g. the field sun.security.util.SecurityConstants.GET_CLASSLOADER_PERMISSION 
+		//can not be resolved because its class can not be looked up. 
+		//This does not happen with the current implementation of detectors.
+		//		if (accessedField != null) {
+		return accessedField.isFinal() || accessedField.isVolatile();
+		//		}
+		//		return true;
 	}
 
 }

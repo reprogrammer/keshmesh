@@ -255,7 +255,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	private boolean mayAccessUnsafelySharedFields(InstructionInfo instructionInfo) {
 		SSAInstruction ssaInstruction = instructionInfo.getInstruction();
 		for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-			if (AnalysisUtils.mayBeUnsafelyShared(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
+			if (AnalysisUtils.isPotentiallyUnsafe(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
 				return true;
 			}
 		}
@@ -335,7 +335,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					//FIXME: The following condition is similar to the one in edu.illinois.keshmesh.detector.VNA00JTransferFunctionProvider.getEdgeTransferFunction(CGNode, CGNode). We should consider removing this duplication.
 					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo)
-							&& AnalysisUtils.canAnyArgumentBeUnsafelyShared(instructionInfo, basicAnalysisData.classHierarchy)) {
+							&& AnalysisUtils.doesAllowPropagation(instructionInfo, basicAnalysisData.classHierarchy)) {
 						SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 						// Add the unprotected instructions of the methods that are the targets of the invocation instruction. 
 						Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
