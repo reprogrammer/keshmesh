@@ -182,36 +182,49 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	//TODO: is modifiedStaticFields is enough to report or it is not?
 	private Collection<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
-		Collection<IField> unsafeStaticFieldNames = new HashSet<IField>();
+		Collection<IField> unsafeStaticFields = new HashSet<IField>();
 		for (InstructionInfo unsafeInstructionInfo : actuallyUnsafeInstructions) {
-			final DefUse defUse = unsafeInstructionInfo.getCGNode().getDU();
-			Collection<IField> modifiedStaticFields = getModifiedStaticFields(defUse, unsafeInstructionInfo.getInstruction());
-			unsafeStaticFieldNames.addAll(modifiedStaticFields);
+			Collection<IField> modifiedStaticFields = getModifiedStaticFields(unsafeInstructionInfo);
+			unsafeStaticFields.addAll(modifiedStaticFields);
 		}
 
-		return unsafeStaticFieldNames;
+		return unsafeStaticFields;
 	}
 
-	private Collection<IField> getModifiedStaticFields(final DefUse defUse, SSAInstruction ssaInstruction) {
-		Collection<IField> unsafeStaticFieldNames = new HashSet<IField>();
+	private Collection<IField> getModifiedStaticFields(InstructionInfo unsafeInstructionInfo) {
+		SSAInstruction ssaInstruction = unsafeInstructionInfo.getInstruction();
+		Collection<IField> unsafeStaticFields = new HashSet<IField>();
 		if (ssaInstruction instanceof SSAPutInstruction) {
 			IField accessedField = getStaticNonFinalField((SSAFieldAccessInstruction) ssaInstruction);
-			unsafeStaticFieldNames.add(accessedField);
+			unsafeStaticFields.add(accessedField);
 		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
 			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-				if (defInstruction instanceof SSAGetInstruction) {
-					IField accessedField = getStaticNonFinalField((SSAFieldAccessInstruction) defInstruction);
-					unsafeStaticFieldNames.add(accessedField);
+				int valueNumber = ssaInstruction.getUse(i);
+				PointerKey pointer = getPointerForValueNumber(unsafeInstructionInfo.getCGNode(), valueNumber);
+				Collection<InstanceKey> variablePointedInstances = getPointedInstances(pointer);
+				for (IField staticField : getAllStaticFields()) {
+					Logger.log("Static field: " + staticField);
+					PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
+					Collection<InstanceKey> staticFieldPointedInstances = getPointedInstances(staticFieldPointer);
+					boolean isIntersected = false;
+					for (InstanceKey staticInstance : staticFieldPointedInstances) {
+						Logger.log("Pointed instance: " + staticInstance);
+						if (variablePointedInstances.contains(staticInstance))
+							isIntersected = true;
+					}
+					if (isIntersected)
+						unsafeStaticFields.add(staticField);
 				}
 			}
 		}
-		return unsafeStaticFieldNames;
+		return unsafeStaticFields;
 	}
 
 	private IField getStaticNonFinalField(SSAFieldAccessInstruction fieldAccessInstruction) {
 		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		assert (fieldAccessInstruction.isStatic() && !accessedField.isFinal());
+		if (!(fieldAccessInstruction.isStatic() && !accessedField.isFinal())) {
+			throw new AssertionError("Expected an instruction accessing a nonfinal static field.");
+		}
 		return accessedField;
 	}
 
