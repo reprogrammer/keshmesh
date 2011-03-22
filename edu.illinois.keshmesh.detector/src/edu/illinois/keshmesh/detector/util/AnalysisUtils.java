@@ -12,15 +12,18 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
 
+import edu.illinois.keshmesh.detector.BasicAnalysisData;
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
 import edu.illinois.keshmesh.detector.LCK06JBugDetector;
@@ -136,6 +139,10 @@ public class AnalysisUtils {
 
 	public static boolean isMonitorExit(SSAInstruction ssaInstruction) {
 		return ssaInstruction instanceof SSAMonitorInstruction && !((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
+	}
+
+	public static IField getAccessedField(BasicAnalysisData basicAnalysisData, SSAFieldAccessInstruction fieldAccessInstruction) {
+		return basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
 	}
 
 }

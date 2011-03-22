@@ -21,11 +21,8 @@ import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
-import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
-import com.ibm.wala.ssa.SSAFieldAccessInstruction;
-import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
@@ -182,51 +179,110 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	//TODO: is modifiedStaticFields is enough to report or it is not?
 	private Collection<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
-		Collection<IField> unsafeStaticFields = new HashSet<IField>();
+		Collection<IField> modifiedStaticFields = new HashSet<IField>();
 		for (InstructionInfo unsafeInstructionInfo : actuallyUnsafeInstructions) {
-			Collection<IField> modifiedStaticFields = getModifiedStaticFields(unsafeInstructionInfo);
-			unsafeStaticFields.addAll(modifiedStaticFields);
+			modifiedStaticFields.addAll(getModifiedStaticFields(unsafeInstructionInfo));
 		}
 
-		return unsafeStaticFields;
+		return modifiedStaticFields;
 	}
 
-	private Collection<IField> getModifiedStaticFields(InstructionInfo unsafeInstructionInfo) {
-		SSAInstruction ssaInstruction = unsafeInstructionInfo.getInstruction();
-		Collection<IField> unsafeStaticFields = new HashSet<IField>();
-		if (ssaInstruction instanceof SSAPutInstruction) {
-			IField accessedField = getStaticNonFinalField((SSAFieldAccessInstruction) ssaInstruction);
-			unsafeStaticFields.add(accessedField);
-		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
-			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-				int valueNumber = ssaInstruction.getUse(i);
-				PointerKey pointer = getPointerForValueNumber(unsafeInstructionInfo.getCGNode(), valueNumber);
-				Collection<InstanceKey> variablePointedInstances = getPointedInstances(pointer);
-				for (IField staticField : getAllStaticFields()) {
-					Logger.log("Static field: " + staticField);
-					PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
-					Collection<InstanceKey> staticFieldPointedInstances = getPointedInstances(staticFieldPointer);
-					boolean isIntersected = false;
-					for (InstanceKey staticInstance : staticFieldPointedInstances) {
-						Logger.log("Pointed instance: " + staticInstance);
-						if (variablePointedInstances.contains(staticInstance))
-							isIntersected = true;
+	//	private Collection<IField> getModifiedStaticFields(InstructionInfo unsafeInstructionInfo) {
+	//		SSAInstruction ssaInstruction = unsafeInstructionInfo.getInstruction();
+	//		if (!(ssaInstruction instanceof SSAPutInstruction)) {
+	//			throw new AssertionError("All unsafe instructions should be instances of SSAPutInstruction");
+	//		}
+	//		SSAPutInstruction ssaPutInstruction = (SSAPutInstruction) ssaInstruction;
+	//		Collection<IField> unsafeStaticFields = new HashSet<IField>();
+	//			int valueNumber = ssaPutInstruction.getRef();
+	//			PointerKey pointer = getPointerForValueNumber(unsafeInstructionInfo.getCGNode(), valueNumber);
+	//			Collection<InstanceKey> variablePointedInstances = getPointedInstances(pointer);
+	//			for (IField staticField : getAllStaticFields()) {
+	//				Logger.log("Static field: " + staticField);
+	//				PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
+	//				Collection<InstanceKey> staticFieldPointedInstances = getPointedInstances(staticFieldPointer);
+	//				boolean isIntersected = false;
+	//				for (InstanceKey staticInstance : staticFieldPointedInstances) {
+	//					Logger.log("Pointed instance: " + staticInstance);
+	//					if (variablePointedInstances.contains(staticInstance))
+	//						isIntersected = true;
+	//				}
+	//				if (isIntersected)
+	//					unsafeStaticFields.add(staticField);
+	//			}
+	//		}
+	////		return unsafeStaticFields;
+	//	}
+
+	private Collection<IField> getModifiedStaticFields(final InstructionInfo unsafeInstructionInfo) {
+		class ScanVisitor extends SSAInstruction.Visitor {
+
+			public Collection<IField> result = new HashSet<IField>();
+
+			@Override
+			public void visitPut(SSAPutInstruction instruction) {
+				IField accessedField = AnalysisUtils.getAccessedField(basicAnalysisData, instruction);
+				if (accessedField.isStatic()) {
+					if (!accessedField.isFinal()) {
+						result.add(accessedField);
 					}
-					if (isIntersected)
-						unsafeStaticFields.add(staticField);
+				} else {
+					result.addAll(getStaticFieldsPointingTo(instruction.getRef(), unsafeInstructionInfo.getCGNode()));
 				}
 			}
+
 		}
-		return unsafeStaticFields;
+		ScanVisitor visitor = new ScanVisitor();
+		unsafeInstructionInfo.getInstruction().visit(visitor);
+		return visitor.result;
 	}
 
-	private IField getStaticNonFinalField(SSAFieldAccessInstruction fieldAccessInstruction) {
-		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		if (!(fieldAccessInstruction.isStatic() && !accessedField.isFinal())) {
-			throw new AssertionError("Expected an instruction accessing a nonfinal static field.");
+	private Collection<IField> getStaticFieldsPointingTo(int valueNumber, CGNode cgNode) {
+		Collection<IField> staticFieldsPointingToValueNumber = new HashSet<IField>();
+		for (IField staticField : getAllStaticFields()) {
+			if (isPointedByStaticField(staticField, valueNumber, cgNode)) {
+				staticFieldsPointingToValueNumber.add(staticField);
+			}
 		}
-		return accessedField;
+		return staticFieldsPointingToValueNumber;
 	}
+
+	private boolean isPointedByStaticField(IField staticField, int valueNumber, CGNode cgNode) {
+		PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
+		Collection<InstanceKey> instancesPointedByStaticField = getPointedInstances(staticFieldPointer);
+		if (containsAny(getPointedInstances(getPointerForValueNumber(cgNode, valueNumber)), instancesPointedByStaticField)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isPointedByAnyStaticField(int valueNumber, CGNode cgNode) {
+		for (IField staticField : getAllStaticFields()) {
+			if (isPointedByStaticField(staticField, valueNumber, cgNode)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Has a side-effect: container collection may change.
+	 * 
+	 * @param container
+	 * @param containee
+	 * @return
+	 */
+	private boolean containsAny(Collection<InstanceKey> container, Collection<InstanceKey> containee) {
+		return containee.removeAll(container);
+	}
+
+	//	private IField getStaticNonFinalField(SSAFieldAccessInstruction fieldAccessInstruction) {
+	//		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+	//		if (!(fieldAccessInstruction.isStatic() && !accessedField.isFinal())) {
+	//			throw new AssertionError("Expected an instruction accessing a nonfinal static field.");
+	//		}
+	//		return accessedField;
+	//	}
 
 	/**
 	 * @param results
@@ -269,13 +325,12 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (ir == null) {
 			return unsafeInstructions; //should not really be null here
 		}
-		final DefUse defUse = new DefUse(ir);
 		AnalysisUtils.filter(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
-					if (canModifyStaticField(defUse, instruction)) {
+					if (canModifyStaticField(cgNode, instruction)) {
 						unsafeInstructions.add(instructionInfo);
 					}
 					if (instruction instanceof SSAAbstractInvokeInstruction) {
@@ -349,42 +404,46 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
+	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(final CGNode cgNode) {
 		Collection<InstructionInfo> modifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
 		IR ir = cgNode.getIR();
 		if (ir == null) {
 			return modifyingStaticFieldsInstructions;
 		}
-		final DefUse defUse = new DefUse(ir);
-
 		AnalysisUtils.filter(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
-
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
-				return canModifyStaticField(defUse, instructionInfo.getInstruction());
+				return canModifyStaticField(cgNode, instructionInfo.getInstruction());
 			}
 		});
 		return modifyingStaticFieldsInstructions;
 	}
 
-	private boolean canModifyStaticField(final DefUse defUse, SSAInstruction ssaInstruction) {
-		if (ssaInstruction instanceof SSAPutInstruction) {
-			return isStaticNonFinal((SSAFieldAccessInstruction) ssaInstruction);
-		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
-			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-				if (defInstruction instanceof SSAGetInstruction && isStaticNonFinal((SSAFieldAccessInstruction) defInstruction)) {
-					return true;
+	private boolean canModifyStaticField(final CGNode cgNode, final SSAInstruction ssaInstruction) {
+		class ScanVisitor extends SSAInstruction.Visitor {
+
+			public boolean result = false;
+
+			@Override
+			public void visitPut(SSAPutInstruction instruction) {
+				IField accessedField = AnalysisUtils.getAccessedField(basicAnalysisData, instruction);
+				if (accessedField.isStatic()) {
+					result = !accessedField.isFinal();
+				} else {
+					result = isPointedByAnyStaticField(instruction.getRef(), cgNode);
 				}
 			}
+
 		}
-		return false;
+		ScanVisitor visitor = new ScanVisitor();
+		ssaInstruction.visit(visitor);
+		return visitor.result;
 	}
 
-	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
-		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
-	}
+	//	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
+	//		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+	//		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
+	//	}
 
 	/*
 	 * FIXME: A synchronized block that is nested inside a safe one is

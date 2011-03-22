@@ -7,6 +7,8 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 public class A {
 
+	int f; 
+	
 	final static A a = new A();
 
 	@EntryPoint
@@ -15,8 +17,8 @@ public class A {
 	}
 
 	private void m() {
-		synchronized (new Object()) {
-			a.toString();
-		}
+		/*[LCK06J,01*/synchronized (new Object()) {
+			a.f=5;
+		}/*]*/
 	}
 }
