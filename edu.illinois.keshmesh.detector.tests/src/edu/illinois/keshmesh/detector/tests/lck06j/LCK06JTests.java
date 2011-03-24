@@ -112,4 +112,13 @@ public class LCK06JTests {
 
 	}
 
+	public static class LCK06JTest12 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("12", "A.java");
+		}
+
+	}
+
 }

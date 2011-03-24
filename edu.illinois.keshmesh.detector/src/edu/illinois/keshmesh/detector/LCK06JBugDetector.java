@@ -162,19 +162,17 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private void reportActuallyUnsafeInstructions(CGNode cgNode, CodePosition position, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
 		if (!actuallyUnsafeInstructions.isEmpty()) {
-			//			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
-			//			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new CodePosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
-			Collection<IField> unsafeStaticFields = getUnsafeStaticFields(actuallyUnsafeInstructions);
-			//			for (IField unsafeStaticField : unsafeStaticFields) {
-			//				CGNode node = unsafeStaticField
-			//			}
-			LCK06JFixInformation fixInfo = new LCK06JFixInformation(getUnsafeStaticFields(actuallyUnsafeInstructions));
-			Collection<IField> fields = fixInfo.getStaticFieldNames();
-			for (IField field : fields) {
-				System.out.println(field.getName());
-			}
+			LCK06JFixInformation fixInfo = new LCK06JFixInformation(getFieldNames(getUnsafeStaticFields(actuallyUnsafeInstructions)));
 			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, fixInfo));
 		}
+	}
+
+	private Collection<String> getFieldNames(Collection<IField> fields) {
+		Collection<String> fieldNames = new HashSet<String>();
+		for (IField field : fields) {
+			fieldNames.add(field.getName().toString());
+		}
+		return fieldNames;
 	}
 
 	//TODO: is modifiedStaticFields is enough to report or it is not?

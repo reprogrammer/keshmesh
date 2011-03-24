@@ -5,28 +5,31 @@ package edu.illinois.keshmesh.detector.bugs;
 
 import java.util.Collection;
 
-import com.ibm.wala.classLoader.IField;
-
 /**
  * 
  * @author Mohsen Vakilian
  * @author Stas Negara
+ * @author Samira Tasharofi
  * 
  */
 public class LCK06JFixInformation implements FixInformation {
 
-	Collection<IField> unsafeStaticFields;
+	Collection<String> unsafeStaticFieldNames;
 
-	public LCK06JFixInformation(Collection<IField> unsafeStaticFields) {
-		this.unsafeStaticFields = unsafeStaticFields;
+	public LCK06JFixInformation(Collection<String> unsafeStaticFieldNames) {
+		this.unsafeStaticFieldNames = unsafeStaticFieldNames;
 	}
 
-	//TODO: remove this after fixing LCK06JTest
-	public LCK06JFixInformation() {
+	public Collection<String> getStaticFieldNames() {
+		return this.unsafeStaticFieldNames;
 	}
 
-	public Collection<IField> getStaticFieldNames() {
-		return this.unsafeStaticFields;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((unsafeStaticFieldNames == null) ? 0 : unsafeStaticFieldNames.hashCode());
+		return result;
 	}
 
 	@Override
@@ -37,12 +40,18 @@ public class LCK06JFixInformation implements FixInformation {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
+		LCK06JFixInformation other = (LCK06JFixInformation) obj;
+		if (unsafeStaticFieldNames == null) {
+			if (other.unsafeStaticFieldNames != null)
+				return false;
+		} else if (!unsafeStaticFieldNames.equals(other.unsafeStaticFieldNames))
+			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LCK06JFixInformation";
+		return "LCK06JFixInformation [unsafeStaticFieldNames=" + unsafeStaticFieldNames + "]";
 	}
 
 }
