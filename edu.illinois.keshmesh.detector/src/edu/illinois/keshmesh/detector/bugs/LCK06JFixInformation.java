@@ -12,6 +12,7 @@ import java.util.Collection;
  * @author Samira Tasharofi
  * 
  */
+
 public class LCK06JFixInformation implements FixInformation {
 
 	Collection<String> unsafeStaticFieldNames;

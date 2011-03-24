@@ -49,8 +49,10 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  * 
  * @author Mohsen Vakilian
  * @author Stas Negara
+ * @author Samira Tasharofi
  * 
  */
+
 public class LCK06JBugDetector extends BugPatternDetector {
 
 	enum SynchronizedBlockKind {
