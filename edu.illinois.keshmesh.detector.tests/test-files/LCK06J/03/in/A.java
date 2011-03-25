@@ -15,8 +15,9 @@ public class A {
 	}
 
 	private void m() {
-		synchronized (new Object()) {
-			o.toString();
+		/* [LCK06J,01,p.A.o */synchronized (new Object()) {
+			o = new A();
 		}
+		/* ] */
 	}
 }

@@ -13,8 +13,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
  */
 public class A {
 
-	static A staticField = new A();
-	A nonStaticField;
+	static B staticField = new B();
 
 	@EntryPoint
 	public static void main(String args[]) {
@@ -23,9 +22,15 @@ public class A {
 
 	void m() {
 		/* [LCK06J,01,staticField */synchronized (new Object()) {
-			A localVariable = staticField;
+			B localVariable = staticField;
 			localVariable.nonStaticField = null;
 		}/* ] */
 	}
+
+}
+
+class B {
+
+	B nonStaticField;
 
 }

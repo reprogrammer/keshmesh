@@ -172,7 +172,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private Collection<String> getFieldNames(Collection<IField> fields) {
 		Collection<String> fieldNames = new HashSet<String>();
 		for (IField field : fields) {
-			fieldNames.add(field.getName().toString());
+			fieldNames.add(AnalysisUtils.walaTypeNameToJavaName(field.getDeclaringClass().getName()) + "." + field.getName().toString());
 		}
 		return fieldNames;
 	}
@@ -250,7 +250,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private boolean isPointedByStaticField(IField staticField, int valueNumber, CGNode cgNode) {
 		PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
 		Collection<InstanceKey> instancesPointedByStaticField = getPointedInstances(staticFieldPointer);
-		if (containsAny(getPointedInstances(getPointerForValueNumber(cgNode, valueNumber)), instancesPointedByStaticField)) {
+		Collection<InstanceKey> pointedInstances = getPointedInstances(getPointerForValueNumber(cgNode, valueNumber));
+		if (containsAny(pointedInstances, instancesPointedByStaticField)) {
 			return true;
 		}
 		return false;

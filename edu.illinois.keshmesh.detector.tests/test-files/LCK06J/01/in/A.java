@@ -5,6 +5,11 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * We don't know why this test passes modulo the fix information.
+ *
+ */
 public class A {
 
 	private static int counter = 0;
@@ -53,5 +58,14 @@ public class A {
 
 	private static void m3() {
 		counter++;
+	}
+}
+
+class B {
+	
+	int i;
+
+	public void set(int i) {
+		this.i = i;
 	}
 }

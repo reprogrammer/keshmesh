@@ -7,14 +7,14 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
- * This test checks that the LCK06J detector reports indirect modifications to
- * parts of static fields that are poorly synchronized.
+ * This test demonstrates a false positive reported by the detector of LCK06J.
+ * The flow insensitivity of the points-to analysis of WALA is the root cause of
+ * this false alaram.
  * 
  */
 public class A {
 
-	static A staticField = new A();
-	A nonStaticField;
+	static B staticField = new B();
 
 	@EntryPoint
 	public static void main(String args[]) {
@@ -23,9 +23,17 @@ public class A {
 
 	void m() {
 		/* [LCK06J,01,staticField */synchronized (new Object()) {
-			A localVariable = staticField;
-			localVariable.nonStaticField = null;
-		}/* ] */
+			B oldValue = staticField;
+			staticField = new B();
+			oldValue.nonStaticField = null;
+		}
+		/* ] */
 	}
+
+}
+
+class B {
+
+	B nonStaticField;
 
 }

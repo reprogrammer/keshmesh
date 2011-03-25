@@ -15,7 +15,6 @@ public class A {
 
 	static A staticField = new A();
 	A nonStaticField;
-	int i;
 
 	@EntryPoint
 	public static void main(String args[]) {
@@ -25,7 +24,6 @@ public class A {
 	void m() {
 		/* [LCK06J,01,staticField */synchronized (new Object()) {
 			staticField.nonStaticField = null;
-			staticField.nonStaticField.i = 0;
 		}/* ] */
 	}
 

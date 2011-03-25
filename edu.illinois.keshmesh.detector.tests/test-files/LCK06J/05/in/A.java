@@ -5,6 +5,11 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * TODO: We need to update this test.
+ *
+ */
 public class A {
 
 	static Object o = new Object();

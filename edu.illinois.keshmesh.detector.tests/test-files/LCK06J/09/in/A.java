@@ -7,6 +7,8 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
+ * TODO: We need to update this test.
+ * 
  * This class tests the LCK06J detector with respect to nestings of synchronized
  * blocks on static and nonstatic locks.
  * 
