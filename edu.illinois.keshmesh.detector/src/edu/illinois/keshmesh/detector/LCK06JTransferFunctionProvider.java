@@ -10,6 +10,8 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.dataflow.graph.AbstractMeetOperator;
+import com.ibm.wala.dataflow.graph.BitVectorIdentity;
+import com.ibm.wala.dataflow.graph.BitVectorKillAll;
 import com.ibm.wala.dataflow.graph.BitVectorUnion;
 import com.ibm.wala.dataflow.graph.BitVectorUnionVector;
 import com.ibm.wala.dataflow.graph.ITransferFunctionProvider;
@@ -18,7 +20,6 @@ import com.ibm.wala.fixpoint.UnaryOperator;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ssa.IR;
-import com.ibm.wala.util.intset.BitVector;
 import com.ibm.wala.util.intset.IntIterator;
 import com.ibm.wala.util.intset.IntSet;
 
@@ -55,7 +56,6 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
 		if (!AnalysisUtils.isSafeSynchronized(dst.getMethod())) {
-			CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
 			CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
 			Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
 			IR dstIR = dst.getIR();
@@ -67,22 +67,22 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 					int invokeInstructionIndex = instructionIndicesIterator.next();
 					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
 					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
-						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+						return BitVectorIdentity.instance();
 					}
 				}
 			}
 		}
-		return new BitVectorUnionVector(new BitVector());
+		return BitVectorKillAll.instance();
 	}
 
 	@Override
 	public boolean hasNodeTransferFunctions() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getNodeTransferFunction(CGNode node) {
-		return null;
+		return new BitVectorUnionVector(cgNodeInfoMap.get(node).getBitVector());
 	}
 
 }

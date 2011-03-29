@@ -71,7 +71,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		this.javaProject = javaProject;
 		this.basicAnalysisData = basicAnalysisData;
-		Iterator<CGNode> cgNodesIter = this.basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode: " + cgNode.getIR());
@@ -89,10 +89,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions();
 
-		Iterator<CGNode> cgNodesIterator = this.basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
-			IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+			IntSet value = bitVectorSolver.getOut(cgNode).getValue();
 			if (value != null) {
 				IntIterator intIterator = value.intIterator();
 				Logger.log("CGNode: " + cgNode.getMethod().getSignature());
@@ -295,7 +295,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	 * @param cgNode
 	 */
 	public void addSolverResults(Collection<InstructionInfo> results, BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
-		IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+		IntSet value = bitVectorSolver.getOut(cgNode).getValue();
 		if (value != null) {
 			IntIterator intIterator = value.intIterator();
 			while (intIterator.hasNext()) {

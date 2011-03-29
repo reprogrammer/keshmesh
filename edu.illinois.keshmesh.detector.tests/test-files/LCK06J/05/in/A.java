@@ -7,7 +7,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
- * TODO: We need to update this test.
+ * This test checks that the detector finds modification of a static field through a method invocation.
  *
  */
 public class A {
@@ -16,12 +16,16 @@ public class A {
 
 	@EntryPoint
 	public static void main(String args[]) {
-		new A().m();
+		new A().m1();
 	}
 
-	private void m() {
-		synchronized (new Object()) {
-			o.toString();
-		}
+	void m1() {
+		/* [LCK06J,01,p.A.o */synchronized (new Object()) {
+			m2();
+		}/* ] */
+	}
+	
+	void m2() {
+		o = new A();
 	}
 }

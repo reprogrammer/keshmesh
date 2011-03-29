@@ -5,6 +5,12 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * This simple test checks for direct modifications of static fields using a
+ * nonstatic lock.
+ * 
+ */
 public class A {
 
 	static Object o = new A();
@@ -17,7 +23,6 @@ public class A {
 	private void m() {
 		/* [LCK06J,01,p.A.o */synchronized (new Object()) {
 			o = new A();
-		}
-		/* ] */
+		} /* ] */
 	}
 }
