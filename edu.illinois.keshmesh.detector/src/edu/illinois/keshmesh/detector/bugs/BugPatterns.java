@@ -16,6 +16,7 @@ import java.util.Map;
 public class BugPatterns {
 
 	public final static BugPattern LCK02J = new LCK02JBugPattern();
+	public final static BugPattern LCK03J = new LCK03JBugPattern();
 	public final static BugPattern LCK06J = new LCK06JBugPattern();
 
 	private static Map<String, BugPattern> bugPatternsMap;
@@ -23,6 +24,7 @@ public class BugPatterns {
 	static {
 		bugPatternsMap = new HashMap<String, BugPattern>();
 		bugPatternsMap.put(LCK02J.getName(), LCK02J);
+		bugPatternsMap.put(LCK03J.getName(), LCK03J);
 		bugPatternsMap.put(LCK06J.getName(), LCK06J);
 	}
 
