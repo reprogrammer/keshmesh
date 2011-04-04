@@ -50,10 +50,13 @@ public class BugInstance {
 		if (portableEquals(obj)) {
 			BugInstance other = (BugInstance) obj;
 			if (bugPosition == null) {
-				if (other.bugPosition != null)
+				if (other.bugPosition != null) {
 					return false;
-			} else if (!bugPosition.equals(other.bugPosition))
+				}
+			} else if (!bugPosition.equals(other.bugPosition)) {
 				return false;
+			}
+			return true;
 		}
 		return false;
 	}

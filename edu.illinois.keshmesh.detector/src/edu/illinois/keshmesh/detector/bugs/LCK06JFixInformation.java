@@ -3,7 +3,7 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * 
@@ -15,13 +15,13 @@ import java.util.Collection;
 
 public class LCK06JFixInformation implements FixInformation {
 
-	Collection<String> unsafeStaticFieldNames;
+	Set<String> unsafeStaticFieldNames;
 
-	public LCK06JFixInformation(Collection<String> unsafeStaticFieldNames) {
+	public LCK06JFixInformation(Set<String> unsafeStaticFieldNames) {
 		this.unsafeStaticFieldNames = unsafeStaticFieldNames;
 	}
 
-	public Collection<String> getStaticFieldNames() {
+	public Set<String> getStaticFieldNames() {
 		return this.unsafeStaticFieldNames;
 	}
 

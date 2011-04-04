@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -121,7 +122,7 @@ public class AnalysisUtils {
 		} else if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
-				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName).getCompilationUnit().getPath());
+				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName, new NullProgressMonitor()).getCompilationUnit().getPath());
 				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
 				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
 			} catch (JavaModelException e) {

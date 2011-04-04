@@ -169,8 +169,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	private Collection<String> getFieldNames(Collection<IField> fields) {
-		Collection<String> fieldNames = new HashSet<String>();
+	private Set<String> getFieldNames(Collection<IField> fields) {
+		Set<String> fieldNames = new HashSet<String>();
 		for (IField field : fields) {
 			fieldNames.add(AnalysisUtils.walaTypeNameToJavaName(field.getDeclaringClass().getName()) + "." + field.getName().toString());
 		}
@@ -178,41 +178,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	//TODO: is modifiedStaticFields is enough to report or it is not?
-	private Collection<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
-		Collection<IField> modifiedStaticFields = new HashSet<IField>();
+	private Set<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
+		Set<IField> modifiedStaticFields = new HashSet<IField>();
 		for (InstructionInfo unsafeInstructionInfo : actuallyUnsafeInstructions) {
 			modifiedStaticFields.addAll(getModifiedStaticFields(unsafeInstructionInfo));
 		}
 
 		return modifiedStaticFields;
 	}
-
-	//	private Collection<IField> getModifiedStaticFields(InstructionInfo unsafeInstructionInfo) {
-	//		SSAInstruction ssaInstruction = unsafeInstructionInfo.getInstruction();
-	//		if (!(ssaInstruction instanceof SSAPutInstruction)) {
-	//			throw new AssertionError("All unsafe instructions should be instances of SSAPutInstruction");
-	//		}
-	//		SSAPutInstruction ssaPutInstruction = (SSAPutInstruction) ssaInstruction;
-	//		Collection<IField> unsafeStaticFields = new HashSet<IField>();
-	//			int valueNumber = ssaPutInstruction.getRef();
-	//			PointerKey pointer = getPointerForValueNumber(unsafeInstructionInfo.getCGNode(), valueNumber);
-	//			Collection<InstanceKey> variablePointedInstances = getPointedInstances(pointer);
-	//			for (IField staticField : getAllStaticFields()) {
-	//				Logger.log("Static field: " + staticField);
-	//				PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
-	//				Collection<InstanceKey> staticFieldPointedInstances = getPointedInstances(staticFieldPointer);
-	//				boolean isIntersected = false;
-	//				for (InstanceKey staticInstance : staticFieldPointedInstances) {
-	//					Logger.log("Pointed instance: " + staticInstance);
-	//					if (variablePointedInstances.contains(staticInstance))
-	//						isIntersected = true;
-	//				}
-	//				if (isIntersected)
-	//					unsafeStaticFields.add(staticField);
-	//			}
-	//		}
-	////		return unsafeStaticFields;
-	//	}
 
 	private Collection<IField> getModifiedStaticFields(final InstructionInfo unsafeInstructionInfo) {
 		class ScanVisitor extends SSAInstruction.Visitor {
