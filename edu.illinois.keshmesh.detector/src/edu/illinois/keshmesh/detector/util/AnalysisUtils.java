@@ -40,6 +40,11 @@ public class AnalysisUtils {
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
+	/**
+	 * The value number of "this" is meaningful only for instance methods.
+	 */
+	public static final int THIS_VALUE_NUMBER = 1;
+
 	public static IPath getWorkspaceLocation() {
 		return ResourcesPlugin.getWorkspace().getRoot().getLocation();
 	}
@@ -97,14 +102,6 @@ public class AnalysisUtils {
 
 	public static boolean isObjectGetClass(IMethod method) {
 		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
-	}
-
-	public static boolean isUnsafeSynchronized(IMethod method) {
-		return method.isSynchronized() && !method.isStatic();
-	}
-
-	public static boolean isSafeSynchronized(IMethod method) {
-		return method.isSynchronized() && method.isStatic();
 	}
 
 	public static String walaTypeNameToJavaName(TypeName typeName) {

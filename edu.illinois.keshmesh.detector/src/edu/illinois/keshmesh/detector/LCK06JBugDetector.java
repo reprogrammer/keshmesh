@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -66,6 +67,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private final OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();
 
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
+
+	public Map<CGNode, CGNodeInfo> getCGNodeInfoMap() {
+		return Collections.unmodifiableMap(cgNodeInfoMap);
+	}
 
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
@@ -140,10 +145,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	 */
 	private void reportActuallyUnsafeInstructionsOfSynchronizedBlocks(BugInstances bugInstances, Collection<InstructionInfo> unsafeSynchronizedBlocks, BitVectorSolver<CGNode> bitVectorSolver) {
 		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
-			IMethod method = unsafeSynchronizedBlock.getCGNode().getMethod();
-
 			// If the method is safe, i.e. static and synchronized, we report no instances of LCK06J in that method. Therefore, we ignore the unsafe synchronized blocks in it.
-			if (AnalysisUtils.isSafeSynchronized(method)) {
+			if (isSafeSynchronized(unsafeSynchronizedBlock.getCGNode())) {
 				continue;
 			}
 
@@ -324,7 +327,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions() {
-		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(javaProject, basicAnalysisData.callGraph, cgNodeInfoMap);
+		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(this);
 
 		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
 				globalValues);
@@ -357,7 +360,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			if (!AnalysisUtils.isSafeSynchronized(cgNode.getMethod()) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!isSafeSynchronized(cgNode) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -433,7 +436,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			IMethod method = cgNode.getMethod();
 			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
-				if (AnalysisUtils.isUnsafeSynchronized(method)) {
+				if (isUnsafeSynchronized(cgNode)) {
 					unsafeSynchronizedMethods.add(cgNode);
 				}
 			}
@@ -460,8 +463,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	boolean isSafe(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
-		assert (monitorInstruction.isMonitorEnter());
-		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
+		if (!monitorInstruction.isMonitorEnter()) {
+			throw new AssertionError("Expected a monitor enter instruction.");
+		}
+		return isSafeLock(cgNode, monitorInstruction.getRef());
+	}
+
+	private boolean isSafeLock(CGNode cgNode, int lockValueNumber) {
+		PointerKey lockPointer = getPointerForValueNumber(cgNode, lockValueNumber);
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
 		if (lockPointedInstances.isEmpty() || !instancesPointedByStaticFields.containsAll(lockPointedInstances)) {
 			return false;
@@ -502,6 +511,18 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	private CodePosition getPosition(CGNode cgNode) {
 		IMethod method = cgNode.getMethod();
 		return AnalysisUtils.getPosition(javaProject, method, 0);
+	}
+
+	public boolean isSafeSynchronized(CGNode cgNode) {
+		return cgNode.getMethod().isSynchronized() && isSafeMethod(cgNode);
+	}
+
+	private boolean isUnsafeSynchronized(CGNode cgNode) {
+		return cgNode.getMethod().isSynchronized() && !isSafeMethod(cgNode);
+	}
+
+	private boolean isSafeMethod(CGNode cgNode) {
+		return cgNode.getMethod().isStatic() || isSafeLock(cgNode, AnalysisUtils.THIS_VALUE_NUMBER);
 	}
 
 }
