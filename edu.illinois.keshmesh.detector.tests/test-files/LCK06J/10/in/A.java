@@ -7,8 +7,6 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
- * TODO: We need to update this test.
- * 
  * This test checks that the LCK06J detector correctly computes the 'is inside'
  * relation for synchronized blocks.
  * 

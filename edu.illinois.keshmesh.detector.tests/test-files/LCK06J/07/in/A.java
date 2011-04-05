@@ -8,7 +8,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
- * TODO: We need to update this test.
+ * This test case checks that the detector handles JDK classes correctly.
  * 
  */
 public class A {
