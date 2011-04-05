@@ -77,7 +77,7 @@ public class CodePosition {
 		result = prime * result + firstLine;
 		result = prime * result + firstOffset;
 		result = prime * result + ((fullyQualifiedEnclosingClassName == null) ? 0 : fullyQualifiedEnclosingClassName.hashCode());
-		result = prime * result + lastLine;
+		//		result = prime * result + lastLine;
 		result = prime * result + lastOffset;
 		result = prime * result + ((sourcePath == null) ? 0 : sourcePath.toPortableString().hashCode());
 		return result;
@@ -87,10 +87,13 @@ public class CodePosition {
 	public boolean equals(Object obj) {
 		if (portableEquals(obj)) {
 			CodePosition other = (CodePosition) obj;
-			if (firstOffset != other.firstOffset)
+			if (firstOffset != other.firstOffset) {
 				return false;
-			if (lastOffset != other.lastOffset)
+			}
+			if (lastOffset != other.lastOffset) {
 				return false;
+			}
+			return true;
 		}
 		return false;
 	}

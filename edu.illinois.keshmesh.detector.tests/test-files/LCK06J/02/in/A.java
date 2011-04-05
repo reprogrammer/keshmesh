@@ -5,8 +5,11 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * We don't need this test any more.
+ */
 public class A {
-	
+
 	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
@@ -14,7 +17,7 @@ public class A {
 
 	private void m() {
 		synchronized (new Object()) {
-			System.out.println("");
+			System.out.close();
 		}
 	}
 }

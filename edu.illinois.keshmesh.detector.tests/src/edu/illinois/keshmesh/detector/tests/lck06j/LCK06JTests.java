@@ -17,7 +17,7 @@ public class LCK06JTests {
 
 		@Before
 		public void setup() throws Exception {
-			setupProjectAndAnalyze("01", "A.java", "B.java");
+			setupProjectAndAnalyze("01", "A.java");
 		}
 
 	}
@@ -99,6 +99,51 @@ public class LCK06JTests {
 		@Before
 		public void setup() throws Exception {
 			setupProjectAndAnalyze("10", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest11 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("11", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest12 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("12", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest13 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("13", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest14 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("14", "A.java");
+		}
+
+	}
+
+	public static class LCK06JTest15 extends LCK06JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("15", "A.java");
 		}
 
 	}

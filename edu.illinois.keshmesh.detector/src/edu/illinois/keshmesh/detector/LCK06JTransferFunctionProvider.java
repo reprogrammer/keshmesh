@@ -4,21 +4,18 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Iterator;
-import java.util.Map;
-
-import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.dataflow.graph.AbstractMeetOperator;
+import com.ibm.wala.dataflow.graph.BitVectorIdentity;
+import com.ibm.wala.dataflow.graph.BitVectorKillAll;
 import com.ibm.wala.dataflow.graph.BitVectorUnion;
 import com.ibm.wala.dataflow.graph.BitVectorUnionVector;
 import com.ibm.wala.dataflow.graph.ITransferFunctionProvider;
 import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.fixpoint.UnaryOperator;
 import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ssa.IR;
-import com.ibm.wala.util.intset.BitVector;
 import com.ibm.wala.util.intset.IntIterator;
 import com.ibm.wala.util.intset.IntSet;
 
@@ -32,14 +29,10 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider<CGNode, BitVectorVariable> {
 
-	private final IJavaProject javaProject;
-	private final CallGraph callGraph;
-	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap;
+	private final LCK06JBugDetector lck06jBugDetector;
 
-	public LCK06JTransferFunctionProvider(IJavaProject javaProject, CallGraph callGraph, Map<CGNode, CGNodeInfo> cgNodeInfoMap) {
-		this.javaProject = javaProject;
-		this.callGraph = callGraph;
-		this.cgNodeInfoMap = cgNodeInfoMap;
+	public LCK06JTransferFunctionProvider(LCK06JBugDetector lck06BugDetector) {
+		this.lck06jBugDetector = lck06BugDetector;
 	}
 
 	@Override
@@ -54,10 +47,9 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getEdgeTransferFunction(CGNode src, CGNode dst) {
-		if (!AnalysisUtils.isSafeSynchronized(dst.getMethod())) {
-			CGNodeInfo srcNodeInfo = cgNodeInfoMap.get(src);
-			CGNodeInfo dstNodeInfo = cgNodeInfoMap.get(dst);
-			Iterator<CallSiteReference> callSitesIterator = callGraph.getPossibleSites(dst, src);
+		if (!lck06jBugDetector.isSafeSynchronized(dst)) {
+			CGNodeInfo dstNodeInfo = lck06jBugDetector.getCGNodeInfoMap().get(dst);
+			Iterator<CallSiteReference> callSitesIterator = lck06jBugDetector.basicAnalysisData.callGraph.getPossibleSites(dst, src);
 			IR dstIR = dst.getIR();
 			while (callSitesIterator.hasNext()) {
 				CallSiteReference callSiteReference = callSitesIterator.next();
@@ -65,24 +57,24 @@ public class LCK06JTransferFunctionProvider implements ITransferFunctionProvider
 				IntIterator instructionIndicesIterator = callInstructionIndices.intIterator();
 				while (instructionIndicesIterator.hasNext()) {
 					int invokeInstructionIndex = instructionIndicesIterator.next();
-					InstructionInfo instructionInfo = new InstructionInfo(javaProject, dst, invokeInstructionIndex);
+					InstructionInfo instructionInfo = new InstructionInfo(lck06jBugDetector.javaProject, dst, invokeInstructionIndex);
 					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(dstNodeInfo.getSafeSynchronizedBlocks(), instructionInfo)) {
-						return new BitVectorUnionVector(srcNodeInfo.getBitVector());
+						return BitVectorIdentity.instance();
 					}
 				}
 			}
 		}
-		return new BitVectorUnionVector(new BitVector());
+		return BitVectorKillAll.instance();
 	}
 
 	@Override
 	public boolean hasNodeTransferFunctions() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public UnaryOperator<BitVectorVariable> getNodeTransferFunction(CGNode node) {
-		return null;
+		return new BitVectorUnionVector(lck06jBugDetector.getCGNodeInfoMap().get(node).getBitVector());
 	}
 
 }

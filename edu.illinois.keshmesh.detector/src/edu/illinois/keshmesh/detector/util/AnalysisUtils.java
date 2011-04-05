@@ -7,20 +7,24 @@ import java.util.Collection;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
 import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
 
+import edu.illinois.keshmesh.detector.BasicAnalysisData;
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
 import edu.illinois.keshmesh.detector.LCK06JBugDetector;
@@ -35,6 +39,11 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
 public class AnalysisUtils {
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
+
+	/**
+	 * The value number of "this" is meaningful only for instance methods.
+	 */
+	public static final int THIS_VALUE_NUMBER = 1;
 
 	public static IPath getWorkspaceLocation() {
 		return ResourcesPlugin.getWorkspace().getRoot().getLocation();
@@ -95,14 +104,6 @@ public class AnalysisUtils {
 		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
 	}
 
-	public static boolean isUnsafeSynchronized(IMethod method) {
-		return method.isSynchronized() && !method.isStatic();
-	}
-
-	public static boolean isSafeSynchronized(IMethod method) {
-		return method.isSynchronized() && method.isStatic();
-	}
-
 	public static String walaTypeNameToJavaName(TypeName typeName) {
 		String fullyQualifiedName = typeName.getPackage() + "." + typeName.getClassName();
 
@@ -118,7 +119,7 @@ public class AnalysisUtils {
 		} else if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
-				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName).getCompilationUnit().getPath());
+				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName, new NullProgressMonitor()).getCompilationUnit().getPath());
 				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
 				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
 			} catch (JavaModelException e) {
@@ -136,6 +137,10 @@ public class AnalysisUtils {
 
 	public static boolean isMonitorExit(SSAInstruction ssaInstruction) {
 		return ssaInstruction instanceof SSAMonitorInstruction && !((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
+	}
+
+	public static IField getAccessedField(BasicAnalysisData basicAnalysisData, SSAFieldAccessInstruction fieldAccessInstruction) {
+		return basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
 	}
 
 }
