@@ -91,6 +91,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode: " + cgNode.getIR());
 		}
+		intermediateResults.setStaticFields(getAllStaticFields());
 		populateAllInstancesPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
@@ -509,7 +510,6 @@ public class LCK06JBugDetector extends BugPatternDetector {
 				staticFields.addAll(klass.getAllStaticFields());
 			}
 		}
-		intermediateResults.setStaticFields(staticFields);
 		return staticFields;
 	}
 
