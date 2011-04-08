@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,11 +22,8 @@ import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
-import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
-import com.ibm.wala.ssa.SSAFieldAccessInstruction;
-import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
@@ -53,8 +51,10 @@ import edu.illinois.keshmesh.util.Logger;
  * 
  * @author Mohsen Vakilian
  * @author Stas Negara
+ * @author Samira Tasharofi
  * 
  */
+
 public class LCK06JBugDetector extends BugPatternDetector {
 
 	enum SynchronizedBlockKind {
@@ -78,11 +78,15 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return intermediateResults;
 	}
 
+	public Map<CGNode, CGNodeInfo> getCGNodeInfoMap() {
+		return Collections.unmodifiableMap(cgNodeInfoMap);
+	}
+
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		this.javaProject = javaProject;
 		this.basicAnalysisData = basicAnalysisData;
-		Iterator<CGNode> cgNodesIter = this.basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode: " + cgNode.getIR());
@@ -100,10 +104,10 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnsafeModifyingStaticFieldsInstructions();
 
-		Iterator<CGNode> cgNodesIterator = this.basicAnalysisData.callGraph.iterator();
+		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			CGNode cgNode = cgNodesIterator.next();
-			IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+			IntSet value = bitVectorSolver.getOut(cgNode).getValue();
 			if (value != null) {
 				IntIterator intIterator = value.intIterator();
 				Logger.log("CGNode: " + cgNode.getMethod().getSignature());
@@ -151,10 +155,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	 */
 	private void reportActuallyUnsafeInstructionsOfSynchronizedBlocks(BugInstances bugInstances, Collection<InstructionInfo> unsafeSynchronizedBlocks, BitVectorSolver<CGNode> bitVectorSolver) {
 		for (InstructionInfo unsafeSynchronizedBlock : unsafeSynchronizedBlocks) {
-			IMethod method = unsafeSynchronizedBlock.getCGNode().getMethod();
-
 			// If the method is safe, i.e. static and synchronized, we report no instances of LCK06J in that method. Therefore, we ignore the unsafe synchronized blocks in it.
-			if (LCK06JBugDetector.isSafeSynchronized(method)) {
+			if (isSafeSynchronized(unsafeSynchronizedBlock.getCGNode())) {
 				continue;
 			}
 
@@ -175,11 +177,99 @@ public class LCK06JBugDetector extends BugPatternDetector {
 
 	private void reportActuallyUnsafeInstructions(CGNode cgNode, CodePosition position, Collection<InstructionInfo> actuallyUnsafeInstructions, BugInstances bugInstances) {
 		if (!actuallyUnsafeInstructions.isEmpty()) {
-			//			TypeName enclosingClassName = cgNode.getMethod().getDeclaringClass().getName();
-			//			bugInstances.add(new BugInstance(BugPatterns.LCK06J, new CodePosition(position, AnalysisUtils.getEnclosingNonanonymousClassName(enclosingClassName)), new LCK06JFixInformation()));
-			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, new LCK06JFixInformation()));
+			LCK06JFixInformation fixInfo = new LCK06JFixInformation(getFieldNames(getUnsafeStaticFields(actuallyUnsafeInstructions)));
+			bugInstances.add(new BugInstance(BugPatterns.LCK06J, position, fixInfo));
 		}
 	}
+
+	private Set<String> getFieldNames(Collection<IField> fields) {
+		Set<String> fieldNames = new HashSet<String>();
+		for (IField field : fields) {
+			fieldNames.add(AnalysisUtils.walaTypeNameToJavaName(field.getDeclaringClass().getName()) + "." + field.getName().toString());
+		}
+		return fieldNames;
+	}
+
+	//TODO: is modifiedStaticFields is enough to report or it is not?
+	private Set<IField> getUnsafeStaticFields(Collection<InstructionInfo> actuallyUnsafeInstructions) {
+		Set<IField> modifiedStaticFields = new HashSet<IField>();
+		for (InstructionInfo unsafeInstructionInfo : actuallyUnsafeInstructions) {
+			modifiedStaticFields.addAll(getModifiedStaticFields(unsafeInstructionInfo));
+		}
+
+		return modifiedStaticFields;
+	}
+
+	private Collection<IField> getModifiedStaticFields(final InstructionInfo unsafeInstructionInfo) {
+		class ScanVisitor extends SSAInstruction.Visitor {
+
+			public Collection<IField> result = new HashSet<IField>();
+
+			@Override
+			public void visitPut(SSAPutInstruction instruction) {
+				IField accessedField = AnalysisUtils.getAccessedField(basicAnalysisData, instruction);
+				if (accessedField.isStatic()) {
+					if (!accessedField.isFinal()) {
+						result.add(accessedField);
+					}
+				} else {
+					result.addAll(getStaticFieldsPointingTo(instruction.getRef(), unsafeInstructionInfo.getCGNode()));
+				}
+			}
+
+		}
+		ScanVisitor visitor = new ScanVisitor();
+		unsafeInstructionInfo.getInstruction().visit(visitor);
+		return visitor.result;
+	}
+
+	private Collection<IField> getStaticFieldsPointingTo(int valueNumber, CGNode cgNode) {
+		Collection<IField> staticFieldsPointingToValueNumber = new HashSet<IField>();
+		for (IField staticField : getAllStaticFields()) {
+			if (isPointedByStaticField(staticField, valueNumber, cgNode)) {
+				staticFieldsPointingToValueNumber.add(staticField);
+			}
+		}
+		return staticFieldsPointingToValueNumber;
+	}
+
+	private boolean isPointedByStaticField(IField staticField, int valueNumber, CGNode cgNode) {
+		PointerKey staticFieldPointer = basicAnalysisData.heapModel.getPointerKeyForStaticField(staticField);
+		Collection<InstanceKey> instancesPointedByStaticField = getPointedInstances(staticFieldPointer);
+		Collection<InstanceKey> pointedInstances = getPointedInstances(getPointerForValueNumber(cgNode, valueNumber));
+		if (containsAny(pointedInstances, instancesPointedByStaticField)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isPointedByAnyStaticField(int valueNumber, CGNode cgNode) {
+		for (IField staticField : getAllStaticFields()) {
+			if (isPointedByStaticField(staticField, valueNumber, cgNode)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Has a side-effect: container collection may change.
+	 * 
+	 * @param container
+	 * @param containee
+	 * @return
+	 */
+	private boolean containsAny(Collection<InstanceKey> container, Collection<InstanceKey> containee) {
+		return containee.removeAll(container);
+	}
+
+	//	private IField getStaticNonFinalField(SSAFieldAccessInstruction fieldAccessInstruction) {
+	//		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+	//		if (!(fieldAccessInstruction.isStatic() && !accessedField.isFinal())) {
+	//			throw new AssertionError("Expected an instruction accessing a nonfinal static field.");
+	//		}
+	//		return accessedField;
+	//	}
 
 	/**
 	 * @param results
@@ -191,7 +281,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	 * @param cgNode
 	 */
 	public void addSolverResults(Collection<InstructionInfo> results, BitVectorSolver<CGNode> bitVectorSolver, CGNode cgNode) {
-		IntSet value = bitVectorSolver.getIn(cgNode).getValue();
+		IntSet value = bitVectorSolver.getOut(cgNode).getValue();
 		if (value != null) {
 			IntIterator intIterator = value.intIterator();
 			while (intIterator.hasNext()) {
@@ -222,13 +312,12 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (ir == null) {
 			return unsafeInstructions; //should not really be null here
 		}
-		final DefUse defUse = new DefUse(ir);
 		AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (instructionInfo.isInside(unsafeSynchronizedBlock) && !AnalysisUtils.isProtectedByAnySynchronizedBlock(safeSynchronizedBlocks, instructionInfo)) {
-					if (canModifyStaticField(defUse, instruction)) {
+					if (canModifyStaticField(cgNode, instruction)) {
 						unsafeInstructions.add(instructionInfo);
 					}
 					if (instruction instanceof SSAAbstractInvokeInstruction) {
@@ -248,7 +337,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private BitVectorSolver<CGNode> propagateUnsafeModifyingStaticFieldsInstructions() {
-		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(javaProject, basicAnalysisData.callGraph, cgNodeInfoMap);
+		LCK06JTransferFunctionProvider transferFunctions = new LCK06JTransferFunctionProvider(this);
 
 		BitVectorFramework<CGNode, InstructionInfo> bitVectorFramework = new BitVectorFramework<CGNode, InstructionInfo>(GraphInverter.invert(basicAnalysisData.callGraph), transferFunctions,
 				globalValues);
@@ -281,7 +370,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIterator.next();
 			BitVector bitVector = new BitVector();
 			Collection<InstructionInfo> safeSynchronizedBlocks = new HashSet<InstructionInfo>();
-			if (!LCK06JBugDetector.isSafeSynchronized(cgNode.getMethod()) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
+			if (!isSafeSynchronized(cgNode) && !isIgnoredClass(cgNode.getMethod().getDeclaringClass())) {
 				Collection<InstructionInfo> modifyingStaticFieldsInstructions = getModifyingStaticFieldsInstructions(cgNode);
 				populateSynchronizedBlocksForNode(safeSynchronizedBlocks, cgNode, SynchronizedBlockKind.SAFE);
 				Collection<InstructionInfo> unsafeModifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
@@ -302,42 +391,46 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		}
 	}
 
-	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(CGNode cgNode) {
+	private Collection<InstructionInfo> getModifyingStaticFieldsInstructions(final CGNode cgNode) {
 		Collection<InstructionInfo> modifyingStaticFieldsInstructions = new HashSet<InstructionInfo>();
 		IR ir = cgNode.getIR();
 		if (ir == null) {
 			return modifyingStaticFieldsInstructions;
 		}
-		final DefUse defUse = new DefUse(ir);
-
 		AnalysisUtils.collect(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
-
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
-				return canModifyStaticField(defUse, instructionInfo.getInstruction());
+				return canModifyStaticField(cgNode, instructionInfo.getInstruction());
 			}
 		});
 		return modifyingStaticFieldsInstructions;
 	}
 
-	private boolean canModifyStaticField(final DefUse defUse, SSAInstruction ssaInstruction) {
-		if (ssaInstruction instanceof SSAPutInstruction) {
-			return isStaticNonFinal((SSAFieldAccessInstruction) ssaInstruction);
-		} else if (ssaInstruction instanceof SSAAbstractInvokeInstruction) {
-			for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-				SSAInstruction defInstruction = defUse.getDef(ssaInstruction.getUse(i));
-				if (defInstruction instanceof SSAGetInstruction && isStaticNonFinal((SSAFieldAccessInstruction) defInstruction)) {
-					return true;
+	private boolean canModifyStaticField(final CGNode cgNode, final SSAInstruction ssaInstruction) {
+		class ScanVisitor extends SSAInstruction.Visitor {
+
+			public boolean result = false;
+
+			@Override
+			public void visitPut(SSAPutInstruction instruction) {
+				IField accessedField = AnalysisUtils.getAccessedField(basicAnalysisData, instruction);
+				if (accessedField.isStatic()) {
+					result = !accessedField.isFinal();
+				} else {
+					result = isPointedByAnyStaticField(instruction.getRef(), cgNode);
 				}
 			}
+
 		}
-		return false;
+		ScanVisitor visitor = new ScanVisitor();
+		ssaInstruction.visit(visitor);
+		return visitor.result;
 	}
 
-	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
-		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
-	}
+	//	private boolean isStaticNonFinal(SSAFieldAccessInstruction fieldAccessInstruction) {
+	//		IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+	//		return fieldAccessInstruction.isStatic() && !accessedField.isFinal();
+	//	}
 
 	/*
 	 * FIXME: A synchronized block that is nested inside a safe one is
@@ -353,7 +446,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			IMethod method = cgNode.getMethod();
 			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateSynchronizedBlocksForNode(unsafeSynchronizedBlocks, cgNode, SynchronizedBlockKind.UNSAFE);
-				if (LCK06JBugDetector.isUnsafeSynchronized(method)) {
+				if (isUnsafeSynchronized(cgNode)) {
 					unsafeSynchronizedMethods.add(cgNode);
 				}
 			}
@@ -380,8 +473,14 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	boolean isSafe(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
-		assert (monitorInstruction.isMonitorEnter());
-		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
+		if (!monitorInstruction.isMonitorEnter()) {
+			throw new AssertionError("Expected a monitor enter instruction.");
+		}
+		return isSafeLock(cgNode, monitorInstruction.getRef());
+	}
+
+	private boolean isSafeLock(CGNode cgNode, int lockValueNumber) {
+		PointerKey lockPointer = getPointerForValueNumber(cgNode, lockValueNumber);
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
 		if (lockPointedInstances.isEmpty() || !instancesPointedByStaticFields.containsAll(lockPointedInstances)) {
 			return false;
@@ -425,12 +524,16 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		return AnalysisUtils.getPosition(javaProject, method, 0);
 	}
 
-	private static boolean isUnsafeSynchronized(IMethod method) {
-		return method.isSynchronized() && !method.isStatic();
+	public boolean isSafeSynchronized(CGNode cgNode) {
+		return cgNode.getMethod().isSynchronized() && isSafeMethod(cgNode);
 	}
 
-	static boolean isSafeSynchronized(IMethod method) {
-		return method.isSynchronized() && method.isStatic();
+	private boolean isUnsafeSynchronized(CGNode cgNode) {
+		return cgNode.getMethod().isSynchronized() && !isSafeMethod(cgNode);
+	}
+
+	private boolean isSafeMethod(CGNode cgNode) {
+		return cgNode.getMethod().isStatic() || isSafeLock(cgNode, AnalysisUtils.THIS_VALUE_NUMBER);
 	}
 
 }

@@ -55,6 +55,14 @@ import edu.illinois.keshmesh.util.Modes;
  * 
  */
 
+/**
+ * 
+ * For each detected bug in the test input file, a number is assigned. For each
+ * bug number, in the output folder a sub folder with that number is created
+ * which contains the input file with that bug fixed
+ * 
+ */
+
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
 

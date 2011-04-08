@@ -11,7 +11,6 @@ package edu.illinois.keshmesh.detector.bugs;
  */
 public class VNA00JFixInformation implements FixInformation {
 
-	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

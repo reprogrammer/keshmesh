@@ -86,22 +86,27 @@ public class KeshmeshFindBugsDetector implements Detector {
 					SourceLineAnnotation sourceLineAnnotation = new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath()
 							.toString(), bugInstance.getBugPosition().getFirstLine(), bugInstance.getBugPosition().getLastLine(), bugInstance.getBugPosition().getFirstOffset(), bugInstance
 							.getBugPosition().getLastOffset());
-					if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1) {
+					if (bugInstance.getBugPattern().getName().equals("LCK02J")) {
+						if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1) {
 
-						sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
+							sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
 
-					} else {
-						sourceLineAnnotation.setDescription("");
+						} else {
+							sourceLineAnnotation.setDescription("");
 
+						}
 					}
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(sourceLineAnnotation));
 				}
 			}
 		} catch (ProjectNotFoundException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		} catch (CoreException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		} catch (WALAInitializationException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		}
 	}

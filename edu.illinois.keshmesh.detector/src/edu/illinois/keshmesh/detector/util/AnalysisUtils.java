@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -28,6 +28,7 @@ import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
 
+import edu.illinois.keshmesh.detector.BasicAnalysisData;
 import edu.illinois.keshmesh.detector.InstructionFilter;
 import edu.illinois.keshmesh.detector.InstructionInfo;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
@@ -41,6 +42,11 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
 public class AnalysisUtils {
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
+
+	/**
+	 * The value number of "this" is meaningful only for instance methods.
+	 */
+	public static final int THIS_VALUE_NUMBER = 1;
 
 	public static IPath getWorkspaceLocation() {
 		return ResourcesPlugin.getWorkspace().getRoot().getLocation();
@@ -149,11 +155,7 @@ public class AnalysisUtils {
 		} else if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
-				ICompilationUnit compilationUnit = javaProject.findType(enclosingClassName).getCompilationUnit();
-				if (compilationUnit == null) {
-					throw new RuntimeException("Could not find a compilation unit for the class: " + enclosingClassName);
-				}
-				IPath fullPath = getWorkspaceLocation().append(compilationUnit.getPath());
+				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName, new NullProgressMonitor()).getCompilationUnit().getPath());
 				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
 				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
 			} catch (JavaModelException e) {
@@ -255,6 +257,10 @@ public class AnalysisUtils {
 		return accessedField.isFinal() || accessedField.isVolatile();
 		//		}
 		//		return true;
+	}
+
+	public static IField getAccessedField(BasicAnalysisData basicAnalysisData, SSAFieldAccessInstruction fieldAccessInstruction) {
+		return basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
 	}
 
 }

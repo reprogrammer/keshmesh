@@ -3,24 +3,28 @@
  */
 package p;
 
-import java.util.Random;
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
 /**
  * 
- * This test case checks that the detector handles JDK classes correctly.
+ * This test checks that the LCK06J detector reports poorly synchronized
+ * modifications to parts of static fields.
  * 
  */
 public class A {
+
+	static A staticField = new A();
+	A nonStaticField;
 
 	@EntryPoint
 	public static void main(String args[]) {
 		new A().m();
 	}
 
-	private void m() {
-		new Random();
-		synchronized (this) {
-		}
+	void m() {
+		/* [LCK06J,01,staticField */synchronized (new Object()) {
+			staticField.nonStaticField = null;
+		}/* ] */
 	}
+
 }
