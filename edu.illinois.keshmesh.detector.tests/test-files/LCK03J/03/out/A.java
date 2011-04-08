@@ -20,7 +20,7 @@ public class A {
 
 	private void m() {
 
-		/*[LCK03J,01,java.util.concurrent.locks.Condition*/synchronized (condition) {
+		/*[LCK03J,01,java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject*/synchronized (condition) {
 			System.out.println("no replace");
 		}/*]*/
 	}

@@ -68,13 +68,14 @@ public class LCK03JBugDetector extends BugPatternDetector {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (AnalysisUtils.isMonitorEnter(instruction)) {
 					SSAMonitorInstruction monitorEnterInstruction = (SSAMonitorInstruction) instruction;
-					Set<String> monitorExpressionTypes = getMonitorExpressionTypes(cgNode, monitorEnterInstruction);
-					if (monitorExpressionTypes.contains(LCK03JBugPattern.LOCK) || monitorExpressionTypes.contains(LCK03JBugPattern.CONDITION)) {
+					Set<IClass> monitorExpressionTypes = getMonitorExpressionTypes(cgNode, monitorEnterInstruction);
+					boolean isLock = isLock(monitorExpressionTypes);
+					boolean isCondition = isCondition(monitorExpressionTypes);
+					if (isLock || isCondition) {
 						CodePosition instructionPosition = instructionInfo.getPosition();
 						Logger.log("Detected an instance of LCK03-J in class " + instructionPosition.getFullyQualifiedClassName() + ", line number=" + instructionPosition.getFirstLine()
 								+ ", instructionIndex= " + instructionInfo.getInstructionIndex());
-						bugInstances.add(new BugInstance(BugPatterns.LCK03J, instructionPosition, new LCK03JFixInformation(monitorExpressionTypes)));
-
+						bugInstances.add(new BugInstance(BugPatterns.LCK03J, instructionPosition, new LCK03JFixInformation(monitorExpressionTypes, isLock)));
 					}
 				}
 				return false;
@@ -82,41 +83,36 @@ public class LCK03JBugDetector extends BugPatternDetector {
 		});
 	}
 
-	/**
-	 * FIXME: Instead of returning a set, return an object with the following
-	 * methods:
-	 * 
-	 * boolean isLock()
-	 * 
-	 * boolean isCondition()
-	 * 
-	 * Set<String> getPossibleType() : returns the most specific types that the
-	 * lock could point to.
-	 * 
-	 * 
-	 * @param cgNode
-	 * @param monitorInstruction
-	 * @return
-	 */
-	Set<String> getMonitorExpressionTypes(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
+	boolean isLock(Set<IClass> instanceTypes) {
+		return anyClassImplementsInterface(instanceTypes, LCK03JBugPattern.LOCK);
+	}
+
+	boolean isCondition(Set<IClass> instanceTypes) {
+		return anyClassImplementsInterface(instanceTypes, LCK03JBugPattern.CONDITION);
+	}
+
+	private boolean anyClassImplementsInterface(Set<IClass> instanceTypes, String interfaceName) {
+		for (IClass instanceType : instanceTypes) {
+			Collection<IClass> implementedInterfaces = instanceType.getAllImplementedInterfaces();
+			for (IClass implementedInterface : implementedInterfaces) {
+				String interfaceType = AnalysisUtils.walaTypeNameToJavaName(implementedInterface.getName());
+				if (interfaceType.equals(interfaceName)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	Set<IClass> getMonitorExpressionTypes(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
 		if (!monitorInstruction.isMonitorEnter()) {
 			throw new AssertionError("Expected a monitor enter instruction.");
 		}
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
-		Set<String> instancesTypes = new HashSet<String>();
+		Set<IClass> instancesTypes = new HashSet<IClass>();
 		for (InstanceKey instanceKey : lockPointedInstances) {
-			boolean impelementedLock = false;
-			Collection<IClass> implementedInterfaces = instanceKey.getConcreteType().getAllImplementedInterfaces();
-			for (IClass implementedInterface : implementedInterfaces) {
-				String interfaceType = AnalysisUtils.walaTypeNameToJavaName(implementedInterface.getName());
-				if (interfaceType.equals(LCK03JBugPattern.LOCK) || interfaceType.equals(LCK03JBugPattern.CONDITION)) {
-					instancesTypes.add(interfaceType);
-					impelementedLock = true;
-				}
-			}
-			if (!impelementedLock)
-				instancesTypes.add(AnalysisUtils.walaTypeNameToJavaName(instanceKey.getConcreteType().getName()));
+			instancesTypes.add(instanceKey.getConcreteType());
 		}
 		return instancesTypes;
 

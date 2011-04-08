@@ -35,7 +35,6 @@ import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK03JBugPattern;
 import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
-import edu.illinois.keshmesh.detector.util.SetUtils;
 
 /**
  * 
@@ -67,8 +66,8 @@ public class LCK03JFixer extends Refactoring {
 
 	@Override
 	public RefactoringStatus checkInitialConditions(IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {
-		if (fixInformation.getTypeNames().size() == 1) {
-			if (SetUtils.getTheOnlyElementOf(fixInformation.getTypeNames()).equals(LCK03JBugPattern.LOCK))
+		if (fixInformation.getInstanceTypes().size() == 1) {
+			if (fixInformation.isLock())
 				return RefactoringStatus.create(Status.OK_STATUS);
 			else
 				return RefactoringStatus.createFatalErrorStatus("Cannot fix the synchronized statement on Condition: " + fixInformation.toString());

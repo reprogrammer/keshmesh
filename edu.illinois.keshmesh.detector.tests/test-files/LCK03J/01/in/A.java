@@ -18,7 +18,7 @@ public class A {
 
 	private void m() {
 		
-		/*[LCK03J,01,java.util.concurrent.locks.Lock*/synchronized(lock) {
+		/*[LCK03J,01,java.util.concurrent.locks.ReentrantLock*/synchronized(lock) {
 			System.out.println("replace by lock.lock()");
 			int i = 3;
 		}/*]*/
