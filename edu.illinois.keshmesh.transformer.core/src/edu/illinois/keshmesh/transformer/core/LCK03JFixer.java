@@ -11,6 +11,7 @@ import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.dom.AST;
@@ -26,7 +27,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
@@ -42,6 +42,8 @@ import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
  * 
  */
 public class LCK03JFixer extends Refactoring {
+
+	final static String SYNC_COMMAND = "synchronized";
 
 	CodePosition bugPosition;
 	BugInstance bugInstance;
@@ -66,7 +68,7 @@ public class LCK03JFixer extends Refactoring {
 
 	@Override
 	public RefactoringStatus checkInitialConditions(IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {
-		if (fixInformation.getInstanceTypes().size() == 1) {
+		if (fixInformation.getTypeNames().size() == 1) {
 			if (fixInformation.isLock())
 				return RefactoringStatus.create(Status.OK_STATUS);
 			else
@@ -109,54 +111,29 @@ public class LCK03JFixer extends Refactoring {
 			parser.setResolveBindings(true);
 			CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(progressMonitor);
 
-			//Rewriting the AST
+			// Retrieving the begin and end indexes of synchronized command
 			int bugLineOffset = document.getLineInformation(bugPosition.getFirstLine() - 1).getOffset();
 			int bugLineLength = document.getLineInformation(bugPosition.getFirstLine() - 1).getLength();
-			String bugLineContent = document.get(bugLineOffset, bugLineLength);
-			String syncCommand = "synchronized";
+			String bugLine = document.get(bugLineOffset, bugLineLength);
+			int syncCommandBeginIndex = getSynchronizedCommandBeginIndex(bugLine);
+			int syncCommandLastIndex = getSynchronizedCommandLastIndex(bugLine, syncCommandBeginIndex);
 
-			int syncIndex = bugLineContent.indexOf(syncCommand);
-			int start_comment_index = bugLineContent.indexOf("/*");
-			int end_comment_index = bugLineContent.indexOf("*/");
-			String temp_bugLineContent = bugLineContent;
-			int temp_syncIndex = syncIndex;
-			int temp_beginIndex = 0;
+			// Extracting the synchronized command expression
+			String bugLineAfterSync = bugLine.substring(syncCommandBeginIndex + SYNC_COMMAND.length());
+			int openParenthesisIndex = bugLineAfterSync.indexOf('(') + syncCommandBeginIndex + SYNC_COMMAND.length();
+			String synchExpression = bugLine.substring(openParenthesisIndex + 1, syncCommandLastIndex);
 
-			// there is a possibility of having synchronized word within comments
-			while (start_comment_index >= 0 && end_comment_index > 0 && temp_bugLineContent.length() > 0 && temp_syncIndex > start_comment_index) {
-				temp_beginIndex += (end_comment_index + 2);
-				temp_bugLineContent = temp_bugLineContent.substring(end_comment_index + 2);
-				temp_syncIndex = temp_bugLineContent.indexOf(syncCommand);
-				start_comment_index = temp_bugLineContent.indexOf("/*");
-				end_comment_index = temp_bugLineContent.indexOf("*/");
-				syncIndex = temp_beginIndex + temp_syncIndex;
-				Logger.log(Integer.toString(syncIndex));
-			}
-
-			String bugLineContentAfterSynch = bugLineContent.substring(syncIndex + syncCommand.length());
-			int openParenthesisIndex = bugLineContentAfterSynch.indexOf('(') + syncIndex + syncCommand.length();
-			int myFirstOffset = bugLineOffset + syncIndex;
-			int index = openParenthesisIndex;
-			int pcounter = 1;
-			while (pcounter != 0 && index < bugLineLength) {
-				index++;
-				if (bugLineContent.charAt(index) == ')') {
-					pcounter--;
-				} else if (bugLineContent.charAt(index) == '(') {
-					pcounter++;
-				}
-			}
-
-			String synchExpression = bugLineContent.substring(openParenthesisIndex + 1, index);
-
-			int myLastOffset = bugLineOffset + index;
-			ASTNode monitorNode = NodeFinder.perform(compilationUnit, myFirstOffset, myLastOffset - myFirstOffset + 1);
+			// Computing the begin and end offset of the synchronized command
+			int syncCommandBeginOffset = bugLineOffset + syncCommandBeginIndex;
+			int syncCommandLastOffset = bugLineOffset + syncCommandLastIndex;
+			// Getting the synchronized command AST node 
+			ASTNode monitorNode = NodeFinder.perform(compilationUnit, syncCommandBeginOffset, syncCommandLastOffset - syncCommandBeginOffset + 1);
 			SynchronizedStatement synchronizedStatement = (SynchronizedStatement) monitorNode;
 			List synchBodyStatements = synchronizedStatement.getBody().statements();
 
-			//Creating a try node to be replaced by monitor node
-			AST ast = synchronizedStatement.getAST();
-			ASTRewrite rewriter = ASTRewrite.create(ast);
+			// Creating a "local variable assignment" statement and a try/catch/final block to be replaced at monitor node place
+			//AST ast = synchronizedStatement.getAST();
+			ASTRewrite rewriter = ASTRewrite.create(compilationUnit.getAST());
 			String localVarNameForLock = "tempLock";
 			String localVarAssignment = LCK03JBugPattern.LOCK + " " + localVarNameForLock + " = " + synchExpression + ";\n";
 			String tryFinalBlockStatements = "try {\n" + localVarNameForLock + ".lock();\n";
@@ -164,27 +141,59 @@ public class LCK03JFixer extends Refactoring {
 				tryFinalBlockStatements += statement;
 			}
 			tryFinalBlockStatements += "} finally {\n" + localVarNameForLock + ".unlock();\n}";
-			//Rewriting the monitor node
+
+			// Rewriting the monitor node
 			ASTNode astNode = rewriter.createStringPlaceholder(localVarAssignment + tryFinalBlockStatements, TryStatement.TRY_STATEMENT);
 			rewriter.replace(synchronizedStatement, astNode, null);
 			TextEdit textEdit = rewriter.rewriteAST(document, null);
-			try {
-				UndoEdit undoEdit = textEdit.apply(document);
-			} catch (MalformedTreeException e) {
-				e.printStackTrace();
-			} catch (BadLocationException e) {
-				e.printStackTrace();
-			}
+			UndoEdit undoEdit = textEdit.apply(document);
 
 			//Committing changes to the source file
 			textFileBuffer.commit(progressMonitor, true);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to fix LCK03J.", e));
 		} finally {
 			textFileBufferManager.disconnect(bugPosition.getSourcePath(), LocationKind.LOCATION, progressMonitor);
 		}
 		return null;
+	}
+
+	private int getSynchronizedCommandBeginIndex(String syncCommandLine) {
+		int syncBeginIndex = syncCommandLine.indexOf(SYNC_COMMAND);
+
+		// There is a possibility of having synchronized word within comments
+		// Skipping the comments before the synchronized command
+		int startCommentIndex = syncCommandLine.indexOf("/*");
+		int endCommentIndex = syncCommandLine.indexOf("*/");
+		String temp_synchCommandLine = syncCommandLine;
+		int temp_syncIndex = syncBeginIndex;
+		int temp_beginIndex = 0;
+		while (startCommentIndex >= 0 && endCommentIndex > 0 && temp_synchCommandLine.length() > 0 && temp_syncIndex > startCommentIndex) {
+			temp_beginIndex += (endCommentIndex + 2);
+			temp_synchCommandLine = temp_synchCommandLine.substring(endCommentIndex + 2);
+			temp_syncIndex = temp_synchCommandLine.indexOf(SYNC_COMMAND);
+			startCommentIndex = temp_synchCommandLine.indexOf("/*");
+			endCommentIndex = temp_synchCommandLine.indexOf("*/");
+			syncBeginIndex = temp_beginIndex + temp_syncIndex;
+			Logger.log(Integer.toString(syncBeginIndex));
+		}
+		return syncBeginIndex;
+	}
+
+	private int getSynchronizedCommandLastIndex(String syncCommandLine, int beginIndex) {
+		String syncCommandLineAfterSyncWord = syncCommandLine.substring(beginIndex + SYNC_COMMAND.length());
+		int openParenthesisIndex = syncCommandLineAfterSyncWord.indexOf('(') + beginIndex + SYNC_COMMAND.length();
+		int index = openParenthesisIndex;
+		int pcounter = 1;
+		while (pcounter != 0 && index < syncCommandLine.length()) {
+			index++;
+			if (syncCommandLine.charAt(index) == ')') {
+				pcounter--;
+			} else if (syncCommandLine.charAt(index) == '(') {
+				pcounter++;
+			}
+		}
+		return index;
 	}
 
 	@Override

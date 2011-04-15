@@ -25,8 +25,14 @@
 		<LongDescription>Do not synchronize on the class object returned by getClass()</LongDescription>
 		<Details>BugPattern KESHMESH_LCK02J Details</Details>
 	</BugPattern>
-
-	<BugCode abbrev="KESHMESH_LCK06J">KESHMESH_LCK02J BugCode</BugCode>
+	<BugCode abbrev="KESHMESH_LCK02">KESHMESH_LCK02J BugCode</BugCode>
+	
+	<BugPattern type="KESHMESH_LCK03J">
+		<ShortDescription>Keshmesh LCK03J</ShortDescription>
+		<LongDescription>Do not synchronize on the intrinsic locks of high-level concurrency objects</LongDescription>
+		<Details>BugPattern KESHMESH_LCK03J Details</Details>
+	</BugPattern>
+	<BugCode abbrev="KESHMESH_LCK03J">KESHMESH_LCK03J BugCode</BugCode>
 	
 		<BugPattern type="KESHMESH_LCK06J">
 		<ShortDescription>Keshmesh LCK06J</ShortDescription>
@@ -34,6 +40,6 @@
 		<Details>BugPattern KESHMESH_LCK06J Details</Details>
 	</BugPattern>
 
-	<BugCode abbrev="KESHMESH_LCK02J">KESHMESH_LCK06J BugCode</BugCode>
+	<BugCode abbrev="KESHMESH_LCK06J">KESHMESH_LCK06J BugCode</BugCode>
 	
 </MessageCollection>

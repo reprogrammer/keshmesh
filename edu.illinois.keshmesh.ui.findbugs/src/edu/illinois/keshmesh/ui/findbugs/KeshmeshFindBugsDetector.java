@@ -17,6 +17,7 @@ import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
+import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -84,16 +85,8 @@ public class KeshmeshFindBugsDetector implements Detector {
 					SourceLineAnnotation sourceLineAnnotation = new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath()
 							.toString(), bugInstance.getBugPosition().getFirstLine(), bugInstance.getBugPosition().getLastLine(), bugInstance.getBugPosition().getFirstOffset(), bugInstance
 							.getBugPosition().getLastOffset());
-					if (bugInstance.getBugPattern().getName().equals("LCK02J")) {
-						if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1) {
-
-							sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
-
-						} else {
-							sourceLineAnnotation.setDescription("");
-
-						}
-					}
+					String fixInfo = getFixInformation(bugInstance);
+					sourceLineAnnotation.setDescription(fixInfo);
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(sourceLineAnnotation));
 				}
 			}
@@ -104,6 +97,20 @@ public class KeshmeshFindBugsDetector implements Detector {
 		} catch (WALAInitializationException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private String getFixInformation(edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance) {
+		String bugPatternName = bugInstance.getBugPattern().getName();
+		if (bugPatternName.equals("LCK02J")) {
+			if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1)
+				return ((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next();
+		} else if (bugPatternName.equals("LCK03J")) {
+			LCK03JFixInformation fixInfo = (LCK03JFixInformation) bugInstance.getFixInformation();
+			if (fixInfo.getTypeNames().size() == 1 && fixInfo.isLock()) {
+				return fixInfo.getTypeNames().iterator().next();
+			}
+		}
+		return "";
 	}
 
 	private BugReporter bugReporter;

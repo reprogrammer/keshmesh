@@ -3,43 +3,29 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
-
-import com.ibm.wala.classLoader.IClass;
-
-import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
 /**
  * 
  * @author Samira Tasharofi
+ * 
  */
 public class LCK03JFixInformation implements FixInformation {
 
-	/* FIXME: Remove instanceTypes */
-	Set<IClass> instanceTypes;
+	private Set<String> typeNames;
+	private boolean isLock;
 
-	Set<String> instanceTypesString;
-	boolean isLock;
-
-	/* FIXME: Remove instanceTypes from the arguments list */
-	public LCK03JFixInformation(Set<IClass> instanceTypes, boolean isLock) {
-		super();
-		this.instanceTypes = instanceTypes;
+	public LCK03JFixInformation(Set<String> typeNames, boolean isLock) {
+		this(typeNames);
 		this.isLock = isLock;
-		this.instanceTypesString = new LinkedHashSet<String>();
-		for (IClass type : instanceTypes) {
-			instanceTypesString.add(AnalysisUtils.walaTypeNameToJavaName(type.getName()));
-		}
 	}
 
-	public LCK03JFixInformation(Set<String> instanceTypesString) {
-		super();
-		this.instanceTypesString = instanceTypesString;
+	public LCK03JFixInformation(Set<String> typeNames) {
+		this.typeNames = typeNames;
 	}
 
-	public Set<IClass> getInstanceTypes() {
-		return instanceTypes;
+	public Set<String> getTypeNames() {
+		return typeNames;
 	}
 
 	public boolean isLock() {
@@ -50,7 +36,7 @@ public class LCK03JFixInformation implements FixInformation {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((instanceTypesString == null) ? 0 : instanceTypesString.hashCode());
+		result = prime * result + ((typeNames == null) ? 0 : typeNames.hashCode());
 		return result;
 	}
 
@@ -63,17 +49,17 @@ public class LCK03JFixInformation implements FixInformation {
 		if (getClass() != obj.getClass())
 			return false;
 		LCK03JFixInformation other = (LCK03JFixInformation) obj;
-		if (instanceTypesString == null) {
-			if (other.instanceTypesString != null)
+		if (typeNames == null) {
+			if (other.typeNames != null)
 				return false;
-		} else if (!instanceTypesString.equals(other.instanceTypesString))
+		} else if (!typeNames.equals(other.typeNames))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LCK03JFixInformation [typeNames=" + instanceTypesString + "]";
+		return "LCK03JFixInformation [typeNames=" + typeNames + "]";
 	}
 
 }

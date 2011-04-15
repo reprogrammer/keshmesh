@@ -60,6 +60,14 @@ public class LCK03JBugDetector extends BugPatternDetector {
 		return bugInstances;
 	}
 
+	private Set<String> getJavaNames(Set<IClass> monitorExpressionTypes) {
+		Set<String> monitorExpressionTypeNames = new HashSet<String>();
+		for (IClass type : monitorExpressionTypes) {
+			monitorExpressionTypeNames.add(AnalysisUtils.walaTypeNameToJavaName(type.getName()));
+		}
+		return monitorExpressionTypeNames;
+	}
+
 	private void populateBugInstances(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final BugInstances bugInstances) {
 		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
@@ -75,7 +83,7 @@ public class LCK03JBugDetector extends BugPatternDetector {
 						CodePosition instructionPosition = instructionInfo.getPosition();
 						Logger.log("Detected an instance of LCK03-J in class " + instructionPosition.getFullyQualifiedClassName() + ", line number=" + instructionPosition.getFirstLine()
 								+ ", instructionIndex= " + instructionInfo.getInstructionIndex());
-						bugInstances.add(new BugInstance(BugPatterns.LCK03J, instructionPosition, new LCK03JFixInformation(monitorExpressionTypes, isLock)));
+						bugInstances.add(new BugInstance(BugPatterns.LCK03J, instructionPosition, new LCK03JFixInformation(getJavaNames(monitorExpressionTypes), isLock)));
 					}
 				}
 				return false;
