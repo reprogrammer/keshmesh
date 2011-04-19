@@ -3,11 +3,15 @@
  */
 package edu.illinois.keshmesh.detector.tests.lck06j;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.junit.Assert;
+import org.junit.Test;
 
+import edu.illinois.keshmesh.detector.LCK06JIntermediateResults;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -15,7 +19,7 @@ import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.BugInstanceCreator;
-import edu.illinois.keshmesh.detector.util.SetUtils;
+import edu.illinois.keshmesh.detector.util.CollectionUtils;
 
 /**
  * 
@@ -35,6 +39,17 @@ abstract public class LCK06JTest extends AbstractTestCase {
 		Assert.assertNotNull("Could not find bug instance.", bugInstance);
 	}
 
+	protected String getExpectedStaticFields() {
+		return null;
+	}
+
+	@Test
+	public void testStaticFields() {
+		assumeNotNull(getExpectedStaticFields());
+		LCK06JIntermediateResults actualIntermediateResults = (LCK06JIntermediateResults) getIntermediateResults();
+		assertEquals(getExpectedStaticFields(), actualIntermediateResults.getStaticFields());
+	}
+
 	@Override
 	protected BugInstanceCreator getBugInstanceCreator() {
 		return new LCK06JBugInstanceCreator();
@@ -44,7 +59,7 @@ abstract public class LCK06JTest extends AbstractTestCase {
 
 		@Override
 		public FixInformation createFixInformation(String... replacements) {
-			return new LCK06JFixInformation(SetUtils.asSet(replacements));
+			return new LCK06JFixInformation(CollectionUtils.asSet(replacements));
 		}
 
 	}

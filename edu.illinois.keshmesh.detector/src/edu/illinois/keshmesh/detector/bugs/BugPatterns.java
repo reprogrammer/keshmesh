@@ -17,13 +17,18 @@ public class BugPatterns {
 
 	public final static BugPattern LCK02J = new LCK02JBugPattern();
 	public final static BugPattern LCK06J = new LCK06JBugPattern();
+	public final static BugPattern VNA00J = new VNA00JBugPattern();
 
-	private static Map<String, BugPattern> bugPatternsMap;
+	private static Map<String, BugPattern> bugPatternsMap = new HashMap<String, BugPattern>();
 
-	static {
-		bugPatternsMap = new HashMap<String, BugPattern>();
-		bugPatternsMap.put(LCK02J.getName(), LCK02J);
-		bugPatternsMap.put(LCK06J.getName(), LCK06J);
+	public static void enableBugPatterns(BugPattern... bugPatterns) {
+		for (BugPattern bugPattern : bugPatterns) {
+			bugPatternsMap.put(bugPattern.getName(), bugPattern);
+		}
+	}
+
+	public static void enableAllBugPatterns() {
+		enableBugPatterns(LCK02J, LCK06J, VNA00J);
 	}
 
 	public static BugPattern getBugPatternByName(String name) {

@@ -41,6 +41,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK06JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
+import edu.illinois.keshmesh.util.Logger;
 
 /**
  * 
@@ -60,13 +61,22 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		SAFE, UNSAFE
 	}
 
-	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
-
 	private final Set<InstanceKey> instancesPointedByStaticFields = new HashSet<InstanceKey>();
 
 	private final OrdinalSetMapping<InstructionInfo> globalValues = MutableMapping.make();
 
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
+
+	private LCK06JIntermediateResults intermediateResults;
+
+	public LCK06JBugDetector() {
+		this.intermediateResults = new LCK06JIntermediateResults();
+	}
+
+	@Override
+	public LCK06JIntermediateResults getIntermediateResults() {
+		return intermediateResults;
+	}
 
 	public Map<CGNode, CGNodeInfo> getCGNodeInfoMap() {
 		return Collections.unmodifiableMap(cgNodeInfoMap);
@@ -81,6 +91,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode: " + cgNode.getIR());
 		}
+		intermediateResults.setStaticFields(getAllStaticFields());
 		populateAllInstancesPointedByStaticFields();
 		BugInstances bugInstances = new BugInstances();
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
@@ -302,7 +313,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (ir == null) {
 			return unsafeInstructions; //should not really be null here
 		}
-		AnalysisUtils.filter(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				SSAInstruction instruction = instructionInfo.getInstruction();
@@ -387,7 +398,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		if (ir == null) {
 			return modifyingStaticFieldsInstructions;
 		}
-		AnalysisUtils.filter(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, modifyingStaticFieldsInstructions, cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				return canModifyStaticField(cgNode, instructionInfo.getInstruction());
@@ -444,7 +455,7 @@ public class LCK06JBugDetector extends BugPatternDetector {
 	}
 
 	private void populateSynchronizedBlocksForNode(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final SynchronizedBlockKind synchronizedBlockKind) {
-		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {

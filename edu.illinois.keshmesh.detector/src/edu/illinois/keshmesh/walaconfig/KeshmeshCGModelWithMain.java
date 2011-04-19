@@ -1,4 +1,4 @@
-package edu.illinois.keshmesh.detector;
+package edu.illinois.keshmesh.walaconfig;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -11,7 +11,6 @@ import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
-import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.graph.InferGraphRoots;
@@ -27,7 +26,8 @@ public class KeshmeshCGModelWithMain extends WalaProjectCGModel {
 
 	@Override
 	protected Iterable<Entrypoint> getEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
-		return Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		//return Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		return null;
 	}
 
 	@Override

@@ -9,8 +9,11 @@
 
 	<BugPattern abbrev="KESHMESH_LCK02J" type="KESHMESH_LCK02J"
 		category="BAD_PRACTICE" />
-		
+
 	<BugPattern abbrev="KESHMESH_LCK06J" type="KESHMESH_LCK06J"
+		category="BAD_PRACTICE" />
+
+	<BugPattern abbrev="KESHMESH_VNA00J" type="KESHMESH_VNA00J"
 		category="BAD_PRACTICE" />
 
 </FindbugsPlugin>

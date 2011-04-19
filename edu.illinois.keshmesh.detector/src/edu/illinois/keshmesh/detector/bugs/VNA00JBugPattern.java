@@ -4,7 +4,7 @@
 package edu.illinois.keshmesh.detector.bugs;
 
 import edu.illinois.keshmesh.detector.BugPatternDetector;
-import edu.illinois.keshmesh.detector.LCK02JBugDetector;
+import edu.illinois.keshmesh.detector.VNA00JBugDetector;
 
 /**
  * 
@@ -12,20 +12,21 @@ import edu.illinois.keshmesh.detector.LCK02JBugDetector;
  * @author Stas Negara
  * 
  */
-public class LCK02JBugPattern extends BugPattern {
+public class VNA00JBugPattern extends BugPattern {
 
-	public LCK02JBugPattern() {
-		super("LCK02J", "Do not synchronize on the class object returned by getClass()");
+	public VNA00JBugPattern() {
+		super("VNA00J", "Ensure visibility when accessing shared primitive variables");
 	}
 
 	@Override
 	public BugPatternDetector createBugPatternDetector() {
-		bugPatternDetector = new LCK02JBugDetector();
+		bugPatternDetector = new VNA00JBugDetector();
 		return bugPatternDetector;
 	}
 
+	@Override
 	public boolean hasFixer() {
-		return true;
+		return false;
 	}
 
 }

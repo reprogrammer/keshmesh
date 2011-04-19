@@ -19,6 +19,8 @@ import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.walaconfig.DetectorJavaSourceAnalysisEngine;
+import edu.illinois.keshmesh.walaconfig.KeshmeshCGModelWithMain;
 
 /**
  * 
@@ -34,7 +36,7 @@ public class Main {
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
-			bugInstances.addAll(bugPattern.getBugPatternDetector().performAnalysis(javaProject, basicAnalysisData));
+			bugInstances.addAll(bugPattern.createBugPatternDetector().performAnalysis(javaProject, basicAnalysisData));
 		}
 		return bugInstances;
 	}
