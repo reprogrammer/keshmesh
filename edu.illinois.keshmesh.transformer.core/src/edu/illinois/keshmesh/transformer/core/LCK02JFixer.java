@@ -25,7 +25,6 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.UndoEdit;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
@@ -114,8 +113,6 @@ public class LCK02JFixer extends Refactoring {
 				start_comment_index = temp_bugLineContent.indexOf("/*");
 				end_comment_index = temp_bugLineContent.indexOf("*/");
 				syncIndex = temp_beginIndex + temp_syncIndex;
-				System.out.println(syncIndex);
-
 			}
 
 			String bugLineContentAfterSynch = bugLineContent.substring(syncIndex + syncCommand.length());
@@ -133,7 +130,6 @@ public class LCK02JFixer extends Refactoring {
 			}
 
 			int myLastOffset = bugLineOffset + index;
-			//System.out.println("synch block = " + document.get(myFirstOffset, myLastOffset - myFirstOffset + 1));
 			ASTNode monitorNode = NodeFinder.perform(compilationUnit, myFirstOffset, myLastOffset - myFirstOffset + 1);
 			SynchronizedStatement synchronizedStatement = (SynchronizedStatement) monitorNode;
 			AST ast = synchronizedStatement.getAST();
@@ -146,7 +142,7 @@ public class LCK02JFixer extends Refactoring {
 			rewriter.set(synchronizedStatement, SynchronizedStatement.EXPRESSION_PROPERTY, astNode, null);
 			TextEdit textEdit = rewriter.rewriteAST(document, null);
 			try {
-				UndoEdit undoEdit = textEdit.apply(document);
+				textEdit.apply(document);
 			} catch (MalformedTreeException e) {
 				e.printStackTrace();
 			} catch (BadLocationException e) {
@@ -156,8 +152,7 @@ public class LCK02JFixer extends Refactoring {
 			//Committing changes to the source file
 			textFileBuffer.commit(progressMonitor, true);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		} finally {
 			textFileBufferManager.disconnect(bugPosition.getSourcePath(), LocationKind.LOCATION, progressMonitor);
 		}

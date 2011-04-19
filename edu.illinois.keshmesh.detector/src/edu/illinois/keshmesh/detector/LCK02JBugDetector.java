@@ -60,34 +60,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 				continue;
 			IR ir = cgNode.getIR();
 			if (ir != null) {
-				if (method.getName().toString().contains("getInitialContext")) {
-					System.out.println("FOUND");
-				}
-				//				Logger.log("IR:" + ir);
-				//				Collection<InstructionInfo> synchronizedBlocksOnGetClassInstructions = new HashSet<InstructionInfo>();
-				//				AnalysisUtils.filter(javaProject, synchronizedBlocksOnGetClassInstructions, cgNode, new InstructionFilter() {
-				//					@Override
-				//					public boolean accept(SSAInstruction ssaInstruction) {
-				//						if (ssaInstruction instanceof SSAMonitorInstruction) {
-				//							SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) ssaInstruction;
-				//							if (monitorInstruction.isMonitorEnter()) {
-				//								Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames(monitorInstruction, cgNode);
-				//								if (!synchronizedClassTypeNames.isEmpty()) {
-				//									return true;
-				//								}
-				//							}
-				//						}
-				//						return false;
-				//					}
-				//				});
-				//				for (InstructionInfo instructionInfo : synchronizedBlocksOnGetClassInstructions) {
-				//					Position instructionPosition = instructionInfo.getPosition();
-				//					Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames((SSAMonitorInstruction) instructionInfo.getInstruction(), cgNode);
-				//					String enclosingClassName = AnalysisUtils.getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
-				//					Logger.log("Detected an instance of LCK02-J in class " + enclosingClassName + ", line number=" + instructionPosition.getFirstLine());
-				//					bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(instructionPosition, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
-				//				}
-
+				Logger.log("IR:" + ir);
 				AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 					@Override
 					public boolean accept(InstructionInfo instructionInfo) {
@@ -104,26 +77,6 @@ public class LCK02JBugDetector extends BugPatternDetector {
 						return false;
 					}
 				});
-
-				//				SSAInstruction[] instructions = ir.getInstructions();
-				//				for (int instructionIndex = 0; instructionIndex < instructions.length; instructionIndex++) {
-				//					SSAInstruction instruction = instructions[instructionIndex];
-				//					if (instruction instanceof SSAMonitorInstruction) {
-				//						SSAMonitorInstruction monitorInstruction = (SSAMonitorInstruction) instruction;
-				//						if (monitorInstruction.isMonitorEnter()) {
-				//							Set<String> synchronizedClassTypeNames = getSynchronizedClassTypeNames(monitorInstruction, cgNode);
-				//							if (!synchronizedClassTypeNames.isEmpty()) {
-				//								InstructionInfo instructionInfo = new InstructionInfo(javaProject, cgNode, instructionIndex);
-				//								CodePosition instructionPosition = instructionInfo.getPosition();
-				//								//								String enclosingClassName = AnalysisUtils.getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
-				//								Logger.log("Detected an instance of LCK02-J in class " + instructionPosition.getFullyQualifiedClassName() + ", line number=" + instructionPosition.getFirstLine()
-				//										+ ", instructionIndex= " + instructionIndex);
-				//								//								bugInstances.add(new BugInstance(BugPatterns.LCK02J, new CodePosition(instructionPosition, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
-				//								bugInstances.add(new BugInstance(BugPatterns.LCK02J, instructionPosition, new LCK02JFixInformation(synchronizedClassTypeNames)));
-				//							}
-				//						}
-				//					}
-				//				}
 			}
 		}
 		return bugInstances;
@@ -139,7 +92,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, lockValueNumber);
 		OrdinalSet<InstanceKey> lockObjects = basicAnalysisData.pointerAnalysis.getPointsToSet(lockPointer);
 		for (InstanceKey instanceKey : lockObjects) {
-			Logger.log("InstanceKey:" + instanceKey);
+			Logger.log("An InstanceKey pointed to by the lock of the synchronized block:" + instanceKey);
 			if (instanceKey instanceof NormalAllocationInNode) {
 				NormalAllocationInNode normalAllocationInNode = (NormalAllocationInNode) instanceKey;
 				if (isReturnedByGetClass(normalAllocationInNode)) {
