@@ -19,7 +19,6 @@ public class A {
 
 class B implements Runnable {
 
-	@Override
 	public void run() {
 		/*[LCK02J,01,p.B.class,p.C.class*/synchronized (getLock()) {
 			++A.sharedCounter;
