@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,12 +20,19 @@ import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
 import com.ibm.wala.fixpoint.BitVectorVariable;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.ipa.callgraph.propagation.InstanceFieldPointerKey;
+import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.ipa.callgraph.propagation.LocalPointerKey;
+import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
+import com.ibm.wala.ssa.SSAFieldAccessInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.util.CancelException;
+import com.ibm.wala.util.graph.Graph;
 import com.ibm.wala.util.graph.impl.GraphInverter;
+import com.ibm.wala.util.graph.traverse.DFS;
 import com.ibm.wala.util.intset.BitVector;
 import com.ibm.wala.util.intset.IntIterator;
 import com.ibm.wala.util.intset.IntSet;
@@ -53,9 +61,19 @@ public class VNA00JBugDetector extends BugPatternDetector {
 
 	private final Map<CGNode, CGNodeInfo> cgNodeInfoMap = new HashMap<CGNode, CGNodeInfo>();
 
+	private Collection<IClass> threadSafeClasses;
+
 	@Override
 	public IntermediateResults getIntermediateResults() {
 		return intermediateResults;
+	}
+
+	private boolean isThreadSafe(IClass klass) {
+		if (threadSafeClasses == null) {
+			populateThreadSafeClasses();
+			intermediateResults.setThreadSafeClasses(threadSafeClasses);
+		}
+		return threadSafeClasses.contains(klass);
 	}
 
 	@Override
@@ -67,9 +85,6 @@ public class VNA00JBugDetector extends BugPatternDetector {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode: " + cgNode.getIR());
 		}
-		Collection<IClass> threadSafeClasses = getThreadSafeClasses();
-		intermediateResults.setThreadSafeClasses(threadSafeClasses);
-
 		collectUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
 
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnprotectedInstructionThatMayAccessUnsafelySharedFields();
@@ -78,19 +93,18 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		return createBugInstances(instructionInfosToReport);
 	}
 
-	private Collection<IClass> getThreadSafeClasses() {
-		Collection<IClass> threadSafeClasses = new HashSet<IClass>();
+	//TODO: All derived classes of a thread safe class should be considered thread safe as well. 
+	private void populateThreadSafeClasses() {
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
-			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass()) && isThreadSafe(cgNode)) {
+			if (!isIgnoredClass(cgNode.getMethod().getDeclaringClass()) && belongsToThreadSafeClass(cgNode)) {
 				threadSafeClasses.add(cgNode.getMethod().getDeclaringClass());
 			}
 		}
-		return threadSafeClasses;
 	}
 
-	private boolean isThreadSafe(CGNode cgNode) {
+	private boolean belongsToThreadSafeClass(CGNode cgNode) {
 		IClass declaringClass = cgNode.getMethod().getDeclaringClass();
 		if (implementsRunnableInterface(declaringClass) || extendsThreadClass(declaringClass)) {
 			return true;
@@ -160,9 +174,9 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 * LCK06JBugDetector#populateUnsafeModifyingStaticFieldsInstructionsMap.
 	 * 
 	 * For every method of the input program, this method computes the set of
-	 * instructions that are protected by a synchronized block but may access a
-	 * field that is shared unsafely. A field that is neither volatile nor final
-	 * is shared unsafely.
+	 * instructions that are not protected by a synchronized block but may
+	 * access a field that is shared unsafely. A field that is neither volatile
+	 * nor final is shared unsafely.
 	 * 
 	 * The resulting instructions will be used as initial values of the data
 	 * flow problem corresponding to the interprocedural part of the detector.
@@ -254,12 +268,51 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	 */
 	private boolean mayAccessUnsafelySharedFields(InstructionInfo instructionInfo) {
 		SSAInstruction ssaInstruction = instructionInfo.getInstruction();
-		for (int i = 0; i < ssaInstruction.getNumberOfUses(); i++) {
-			if (AnalysisUtils.isPotentiallyUnsafe(ssaInstruction.getUse(i), instructionInfo.getCGNode(), basicAnalysisData.classHierarchy)) {
+		if (ssaInstruction instanceof SSAFieldAccessInstruction) {
+			SSAFieldAccessInstruction fieldAccessInstruction = (SSAFieldAccessInstruction) ssaInstruction;
+			if (fieldAccessInstruction.isStatic()) {
+				IClass declaringClass = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField()).getDeclaringClass();
+				if (isThreadSafe(declaringClass)) {
+					return true;
+				}
+			} else {
+				PointerKey pointerForValueNumber = getPointerForValueNumber(instructionInfo.getCGNode(), fieldAccessInstruction.getRef());
+				if (basicAnalysisData.basicHeapGraph.getSuccNodeCount(pointerForValueNumber) != 1) {
+					throw new AssertionError("Expected that value number pointer points to a single object: " + instructionInfo);
+				}
+				InstanceKey pointedInstance = (InstanceKey) basicAnalysisData.basicHeapGraph.getSuccNodes(pointerForValueNumber).next();
+				Graph<Object> invertedHeapGraph = GraphInverter.invert(basicAnalysisData.basicHeapGraph);
+				Set<Object> reachingNodes = DFS.getReachableNodes(invertedHeapGraph, Arrays.asList(pointedInstance));
+				return doesContainExternalPointer(reachingNodes, instructionInfo.getCGNode()) && (isThreadSafe(pointedInstance.getConcreteType()) || doesContainThreadSafeFieldPointer(reachingNodes));
+			}
+		}
+		return false;
+	}
+
+	private boolean doesContainExternalPointer(Set<Object> reachingNodes, CGNode localCGNode) {
+		for (Object node : reachingNodes) {
+			if (node instanceof LocalPointerKey && isExternalPointer((LocalPointerKey) node, localCGNode)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private boolean doesContainThreadSafeFieldPointer(Set<Object> reachingNodes) {
+		for (Object node : reachingNodes) {
+			if (node instanceof InstanceFieldPointerKey && isThreadSafeFieldPointer((InstanceFieldPointerKey) node)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isExternalPointer(LocalPointerKey pointerKey, CGNode cgNode) {
+		return pointerKey.getNode() != cgNode;
+	}
+
+	private boolean isThreadSafeFieldPointer(InstanceFieldPointerKey pointerKey) {
+		return isThreadSafe(pointerKey.getInstanceKey().getConcreteType());
 	}
 
 	/**
@@ -334,8 +387,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (instruction instanceof SSAAbstractInvokeInstruction) {
 					//FIXME: The following condition is similar to the one in edu.illinois.keshmesh.detector.VNA00JTransferFunctionProvider.getEdgeTransferFunction(CGNode, CGNode). We should consider removing this duplication.
-					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo)
-							&& AnalysisUtils.doesAllowPropagation(instructionInfo, basicAnalysisData.classHierarchy)) {
+					if (!AnalysisUtils.isProtectedByAnySynchronizedBlock(synchronizedBlocks, instructionInfo) && AnalysisUtils.doesAllowPropagation(instructionInfo, basicAnalysisData.classHierarchy)) {
 						SSAAbstractInvokeInstruction invokeInstruction = (SSAAbstractInvokeInstruction) instruction;
 						// Add the unprotected instructions of the methods that are the targets of the invocation instruction. 
 						Set<CGNode> possibleTargets = basicAnalysisData.callGraph.getPossibleTargets(cgNode, invokeInstruction.getCallSite());
