@@ -95,6 +95,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 
 	//TODO: All derived classes of a thread safe class should be considered thread safe as well. 
 	private void populateThreadSafeClasses() {
+		threadSafeClasses = new HashSet<IClass>();
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();

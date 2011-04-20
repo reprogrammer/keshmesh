@@ -129,4 +129,19 @@ public class VNA00JTests {
 		}
 
 	}
+
+	public static class VNA00JTest09 extends VNA00JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("09", "ControlledStop.java");
+		}
+
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/ControlledStop>]";
+		}
+
+	}
+
 }
