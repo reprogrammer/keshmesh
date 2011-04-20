@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import edu.illinois.keshmesh.detector.BugPatternDetector;
 import edu.illinois.keshmesh.detector.LCK01JBugDetector;
 
 /**
@@ -13,12 +14,17 @@ import edu.illinois.keshmesh.detector.LCK01JBugDetector;
 public class LCK01JBugPattern extends BugPattern {
 
 	public LCK01JBugPattern() {
-		super("LCK01J", "Do not synchronize on objects that may be reused", new LCK01JBugDetector());
+		super("LCK01J", "Do not synchronize on objects that may be reused");
 	}
 
 	@Override
+	public BugPatternDetector createBugPatternDetector() {
+		bugPatternDetector = new LCK01JBugDetector();
+		return bugPatternDetector;
+	}
+
 	public boolean hasFixer() {
-		return true;
+		return false;
 	}
 
 }

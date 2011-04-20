@@ -24,6 +24,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK01JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
+import edu.illinois.keshmesh.util.Logger;
 
 /**
  * 
@@ -31,6 +32,11 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  * 
  */
 public class LCK01JBugDetector extends BugPatternDetector {
+
+	@Override
+	public IntermediateResults getIntermediateResults() {
+		return null;
+	}
 
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
@@ -43,7 +49,6 @@ public class LCK01JBugDetector extends BugPatternDetector {
 		}
 		BugInstances bugInstances = new BugInstances();
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
-		Collection<CGNode> unsafeSynchronizedMethods = new HashSet<CGNode>();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
@@ -51,16 +56,13 @@ public class LCK01JBugDetector extends BugPatternDetector {
 			IMethod method = cgNode.getMethod();
 			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateBugInstances(unsafeSynchronizedBlocks, cgNode, bugInstances);
-				if (AnalysisUtils.isUnsafeSynchronized(method)) {
-					unsafeSynchronizedMethods.add(cgNode);
-				}
 			}
 		}
 		return bugInstances;
 	}
 
 	private void populateBugInstances(Collection<InstructionInfo> synchronizedBlocks, final CGNode cgNode, final BugInstances bugInstances) {
-		AnalysisUtils.filter(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, synchronizedBlocks, cgNode, new InstructionFilter() {
 
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
