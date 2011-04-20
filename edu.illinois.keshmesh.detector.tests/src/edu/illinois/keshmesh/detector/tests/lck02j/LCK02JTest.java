@@ -14,7 +14,7 @@ import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.tests.AbstractTestCase;
 import edu.illinois.keshmesh.detector.tests.BugInstanceCreator;
-import edu.illinois.keshmesh.detector.util.SetUtils;
+import edu.illinois.keshmesh.detector.util.CollectionUtils;
 import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
 
 /**
@@ -47,7 +47,7 @@ abstract public class LCK02JTest extends AbstractTestCase {
 
 		@Override
 		public FixInformation createFixInformation(String... replacements) {
-			return new LCK02JFixInformation(SetUtils.asSet(replacements));
+			return new LCK02JFixInformation(CollectionUtils.asSet(replacements));
 		}
 
 	}

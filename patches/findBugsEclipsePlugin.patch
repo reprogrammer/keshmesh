@@ -1,22 +1,90 @@
 Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml
 ===================================================================
---- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(revision 13128)
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(revision 13194)
 +++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(working copy)
-@@ -1,5 +1,10 @@
+@@ -1,5 +1,15 @@
  <?xml version="1.0" encoding="UTF-8"?>
  <findbugs-resolutions>
 +    <bug type="KESHMESH_LCK02J">
-+        <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.KeshmeshResolution">
-+            <attr name="label">Use valueOf(...) instead</attr>
++        <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.LCK02JKeshmeshResolution">
++            <attr name="label">Use the literal class name instead </attr>
++		</resolution>
++    </bug>
++    <bug type="KESHMESH_LCK03J">
++        <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.LCK03JKeshmeshResolution">
++            <attr name="label"> Use the lock() and unlock() methods provided by the Lock interface </attr>
 +		</resolution>
 +    </bug>
      <bug type="DM_BOOLEAN_CTOR">
          <resolution classname="edu.umd.cs.findbugs.plugin.eclipse.quickfix.UseValueOfResolution">
              <attr name="label">Use valueOf(...) instead</attr>
-Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java
+Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK03JKeshmeshResolution.java
 ===================================================================
---- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java	(revision 0)
-+++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java	(revision 0)
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK03JKeshmeshResolution.java	(revision 0)
++++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK03JKeshmeshResolution.java	(revision 0)
+@@ -0,0 +1,58 @@
++package edu.umd.cs.findbugs.plugin.eclipse.quickfix;
++
++import java.util.HashSet;
++import java.util.Set;
++
++import org.eclipse.core.runtime.CoreException;
++import org.eclipse.core.runtime.NullProgressMonitor;
++import org.eclipse.core.runtime.OperationCanceledException;
++import org.eclipse.jdt.core.dom.CompilationUnit;
++import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
++
++import com.ibm.wala.cast.java.translator.jdt.JDTJava2CAstTranslator.JdtPosition;
++
++import de.tobject.findbugs.FindbugsPlugin;
++import edu.illinois.keshmesh.detector.bugs.BugPatterns;
++import edu.illinois.keshmesh.detector.bugs.CodePosition;
++import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
++import edu.illinois.keshmesh.transformer.core.LCK03JFixer;
++import edu.umd.cs.findbugs.BugInstance;
++
++public class LCK03JKeshmeshResolution extends BugResolution {
++
++    @Override
++    protected boolean resolveBindings() {
++        return true;
++    }
++
++    @Override
++    protected void repairBug(ASTRewrite rewrite, CompilationUnit workingUnit, BugInstance bug) {
++        if (rewrite == null || workingUnit == null || bug == null) {
++            throw new AssertionError("LCK03JKeshmeshResolution expects nonnull arguments.");
++        }
++
++        edu.illinois.keshmesh.detector.bugs.CodePosition keshmeshPosition = new CodePosition(new JdtPosition(bug
++                .getPrimarySourceLineAnnotation().getStartBytecode(), bug.getPrimarySourceLineAnnotation().getEndBytecode(), bug
++                .getPrimarySourceLineAnnotation().getStartLine(), bug.getPrimarySourceLineAnnotation().getEndLine(), bug
++                .getPrimarySourceLineAnnotation().getSourceFile()), null);
++        Set<String> typeNames = new HashSet<String>();
++        boolean isLock = false;
++        String fixInfo = bug.getPrimarySourceLineAnnotation().getDescription();
++        if (!fixInfo.equals("")) {
++            typeNames.add(fixInfo);
++            isLock = true;
++        }
++        edu.illinois.keshmesh.detector.bugs.BugInstance keshmeshBugInstance = new edu.illinois.keshmesh.detector.bugs.BugInstance(
++                BugPatterns.LCK03J, keshmeshPosition, new LCK03JFixInformation(typeNames, isLock));
++        LCK03JFixer fixer = new LCK03JFixer(keshmeshBugInstance);
++        try {
++            if (fixer.checkInitialConditions(new NullProgressMonitor()).isOK()) {
++                fixer.createChange(new NullProgressMonitor());
++            }
++        } catch (OperationCanceledException e) {
++            FindbugsPlugin.getDefault().logException(e, "Failed to create the change in the fixer of LCK03J.");
++        } catch (CoreException e) {
++            FindbugsPlugin.getDefault().logException(e, "Failed to create the change in the fixer of LCK03J.");
++        }
++    }
++}
+Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK02JKeshmeshResolution.java
+===================================================================
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK02JKeshmeshResolution.java	(revision 0)
++++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK02JKeshmeshResolution.java	(revision 0)
 @@ -0,0 +1,75 @@
 +package edu.umd.cs.findbugs.plugin.eclipse.quickfix;
 +
@@ -37,7 +105,7 @@ Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java
 +import edu.illinois.keshmesh.transformer.core.LCK02JFixer;
 +import edu.umd.cs.findbugs.BugInstance;
 +
-+public class KeshmeshResolution extends BugResolution {
++public class LCK02JKeshmeshResolution extends BugResolution {
 +
 +    @Override
 +    protected boolean resolveBindings() {
@@ -95,7 +163,7 @@ Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/KeshmeshResolution.java
 +}
 Index: META-INF/MANIFEST.MF
 ===================================================================
---- META-INF/MANIFEST.MF	(revision 13128)
+--- META-INF/MANIFEST.MF	(revision 13194)
 +++ META-INF/MANIFEST.MF	(working copy)
 @@ -40,7 +40,13 @@
   org.eclipse.ui.views.properties.tabbed,

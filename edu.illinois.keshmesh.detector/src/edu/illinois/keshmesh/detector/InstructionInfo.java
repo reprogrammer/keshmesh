@@ -73,7 +73,7 @@ public class InstructionInfo {
 		Collection<InstructionInfo> matchingMonitorExits = new HashSet<InstructionInfo>();
 		final int monitorEnterLockValueNumber = ssaInstruction.getUse(0);
 		final int monitorEnterLineNumber = getPosition().getFirstLine();
-		AnalysisUtils.filter(javaProject, matchingMonitorExits, cgNode, new InstructionFilter() {
+		AnalysisUtils.collect(javaProject, matchingMonitorExits, cgNode, new InstructionFilter() {
 			@Override
 			public boolean accept(InstructionInfo instructionInfo) {
 				if (AnalysisUtils.isMonitorExit(instructionInfo.getInstruction())) {

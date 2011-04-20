@@ -4,6 +4,8 @@
 package edu.illinois.keshmesh.detector.util;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +15,7 @@ import java.util.Set;
  * @author Mohsen Vakilian
  * 
  */
-public class SetUtils {
+public class CollectionUtils {
 
 	public static String getTheOnlyElementOf(Set<String> set) {
 		if (set.size() != 1) {
@@ -24,6 +26,19 @@ public class SetUtils {
 
 	public static Set<String> asSet(String... strs) {
 		return new HashSet<String>(Arrays.asList(strs));
+	}
+
+	public static Object[] collectionToSortedArray(Collection<? extends Object> objects) {
+		Object[] sortedArray = objects.toArray(new Object[] {});
+		Arrays.sort(sortedArray, new Comparator<Object>() {
+
+			@Override
+			public int compare(Object o1, Object o2) {
+				return o1.toString().compareTo(o2.toString());
+			}
+
+		});
+		return sortedArray;
 	}
 
 }

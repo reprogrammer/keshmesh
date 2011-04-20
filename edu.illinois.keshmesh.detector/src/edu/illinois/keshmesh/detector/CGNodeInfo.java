@@ -6,6 +6,9 @@ package edu.illinois.keshmesh.detector;
 import java.util.Collection;
 
 import com.ibm.wala.util.intset.BitVector;
+import com.ibm.wala.util.intset.BitVectorIntSet;
+import com.ibm.wala.util.intset.IntIterator;
+import com.ibm.wala.util.intset.OrdinalSetMapping;
 
 /**
  * 
@@ -16,6 +19,8 @@ import com.ibm.wala.util.intset.BitVector;
 public class CGNodeInfo {
 
 	private final Collection<InstructionInfo> safeSynchronizedBlocks;
+
+	// This bit vector is the initial set of the data flow analysis. That is, it contains the interesting instructions that are in the body of the given method.
 	private final BitVector bitVector;
 
 	public CGNodeInfo(Collection<InstructionInfo> safeSynchronizedBlocks, BitVector bitVector) {
@@ -29,6 +34,15 @@ public class CGNodeInfo {
 
 	public BitVector getBitVector() {
 		return bitVector;
+	}
+
+	public <T> void getBitVectorContents(Collection<T> result, OrdinalSetMapping<T> globalValues) {
+		BitVectorIntSet bitVectorIntSet = new BitVectorIntSet(bitVector);
+		IntIterator intIterator = bitVectorIntSet.intIterator();
+		while (intIterator.hasNext()) {
+			T instructionInfo = globalValues.getMappedObject(intIterator.next());
+			result.add(instructionInfo);
+		}
 	}
 
 }

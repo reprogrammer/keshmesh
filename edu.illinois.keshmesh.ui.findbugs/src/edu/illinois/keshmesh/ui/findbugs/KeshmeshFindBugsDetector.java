@@ -13,11 +13,13 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import edu.illinois.keshmesh.detector.Logger;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
+import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
+import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.Detector;
@@ -78,32 +80,42 @@ public class KeshmeshFindBugsDetector implements Detector {
 				projectName = getProjectName(classContext.getAnalysisContext());
 				IJavaProject javaProject = getProject(projectName);
 				Logger.log("The java project under analysis is " + javaProject.getElementName());
+				BugPatterns.enableAllBugPatterns();
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
 					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());
 					SourceLineAnnotation sourceLineAnnotation = new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath()
 							.toString(), bugInstance.getBugPosition().getFirstLine(), bugInstance.getBugPosition().getLastLine(), bugInstance.getBugPosition().getFirstOffset(), bugInstance
 							.getBugPosition().getLastOffset());
-					if (bugInstance.getBugPattern().getName().equals("LCK02J")) {
-						if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1) {
-
-							sourceLineAnnotation.setDescription(((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next());
-
-						} else {
-							sourceLineAnnotation.setDescription("");
-
-						}
-					}
+					String fixInfo = getFixInformation(bugInstance);
+					sourceLineAnnotation.setDescription(fixInfo);
 					bugReporter.reportBug(new BugInstance(this, getBugPatternName(bugInstance), HIGH_PRIORITY).addClass(classContext.getJavaClass()).addSourceLine(sourceLineAnnotation));
 				}
 			}
 		} catch (ProjectNotFoundException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		} catch (CoreException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		} catch (WALAInitializationException e) {
+			//FIXME: Log exceptions into the error log
 			e.printStackTrace();
 		}
+	}
+
+	private String getFixInformation(edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance) {
+		String bugPatternName = bugInstance.getBugPattern().getName();
+		if (bugPatternName.equals("LCK02J")) {
+			if (((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().size() == 1)
+				return ((LCK02JFixInformation) bugInstance.getFixInformation()).getTypeNames().iterator().next();
+		} else if (bugPatternName.equals("LCK03J")) {
+			LCK03JFixInformation fixInfo = (LCK03JFixInformation) bugInstance.getFixInformation();
+			if (fixInfo.getTypeNames().size() == 1 && fixInfo.isLock()) {
+				return fixInfo.getTypeNames().iterator().next();
+			}
+		}
+		return "";
 	}
 
 	private BugReporter bugReporter;

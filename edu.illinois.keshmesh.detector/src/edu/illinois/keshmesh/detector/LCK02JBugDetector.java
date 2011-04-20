@@ -30,6 +30,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
+import edu.illinois.keshmesh.util.Logger;
 
 /**
  * 
@@ -40,6 +41,11 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 public class LCK02JBugDetector extends BugPatternDetector {
 
 	private static final String JAVA_LANG_CLASS = "Ljava/lang/Class"; //$NON-NLS-1$
+
+	@Override
+	public IntermediateResults getIntermediateResults() {
+		return null;
+	}
 
 	@Override
 	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData analysisData) {
@@ -82,7 +88,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 				//					bugInstances.add(new BugInstance(BugPatterns.LCK02J, new BugPosition(instructionPosition, enclosingClassName), new LCK02JFixInformation(synchronizedClassTypeNames)));
 				//				}
 
-				AnalysisUtils.filter(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
+				AnalysisUtils.collect(javaProject, new HashSet<InstructionInfo>(), cgNode, new InstructionFilter() {
 					@Override
 					public boolean accept(InstructionInfo instructionInfo) {
 						SSAInstruction instruction = instructionInfo.getInstruction();
