@@ -35,7 +35,6 @@ public class CodePosition {
 	}
 
 	public CodePosition(int firstLine, int lastLine, IPath sourcePath, String fullyQualifiedClassName) {
-		super();
 		this.firstLine = firstLine;
 		this.lastLine = lastLine;
 		this.sourcePath = sourcePath;

@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -23,6 +24,17 @@ public class LCK06JFixInformation implements FixInformation {
 
 	public Set<String> getStaticFieldNames() {
 		return this.unsafeStaticFieldNames;
+	}
+
+	@Override
+	public FixInformation merge(FixInformation other) {
+		if (!(other instanceof LCK06JFixInformation)) {
+			throw new AssertionError("Only FixInformation's of the same types can be merged");
+		}
+		LCK06JFixInformation otherLCK06JFixInformation = (LCK06JFixInformation) other;
+		Set<String> allUnsafeStaticFieldNames = new HashSet<String>(unsafeStaticFieldNames);
+		allUnsafeStaticFieldNames.addAll(otherLCK06JFixInformation.getStaticFieldNames());
+		return new LCK02JFixInformation(allUnsafeStaticFieldNames);
 	}
 
 	@Override

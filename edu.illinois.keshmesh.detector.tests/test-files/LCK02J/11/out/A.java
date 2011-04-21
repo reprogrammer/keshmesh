@@ -5,6 +5,12 @@ package p;
 
 import edu.illinois.keshmesh.annotations.EntryPoint;
 
+/**
+ * 
+ * This test is designed to demonstrate LCK02J and how Keshmesh finds instances
+ * of LCK02J interprocedurally.
+ * 
+ */
 public class A {
 
 	static int sharedCounter;
@@ -20,9 +26,9 @@ public class A {
 class B implements Runnable {
 
 	public void run() {
-		/*[LCK02J,01,p.B.class,p.C.class*/synchronized (getLock()) {
+		/* [LCK02J,01,p.B.class,p.C.class */synchronized (getLock()) {
 			++A.sharedCounter;
-		}/*]*/
+		}/* ] */
 	}
 
 	public Object getLock() {

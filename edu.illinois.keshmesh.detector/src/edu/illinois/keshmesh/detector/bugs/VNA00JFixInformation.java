@@ -11,6 +11,14 @@ package edu.illinois.keshmesh.detector.bugs;
  */
 public class VNA00JFixInformation implements FixInformation {
 
+	@Override
+	public FixInformation merge(FixInformation other) {
+		if (!(other instanceof VNA00JFixInformation)) {
+			throw new AssertionError("Only FixInformation's of the same types can be merged");
+		}
+		return this;
+	}
+
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
