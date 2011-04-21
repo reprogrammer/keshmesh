@@ -35,6 +35,20 @@ public class BugInstance {
 		return fixInformation;
 	}
 
+	public BugInstanceKey getKey() {
+		return new BugInstanceKey(bugPattern, bugPosition);
+	}
+
+	public BugInstance merge(BugInstance other) {
+		if (other == null) {
+			return this;
+		}
+		if (!getKey().equals(other.getKey())) {
+			throw new AssertionError("Only bug instances with the same keys can be merged.");
+		}
+		return new BugInstance(bugPattern, bugPosition, fixInformation.merge(other.getFixInformation()));
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -91,4 +105,5 @@ public class BugInstance {
 	public String toString() {
 		return bugPattern + " @ " + bugPosition + " : " + fixInformation;
 	}
+
 }
