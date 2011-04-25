@@ -13,7 +13,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.ipa.callgraph.propagation.ConcreteTypeKey;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -29,9 +31,14 @@ import edu.illinois.keshmesh.util.Logger;
 /**
  * 
  * @author Samira Tasharofi
+ * @author Stas Negara
+ * @author Mohsen Vakilian
  * 
  */
 public class LCK01JBugDetector extends BugPatternDetector {
+	private static final String JAVA_LANG_INTEGER = "java.lang.Integer";
+	private static final String JAVA_LANG_STRING = "java.lang.String";
+	private static final String JAVA_LANG_BOOLEAN = "java.lang.Boolean";
 
 	@Override
 	public IntermediateResults getIntermediateResults() {
@@ -69,17 +76,12 @@ public class LCK01JBugDetector extends BugPatternDetector {
 				SSAInstruction instruction = instructionInfo.getInstruction();
 				if (AnalysisUtils.isMonitorEnter(instruction)) {
 					SSAMonitorInstruction monitorEnterInstruction = (SSAMonitorInstruction) instruction;
-					Set<IClass> monitorExpressionTypes = getMonitorExpressionTypes(cgNode, monitorEnterInstruction);
-					boolean isPrimitive = isPrimitive(monitorExpressionTypes);
-					if (isPrimitive) {
-						Set<String> monitorExpressionTypeNames = new HashSet<String>();
-						for (IClass type : monitorExpressionTypes) {
-							monitorExpressionTypeNames.add(AnalysisUtils.walaTypeNameToJavaName(type.getName()));
-						}
+					Set<String> reusableLockObjectTypes = getReusableLockObjectTypes(cgNode, monitorEnterInstruction);
+					if (!reusableLockObjectTypes.isEmpty()) {
 						CodePosition instructionPosition = instructionInfo.getPosition();
-						Logger.log("Detected an instance of LCK03-J in class " + instructionPosition.getFullyQualifiedClassName() + ", line number=" + instructionPosition.getFirstLine()
+						Logger.log("Detected an instance of LCK01-J in class " + instructionPosition.getFullyQualifiedClassName() + ", line number=" + instructionPosition.getFirstLine()
 								+ ", instructionIndex= " + instructionInfo.getInstructionIndex());
-						bugInstances.add(new BugInstance(BugPatterns.LCK03J, instructionPosition, new LCK01JFixInformation(monitorExpressionTypeNames)));
+						bugInstances.add(new BugInstance(BugPatterns.LCK01J, instructionPosition, new LCK01JFixInformation(reusableLockObjectTypes)));
 					}
 				}
 				return false;
@@ -87,27 +89,49 @@ public class LCK01JBugDetector extends BugPatternDetector {
 		});
 	}
 
-	boolean isPrimitive(Set<IClass> instanceTypes) {
-		for (IClass instanceType : instanceTypes) {
-			String instanceTypeName = AnalysisUtils.walaTypeNameToJavaName(instanceType.getName());
-			if (instanceTypeName.equals("String") || instanceTypeName.equals("int"))
-				return true;
-		}
-		return false;
-	}
-
-	Set<IClass> getMonitorExpressionTypes(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
+	Set<String> getReusableLockObjectTypes(CGNode cgNode, SSAMonitorInstruction monitorInstruction) {
 		if (!monitorInstruction.isMonitorEnter()) {
 			throw new AssertionError("Expected a monitor enter instruction.");
 		}
+		//		if (monitorInstruction.getRef() == 5) {
+		//			System.out.println("FOUND");
+		//		} else if (monitorInstruction.getRef() == 13) {
+		//			System.out.println("FOUND");
+		//		}
+
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
-		Set<IClass> instancesTypes = new HashSet<IClass>();
+		Set<String> instancesTypes = new HashSet<String>();
 		for (InstanceKey instanceKey : lockPointedInstances) {
-			instancesTypes.add(instanceKey.getConcreteType());
+			String javaType = AnalysisUtils.walaTypeNameToJavaName(instanceKey.getConcreteType().getName());
+			if (javaType.equals(JAVA_LANG_INTEGER)) {
+				if (instanceKey instanceof NormalAllocationInNode && isIntegerCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+				}
+			} else if (javaType.equals(JAVA_LANG_BOOLEAN)) {
+				if (instanceKey instanceof NormalAllocationInNode && isClinit((NormalAllocationInNode) instanceKey))
+					instancesTypes.add(javaType);
+			} else if (javaType.equals(JAVA_LANG_STRING)) {
+				if ((instanceKey instanceof NormalAllocationInNode && isIntern((NormalAllocationInNode) instanceKey)) || instanceKey instanceof ConcreteTypeKey) {
+					instancesTypes.add(javaType);
+				}
+			}
 		}
 		return instancesTypes;
 
+	}
+
+	private static boolean isIntern(NormalAllocationInNode normalAllocationInNode) {
+		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("intern");
+	}
+
+	private static boolean isClinit(NormalAllocationInNode normalAllocationInNode) {
+		return normalAllocationInNode.getNode().getMethod().isClinit();
+	}
+
+	private static boolean isIntegerCache(NormalAllocationInNode normalAllocationInNode) {
+		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf");
+		//		return (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals("Ljava/lang/Integer")
 	}
 
 	private boolean isIgnoredClass(IClass klass) {

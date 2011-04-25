@@ -39,7 +39,7 @@ public class LCK01JFixInformation implements FixInformation {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		LCK02JFixInformation other = (LCK02JFixInformation) obj;
+		LCK01JFixInformation other = (LCK01JFixInformation) obj;
 		if (typeNames == null) {
 			if (other.typeNames != null)
 				return false;
@@ -50,7 +50,7 @@ public class LCK01JFixInformation implements FixInformation {
 
 	@Override
 	public String toString() {
-		return "LCK02JFixInformation [typeNames=" + typeNames + "]";
+		return "LCK01JFixInformation [typeNames=" + typeNames + "]";
 	}
 
 }

@@ -8,7 +8,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 /**
  * 
  * This test checks that the detector distinguishes reusable and unreusable
- * Integer objects.
+ * Boolean objects.
  * 
  */
 public class A {
@@ -19,17 +19,17 @@ public class A {
 	}
 
 	private void m() {
-		Integer integerUnsafe = -100;
-		Integer unCachedIntegerUnsafe = -1000;
-		Integer integerSafe = new Integer(5);
+		Boolean booleanUnsafe1 = Boolean.FALSE;
+		Boolean booleanUnsafe2 = true;
+		Boolean booleanSafe = new Boolean(true);
 
-		/* [LCK01J,01,java.lang.Integer */synchronized (integerUnsafe) {
+		/* [LCK01J,01,java.lang.Boolean */synchronized (booleanUnsafe1) {
 		}/* ] */
 
-		/* [LCK01J,02,java.lang.Integer */synchronized (unCachedIntegerUnsafe) {
+		/* [LCK01J,02,java.lang.Boolean */synchronized (booleanUnsafe2) {
 		}/* ] */
 
-		synchronized (integerSafe) {
+		synchronized (booleanSafe) {
 		}
 	}
 }
