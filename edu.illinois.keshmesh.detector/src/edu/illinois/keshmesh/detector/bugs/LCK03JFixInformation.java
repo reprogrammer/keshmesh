@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector.bugs;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -30,6 +31,17 @@ public class LCK03JFixInformation implements FixInformation {
 
 	public boolean isLock() {
 		return isLock;
+	}
+
+	@Override
+	public FixInformation merge(FixInformation other) {
+		if (!(other instanceof LCK03JFixInformation)) {
+			throw new AssertionError("Only FixInformation's of the same types can be merged");
+		}
+		LCK03JFixInformation otherLCK03JFixInformation = (LCK03JFixInformation) other;
+		Set<String> allTypeNames = new HashSet<String>(typeNames);
+		allTypeNames.addAll(otherLCK03JFixInformation.getTypeNames());
+		return new LCK03JFixInformation(allTypeNames);
 	}
 
 	@Override

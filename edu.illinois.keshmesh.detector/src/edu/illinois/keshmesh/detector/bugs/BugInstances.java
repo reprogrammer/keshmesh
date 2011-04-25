@@ -4,9 +4,9 @@
 package edu.illinois.keshmesh.detector.bugs;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * 
@@ -16,20 +16,34 @@ import java.util.Set;
  */
 public class BugInstances implements Collection<BugInstance> {
 
-	Set<BugInstance> bugInstances;
+	Map<BugInstanceKey, BugInstance> bugInstances;
 
 	public BugInstances() {
-		bugInstances = new HashSet<BugInstance>();
+		bugInstances = new HashMap<BugInstanceKey, BugInstance>();
 	}
 
 	@Override
 	public boolean add(BugInstance bugInstance) {
-		return bugInstances.add(bugInstance);
+		BugInstanceKey key = bugInstance.getKey();
+		BugInstance mergedBugInstance = bugInstance.merge(bugInstances.get(key));
+		BugInstance oldBugInstance = bugInstances.put(key, mergedBugInstance);
+		return !mergedBugInstance.equals(oldBugInstance);
 	}
 
 	@Override
 	public boolean addAll(Collection<? extends BugInstance> bugInstances) {
-		return this.bugInstances.addAll(bugInstances);
+		boolean changed = false;
+		// FIXME: I dont't know why the foreach loop version doesn't work correctly. It might have something to do with generics and wildcards.
+		//		for (BugInstance bugInstance : bugInstances) {
+		//			changed = changed || add(bugInstance);
+		//		}
+		Iterator<? extends BugInstance> iter = bugInstances.iterator();
+		while (iter.hasNext()) {
+			BugInstance nextBugInstance = iter.next();
+			boolean added = add(nextBugInstance);
+			changed = changed || added;
+		}
+		return changed;
 	}
 
 	@Override
@@ -37,8 +51,8 @@ public class BugInstances implements Collection<BugInstance> {
 		throw new UnsupportedOperationException();
 	}
 
-	public BugInstance find(BugInstance testBugInstance) {
-		for (BugInstance bugInstance : bugInstances) {
+	public BugInstance portableFind(BugInstance testBugInstance) {
+		for (BugInstance bugInstance : bugInstances.values()) {
 			if (bugInstance.portableEquals(testBugInstance))
 				return bugInstance;
 		}
@@ -62,7 +76,7 @@ public class BugInstances implements Collection<BugInstance> {
 
 	@Override
 	public Iterator<BugInstance> iterator() {
-		return bugInstances.iterator();
+		return bugInstances.values().iterator();
 	}
 
 	@Override
@@ -82,7 +96,7 @@ public class BugInstances implements Collection<BugInstance> {
 
 	@Override
 	public int size() {
-		return bugInstances.size();
+		return bugInstances.values().size();
 	}
 
 	@Override
@@ -97,7 +111,7 @@ public class BugInstances implements Collection<BugInstance> {
 
 	@Override
 	public String toString() {
-		return bugInstances.toString();
+		return bugInstances.values().toString();
 	}
 
 }

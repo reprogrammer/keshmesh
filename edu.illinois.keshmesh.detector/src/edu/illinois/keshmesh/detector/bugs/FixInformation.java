@@ -17,4 +17,7 @@ public interface FixInformation {
 
 	public abstract String toString();
 
+	//FIXME: There is some code duplication among different overriders of this method that can be elimiated by use of an abstract class.
+	public FixInformation merge(FixInformation other);
+
 }
