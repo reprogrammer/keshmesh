@@ -228,10 +228,10 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	private boolean canContainUnprotectedInstructions(IMethod method) {
-		return !method.isSynchronized() && !isIgnoredClass(method.getDeclaringClass()) && !isIgnoredMethod(method);
+		return !method.isSynchronized() && !isIgnoredClass(method.getDeclaringClass()) && !isInitializationMethod(method);
 	}
 
-	private boolean isIgnoredMethod(IMethod method) {
+	private boolean isInitializationMethod(IMethod method) {
 		String methodName = method.getName().toString();
 		return methodName.equals("<init>") || methodName.equals("<clinit>");
 	}
@@ -293,15 +293,16 @@ public class VNA00JBugDetector extends BugPatternDetector {
 				}
 				InstanceKey pointedInstance = (InstanceKey) basicAnalysisData.basicHeapGraph.getSuccNodes(pointerForValueNumber).next();
 				Graph<Object> invertedHeapGraph = GraphInverter.invert(basicAnalysisData.basicHeapGraph);
-				Set<Object> reachingNodes = DFS.getReachableNodes(invertedHeapGraph, Arrays.asList(pointedInstance));
-				return doesContainExternalPointer(reachingNodes, instructionInfo.getCGNode()) && (isThreadSafe(pointedInstance.getConcreteType()) || doesContainThreadSafeFieldPointer(reachingNodes));
+				Set<Object> reachingHeapGraphNodes = DFS.getReachableNodes(invertedHeapGraph, Arrays.asList(pointedInstance));
+				return doesContainExternalPointer(reachingHeapGraphNodes, instructionInfo.getCGNode())
+						&& (isThreadSafe(pointedInstance.getConcreteType()) || doesContainThreadSafeFieldPointer(reachingHeapGraphNodes));
 			}
 		}
 		return false;
 	}
 
-	private boolean doesContainExternalPointer(Set<Object> reachingNodes, CGNode localCGNode) {
-		for (Object node : reachingNodes) {
+	private boolean doesContainExternalPointer(Set<Object> reachingHeapGraphNodes, CGNode localCGNode) {
+		for (Object node : reachingHeapGraphNodes) {
 			if (node instanceof LocalPointerKey && isExternalPointer((LocalPointerKey) node, localCGNode)) {
 				return true;
 			}
@@ -319,7 +320,8 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	private boolean isExternalPointer(LocalPointerKey pointerKey, CGNode cgNode) {
-		return pointerKey.getNode() != cgNode;
+		CGNode pointerNode = pointerKey.getNode();
+		return !isInitializationMethod(pointerNode.getMethod()) && pointerNode != cgNode;
 	}
 
 	private boolean isThreadSafeFieldPointer(InstanceFieldPointerKey pointerKey) {

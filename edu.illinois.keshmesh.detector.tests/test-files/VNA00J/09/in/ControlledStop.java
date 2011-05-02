@@ -12,7 +12,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
  * 
  */
 final class ControlledStop implements Runnable {
-	/* [VNA00J,01 */private boolean done = false;/* ] */
+	private boolean done = false;
 
 	@EntryPoint
 	public static void main(String args[]) {
@@ -22,7 +22,7 @@ final class ControlledStop implements Runnable {
 	}
 
 	public void run() {
-		/* [VNA00J,02 */while (!done) {/* ] */
+		/* [VNA00J,01 */while (!done) {/* ] */
 			try {
 				// ...
 				Thread.currentThread().sleep(1000); // Do something
@@ -33,7 +33,7 @@ final class ControlledStop implements Runnable {
 	}
 
 	public void shutdown() {
-		/* [VNA00J,03 */done = true;/* ] */
+		/* [VNA00J,02 */done = true;/* ] */
 	}
 
 }
