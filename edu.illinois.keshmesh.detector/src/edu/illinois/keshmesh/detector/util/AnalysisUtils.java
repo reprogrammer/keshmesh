@@ -205,24 +205,7 @@ public class AnalysisUtils {
 		return valueNumber <= numberOfParametersOfCaller;
 	}
 
-	private static boolean doesAccessSafeFieldDirectly(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		DefUse defUse = enclosingCGNode.getDU();
-		SSAInstruction instructionDefiningTheValue = defUse.getDef(valueNumber);
-		if (instructionDefiningTheValue instanceof SSAGetInstruction) {
-			SSAGetInstruction getInstruction = (SSAGetInstruction) instructionDefiningTheValue;
-			return isFinalOrVolatile(getInstruction, classHierarchy);
-		}
-		return false;
-	}
-
-	public static boolean isPotentiallyUnsafe(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		if (isParameterOf(valueNumber, enclosingCGNode) || doesAccessSafeFieldDirectly(valueNumber, enclosingCGNode, classHierarchy)) {
-			return false;
-		}
-		return !isIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy);
-	}
-
-	private static boolean isIndirectlyLocal(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
+	private static boolean isDefUseReachableFromParameterOrStaticField(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
 		if (isParameterOf(valueNumber, enclosingCGNode)) {
 			return false;
 		}
@@ -233,30 +216,13 @@ public class AnalysisUtils {
 			if (getInstruction.isStatic()) {
 				return false; // indirectly accesses a static field
 			}
-			return isIndirectlyLocal(getInstruction.getRef(), enclosingCGNode, classHierarchy);
+			return isDefUseReachableFromParameterOrStaticField(getInstruction.getRef(), enclosingCGNode, classHierarchy);
 		}
 		return true;
 	}
 
 	private static boolean doesAllowPropagation(int valueNumber, CGNode enclosingCGNode, IClassHierarchy classHierarchy) {
-		return !isIndirectlyLocal(valueNumber, enclosingCGNode, classHierarchy);
-	}
-
-	/**
-	 * 
-	 * @param fieldAccessInstruction
-	 * @return true if the changes to the given field are visible to other
-	 *         threads.
-	 */
-	private static boolean isFinalOrVolatile(SSAFieldAccessInstruction fieldAccessInstruction, IClassHierarchy classHierarchy) {
-		IField accessedField = classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-		//TODO: We do not know why it could be null here, e.g. the field sun.security.util.SecurityConstants.GET_CLASSLOADER_PERMISSION 
-		//can not be resolved because its class can not be looked up. 
-		//This does not happen with the current implementation of detectors.
-		//		if (accessedField != null) {
-		return accessedField.isFinal() || accessedField.isVolatile();
-		//		}
-		//		return true;
+		return !isDefUseReachableFromParameterOrStaticField(valueNumber, enclosingCGNode, classHierarchy);
 	}
 
 	public static IField getAccessedField(BasicAnalysisData basicAnalysisData, SSAFieldAccessInstruction fieldAccessInstruction) {

@@ -227,7 +227,12 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	private boolean canContainUnprotectedInstructions(IMethod method) {
-		return !method.isSynchronized() && !isIgnoredClass(method.getDeclaringClass());
+		return !method.isSynchronized() && !isIgnoredClass(method.getDeclaringClass()) && !isIgnoredMethod(method);
+	}
+
+	private boolean isIgnoredMethod(IMethod method) {
+		String methodName = method.getName().toString();
+		return methodName.equals("<init>") || methodName.equals("<clinit>");
 	}
 
 	/**
