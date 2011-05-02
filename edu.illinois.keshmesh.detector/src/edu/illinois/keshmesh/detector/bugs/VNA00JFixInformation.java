@@ -19,6 +19,11 @@ public class VNA00JFixInformation implements FixInformation {
 		return this;
 	}
 
+	@Override
+	public int hashCode() {
+		return 97;
+	}
+
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
