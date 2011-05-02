@@ -220,7 +220,7 @@ public abstract class AbstractTestCase {
 	private void tryFix(BugInstance bugInstance, String bugInstanceNumber) throws IOException, OperationCanceledException, CoreException {
 		if (bugInstances.size() == 1)
 			bugInstanceNumber = "";
-		BugInstance actualBugInstance = bugInstances.find(bugInstance);
+		BugInstance actualBugInstance = bugInstances.portableFind(bugInstance);
 		Assert.assertNotNull("Could not find bug instance.", actualBugInstance);
 		fixBugInstance(actualBugInstance);
 		if (bugInstance.getBugPattern().hasFixer()) {

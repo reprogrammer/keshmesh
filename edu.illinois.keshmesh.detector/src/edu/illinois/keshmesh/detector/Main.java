@@ -36,7 +36,8 @@ public class Main {
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
-			bugInstances.addAll(bugPattern.createBugPatternDetector().performAnalysis(javaProject, basicAnalysisData));
+			BugInstances instancesOfCurrentBugPattern = bugPattern.createBugPatternDetector().performAnalysis(javaProject, basicAnalysisData);
+			bugInstances.addAll(instancesOfCurrentBugPattern);
 		}
 		return bugInstances;
 	}

@@ -15,7 +15,9 @@ import java.util.Map;
  */
 public class BugPatterns {
 
+	public final static BugPattern LCK01J = new LCK01JBugPattern();
 	public final static BugPattern LCK02J = new LCK02JBugPattern();
+	public final static BugPattern LCK03J = new LCK03JBugPattern();
 	public final static BugPattern LCK06J = new LCK06JBugPattern();
 	public final static BugPattern VNA00J = new VNA00JBugPattern();
 
@@ -28,7 +30,7 @@ public class BugPatterns {
 	}
 
 	public static void enableAllBugPatterns() {
-		enableBugPatterns(LCK02J, LCK06J, VNA00J);
+		enableBugPatterns(LCK01J, LCK02J, LCK03J, LCK06J, VNA00J);
 	}
 
 	public static BugPattern getBugPatternByName(String name) {

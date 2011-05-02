@@ -20,19 +20,33 @@
 		</Details>
 	</Detector>
 
+	<BugPattern type="KESHMESH_LCK01J">
+		<ShortDescription>Keshmesh LCK01J</ShortDescription>
+		<LongDescription>Do not synchronize on objects that may be reused</LongDescription>
+		<Details>BugPattern KESHMESH_LCK01J Details</Details>
+	</BugPattern>
+
+	<BugCode abbrev="KESHMESH_LCK01J">KESHMESH_LCK01J BugCode</BugCode>
+
 	<BugPattern type="KESHMESH_LCK02J">
 		<ShortDescription>Keshmesh LCK02J</ShortDescription>
-		<LongDescription>Do not synchronize on the class object returned by
-			getClass()</LongDescription>
+		<LongDescription>Do not synchronize on the class object returned by	getClass()</LongDescription>
 		<Details>BugPattern KESHMESH_LCK02J Details</Details>
 	</BugPattern>
 
 	<BugCode abbrev="KESHMESH_LCK02J">KESHMESH_LCK02J BugCode</BugCode>
 
+	<BugPattern type="KESHMESH_LCK03J">
+		<ShortDescription>Keshmesh LCK03J</ShortDescription>
+		<LongDescription>Do not synchronize on the intrinsic locks of high-level concurrency objects</LongDescription>
+		<Details>BugPattern KESHMESH_LCK03J Details</Details>
+	</BugPattern>
+	
+	<BugCode abbrev="KESHMESH_LCK03J">KESHMESH_LCK03J BugCode</BugCode>
+
 	<BugPattern type="KESHMESH_LCK06J">
 		<ShortDescription>Keshmesh LCK06J</ShortDescription>
-		<LongDescription>Do not use an instance lock to protect shared static
-			data</LongDescription>
+		<LongDescription>Do not use an instance lock to protect shared static data</LongDescription>
 		<Details>BugPattern KESHMESH_LCK06J Details</Details>
 	</BugPattern>
 
@@ -40,10 +54,10 @@
 
 	<BugPattern type="KESHMESH_VNA00J">
 		<ShortDescription>Keshmesh VNA00J</ShortDescription>
-		<LongDescription>Ensure visibility when accessing shared primitive
-			variables</LongDescription>
+		<LongDescription>Ensure visibility when accessing shared primitive variables</LongDescription>
 		<Details>BugPattern KESHMESH_VNA00J Details</Details>
 	</BugPattern>
 
 	<BugCode abbrev="KESHMESH_VNA00J">KESHMESH_VNA00J BugCode</BugCode>
+
 </MessageCollection>
