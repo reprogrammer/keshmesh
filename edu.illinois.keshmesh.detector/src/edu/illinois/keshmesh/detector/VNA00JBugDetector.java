@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.ibm.wala.cast.ipa.callgraph.AstCallGraph.AstFakeRoot;
 import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
@@ -276,8 +277,12 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		SSAInstruction ssaInstruction = instructionInfo.getInstruction();
 		if (ssaInstruction instanceof SSAFieldAccessInstruction) {
 			SSAFieldAccessInstruction fieldAccessInstruction = (SSAFieldAccessInstruction) ssaInstruction;
+			IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
+			if (accessedField.isVolatile()) {
+				return false;
+			}
 			if (fieldAccessInstruction.isStatic()) {
-				IClass declaringClass = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField()).getDeclaringClass();
+				IClass declaringClass = accessedField.getDeclaringClass();
 				if (isThreadSafe(declaringClass)) {
 					return true;
 				}
