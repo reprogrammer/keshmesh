@@ -89,7 +89,8 @@ public class LCK06JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
-			Logger.log("CGNode: " + cgNode.getIR());
+			Logger.log("CGNode:" + cgNode);
+			Logger.log("IR: " + cgNode.getIR());
 		}
 		intermediateResults.setStaticFields(getAllStaticFields());
 		populateAllInstancesPointedByStaticFields();
