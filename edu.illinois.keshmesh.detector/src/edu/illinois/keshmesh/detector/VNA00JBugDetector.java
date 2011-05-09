@@ -83,7 +83,8 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
-			Logger.log("CGNode: " + cgNode.getIR());
+			Logger.log("CGNode:" + cgNode);
+			Logger.log("IR: " + cgNode.getIR());
 		}
 		collectUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
 
