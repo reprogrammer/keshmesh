@@ -3,7 +3,6 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -266,6 +265,34 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		return instructionsThatMayAccessUnsafelySharedFields;
 	}
 
+	private Collection<IClass> getConcreteTypes(Collection<InstanceKey> instanceKeys) {
+		Collection<IClass> concreteTypes = new HashSet<IClass>();
+		for (InstanceKey instanceKey : instanceKeys) {
+			concreteTypes.add(instanceKey.getConcreteType());
+		}
+		return concreteTypes;
+	}
+
+	private boolean isAnyThreadSafe(Collection<IClass> classes) {
+		for (IClass klass : classes) {
+			if (isThreadSafe(klass)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Collection<InstanceKey> getSuccNodes(CGNode cgNode, int valueNumber) {
+		PointerKey pointerForValueNumber = getPointerForValueNumber(cgNode, valueNumber);
+		Collection<InstanceKey> pointedInstances = new HashSet<InstanceKey>();
+		Iterator<Object> iterator = basicAnalysisData.basicHeapGraph.getSuccNodes(pointerForValueNumber);
+		while (iterator.hasNext()) {
+			InstanceKey nextInstanceKey = (InstanceKey) iterator.next();
+			pointedInstances.add(nextInstanceKey);
+		}
+		return pointedInstances;
+	}
+
 	/**
 	 * 
 	 * See LCK06JBugDetector#canModifyStaticField.
@@ -287,15 +314,11 @@ public class VNA00JBugDetector extends BugPatternDetector {
 					return true;
 				}
 			} else {
-				PointerKey pointerForValueNumber = getPointerForValueNumber(instructionInfo.getCGNode(), fieldAccessInstruction.getRef());
-				if (basicAnalysisData.basicHeapGraph.getSuccNodeCount(pointerForValueNumber) != 1) {
-					throw new AssertionError("Expected that value number pointer points to a single object: " + instructionInfo);
-				}
-				InstanceKey pointedInstance = (InstanceKey) basicAnalysisData.basicHeapGraph.getSuccNodes(pointerForValueNumber).next();
+				Collection<InstanceKey> pointedInstances = getSuccNodes(instructionInfo.getCGNode(), fieldAccessInstruction.getRef());
 				Graph<Object> invertedHeapGraph = GraphInverter.invert(basicAnalysisData.basicHeapGraph);
-				Set<Object> reachingHeapGraphNodes = DFS.getReachableNodes(invertedHeapGraph, Arrays.asList(pointedInstance));
+				Set<Object> reachingHeapGraphNodes = DFS.getReachableNodes(invertedHeapGraph, pointedInstances);
 				return doesContainExternalPointer(reachingHeapGraphNodes, instructionInfo.getCGNode())
-						&& (isThreadSafe(pointedInstance.getConcreteType()) || doesContainThreadSafeFieldPointer(reachingHeapGraphNodes));
+						&& (isAnyThreadSafe(getConcreteTypes(pointedInstances)) || doesContainThreadSafeFieldPointer(reachingHeapGraphNodes));
 			}
 		}
 		return false;

@@ -17,6 +17,7 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
  * @author Stas Negara
  * 
  */
+@Deprecated
 public class KeshmeshCFABuilder extends AstJavaZeroOneContainerCFABuilder {
 
 	public KeshmeshCFABuilder(IClassHierarchy cha, AnalysisOptions options, AnalysisCache cache, ContextSelector appContextSelector, SSAContextInterpreter appContextInterpreter) {

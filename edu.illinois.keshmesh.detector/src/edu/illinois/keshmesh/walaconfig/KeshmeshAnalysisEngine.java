@@ -18,6 +18,10 @@ import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.DefaultEntrypoint;
 import com.ibm.wala.ipa.callgraph.impl.Util;
+import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
+import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
+import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXCFABuilder;
+import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXInstanceKeys;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.types.Descriptor;
@@ -50,7 +54,20 @@ public class KeshmeshAnalysisEngine {
 		ContextSelector contextSelector = new CustomReceiverInstanceContextSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
-		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
+		//		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
+		return makeZeroOneCFABuilder(analysisOptions, analysisCache, classHierarchy, analysisScope, contextSelector, null);
+	}
+
+	public static SSAPropagationCallGraphBuilder makeZeroOneCFABuilder(AnalysisOptions options, AnalysisCache cache, IClassHierarchy cha, AnalysisScope scope, ContextSelector customSelector,
+			SSAContextInterpreter customInterpreter) {
+
+		if (options == null) {
+			throw new IllegalArgumentException("options is null");
+		}
+		Util.addDefaultSelectors(options, cha);
+		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
+
+		return ZeroXCFABuilder.make(cha, options, cache, customSelector, customInterpreter, ZeroXInstanceKeys.ALLOCATIONS | ZeroXInstanceKeys.SMUSH_MANY | ZeroXInstanceKeys.SMUSH_THROWABLES);
 	}
 
 	public static Iterable<Entrypoint> makeAnnotatedEntryPoints(IClassHierarchy classHierarchy) {

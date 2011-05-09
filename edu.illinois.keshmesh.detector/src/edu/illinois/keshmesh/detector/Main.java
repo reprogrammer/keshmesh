@@ -57,25 +57,12 @@ public class Main {
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
-		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		//		try {
-		//			//		InputStream regressionExclusions = new FileInputStream(new File(FileLocator.toFileURL(FileLocator.find(Activator.getContext().getBundle(), new Path(REGRESSION_EXCLUSIONS), null)).toURI()));
-		//			AnalysisScope analysisScope = AnalysisScopeReader.makeJavaBinaryAnalysisScope("bin", null);
-		//			classHierarchy = ClassHierarchy.make(analysisScope);
-		//
-		//			AnalysisOptions analysisOptions = new AnalysisOptions(analysisScope, Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy));
-		//
-		//			ContextSelector contextSelector = new CustomContextSelector();
-		//
-		//			com.ibm.wala.ipa.callgraph.CallGraphBuilder builder = Util.makeVanillaZeroOneCFABuilder(analysisOptions, new AnalysisCache(), classHierarchy, analysisScope, contextSelector, null);
-		//
-		//			callGraph = builder.makeCallGraph(analysisOptions, null);
-		//			pointerAnalysis = builder.getPointerAnalysis();
-		//			heapModel = pointerAnalysis.getHeapModel();
-		//			basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
-		//		} catch (Exception e) {
-		//			throw new Exceptions.WALAInitializationException(e);
+		//			DisplayUtils.displayGraph(basicHeapGraph);
+		//		} catch (WalaException e) {
+		//			throw new WALAInitializationException(e);
 		//		}
+		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, basicHeapGraph);
 	}
 
