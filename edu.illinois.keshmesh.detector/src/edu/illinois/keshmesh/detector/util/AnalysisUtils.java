@@ -11,7 +11,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
@@ -149,10 +148,7 @@ public class AnalysisUtils {
 
 	public static CodePosition getPosition(IJavaProject javaProject, IMethod method, int instructionIndex) {
 		String enclosingClassName = getEnclosingNonanonymousClassName(method.getDeclaringClass().getName());
-		if (method instanceof AstMethod) {
-			AstMethod astMethod = (AstMethod) method;
-			return new CodePosition(astMethod.getSourcePosition(instructionIndex), enclosingClassName);
-		} else if (method instanceof ShrikeCTMethod) {
+		if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
 				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName, new NullProgressMonitor()).getCompilationUnit().getPath());

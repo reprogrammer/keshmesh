@@ -120,6 +120,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	 * get reported as the type names of the receivers of the call to
 	 * Object.getClass.
 	 */
+	@Deprecated
 	private void addSynchronizedClassTypeNames(Set<String> result, NormalAllocationInNode normalAllocationInNode) {
 		{
 			CGNode normalAllocationCGNode = normalAllocationInNode.getNode();

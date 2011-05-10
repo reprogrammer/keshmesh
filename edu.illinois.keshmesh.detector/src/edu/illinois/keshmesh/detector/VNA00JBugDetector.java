@@ -12,10 +12,10 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.ibm.wala.cast.ipa.callgraph.AstCallGraph.AstFakeRoot;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.SyntheticMethod;
 import com.ibm.wala.dataflow.graph.BitVectorFramework;
 import com.ibm.wala.dataflow.graph.BitVectorSolver;
 import com.ibm.wala.fixpoint.BitVectorVariable;
@@ -485,7 +485,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	private boolean isInFakeRootMethod(InstructionInfo instructionInfo) {
-		return instructionInfo.getCGNode().getMethod() instanceof AstFakeRoot;
+		return instructionInfo.getCGNode().getMethod() instanceof SyntheticMethod;
 	}
 
 }

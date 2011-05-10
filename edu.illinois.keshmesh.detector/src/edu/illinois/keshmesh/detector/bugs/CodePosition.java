@@ -4,9 +4,6 @@
 package edu.illinois.keshmesh.detector.bugs;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-
-import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 
 /**
  * 
@@ -24,15 +21,6 @@ public class CodePosition {
 	private IPath sourcePath;
 
 	private String fullyQualifiedEnclosingClassName;
-
-	public CodePosition(Position position, String fullyQualifiedEnclosingClassName) {
-		this.firstOffset = position.getFirstOffset();
-		this.lastOffset = position.getLastOffset();
-		this.firstLine = position.getFirstLine();
-		this.lastLine = position.getLastLine();
-		this.sourcePath = Path.fromPortableString(position.getURL().getFile());
-		this.fullyQualifiedEnclosingClassName = fullyQualifiedEnclosingClassName;
-	}
 
 	public CodePosition(int firstLine, int lastLine, IPath sourcePath, String fullyQualifiedClassName) {
 		this.firstLine = firstLine;

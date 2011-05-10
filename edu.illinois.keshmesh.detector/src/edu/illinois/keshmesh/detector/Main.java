@@ -19,7 +19,6 @@ import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
-import edu.illinois.keshmesh.walaconfig.DetectorJavaSourceAnalysisEngine;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModelWithMain;
 
 /**
@@ -42,8 +41,6 @@ public class Main {
 		return bugInstances;
 	}
 
-	//FIXME: Make the selection between initAnalysis and initSourceAnalysis cleaner by using patterns such as Strategy.
-
 	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject) throws WALAInitializationException {
 		KeshmeshCGModelWithMain model;
 		try {
@@ -64,22 +61,6 @@ public class Main {
 		//		}
 		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, basicHeapGraph);
-	}
-
-	private static BasicAnalysisData initSourceAnalysis(IJavaProject javaProject) throws WALAInitializationException {
-		try {
-			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
-			DetectorJavaSourceAnalysisEngine engine = new DetectorJavaSourceAnalysisEngine(javaProject, exclusionsFileName);
-			CallGraph callGraph = engine.buildDefaultCallGraph();
-			PointerAnalysis pointerAnalysis = engine.getPointerAnalysis();
-			HeapModel heapModel = pointerAnalysis.getHeapModel();
-			BasicHeapGraph basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
-			IClassHierarchy classHierarchy = engine.getClassHierarchy();
-			//DisplayUtils.displayGraph(basicHeapGraph);
-			return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, basicHeapGraph);
-		} catch (Exception e) {
-			throw new Exceptions.WALAInitializationException(e);
-		}
 	}
 
 }
