@@ -39,6 +39,11 @@ public class LCK01JBugDetector extends BugPatternDetector {
 	private static final String JAVA_LANG_INTEGER = "java.lang.Integer";
 	private static final String JAVA_LANG_STRING = "java.lang.String";
 	private static final String JAVA_LANG_BOOLEAN = "java.lang.Boolean";
+	private static final String JAVA_LANG_LONG = "java.lang.Long";
+	private static final String JAVA_LANG_SHORT = "java.lang.Short";
+	private static final String JAVA_LANG_FLOAT = "java.lang.Float";
+	private static final String JAVA_LANG_DOUBLE = "java.lang.Double";
+	private static final String JAVA_LANG_BYTE = "java.lang.Byte";
 
 	@Override
 	public IntermediateResults getIntermediateResults() {
@@ -109,11 +114,41 @@ public class LCK01JBugDetector extends BugPatternDetector {
 					instancesTypes.add(javaType);
 				}
 			} else if (javaType.equals(JAVA_LANG_BOOLEAN)) {
-				if (instanceKey instanceof NormalAllocationInNode && isClinit((NormalAllocationInNode) instanceKey))
+				if (instanceKey instanceof NormalAllocationInNode && isBooleanCache((NormalAllocationInNode) instanceKey)) {
 					instancesTypes.add(javaType);
+					break;
+				}
 			} else if (javaType.equals(JAVA_LANG_STRING)) {
-				if ((instanceKey instanceof NormalAllocationInNode && isIntern((NormalAllocationInNode) instanceKey)) || instanceKey instanceof ConcreteTypeKey) {
+				if ((instanceKey instanceof NormalAllocationInNode && isStringCache((NormalAllocationInNode) instanceKey)) || instanceKey instanceof ConcreteTypeKey) {
 					instancesTypes.add(javaType);
+					break;
+				}
+			} else if (javaType.equals(JAVA_LANG_LONG)) {
+				if (instanceKey instanceof NormalAllocationInNode && isLongCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+					break;
+				}
+			} else if (javaType.equals(JAVA_LANG_SHORT)) {
+				if (instanceKey instanceof NormalAllocationInNode && isShortCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+					break;
+				}
+
+			} else if (javaType.equals(JAVA_LANG_FLOAT)) {
+				if (instanceKey instanceof NormalAllocationInNode && isFloatCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+					break;
+				}
+
+			} else if (javaType.equals(JAVA_LANG_DOUBLE)) {
+				if (instanceKey instanceof NormalAllocationInNode && isDoubleCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+					break;
+				}
+			} else if (javaType.equals(JAVA_LANG_BYTE)) {
+				if (instanceKey instanceof NormalAllocationInNode && isByteCache((NormalAllocationInNode) instanceKey)) {
+					instancesTypes.add(javaType);
+					break;
 				}
 			}
 		}
@@ -121,17 +156,43 @@ public class LCK01JBugDetector extends BugPatternDetector {
 
 	}
 
-	private static boolean isIntern(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("intern");
+	private static boolean isStringCache(NormalAllocationInNode normalAllocationInNode) {
+		return (normalAllocationInNode.getNode().getMethod().getName().toString().equals("intern") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString()
+				.equals("Ljava/lang/String"));
 	}
 
-	private static boolean isClinit(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().isClinit();
+	private static boolean isBooleanCache(NormalAllocationInNode normalAllocationInNode) {
+		return (normalAllocationInNode.getNode().getMethod().isClinit() && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Boolean"));
+
+	}
+
+	private static boolean isLongCache(NormalAllocationInNode normalAllocationInNode) {
+		return (normalAllocationInNode.getNode().getMethod().isClinit() && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Long$LongCache") || (normalAllocationInNode
+				.getNode().getMethod().getName().toString().equals("valueOf") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Long")));
+	}
+
+	private static boolean isShortCache(NormalAllocationInNode normalAllocationInNode) {
+		return (normalAllocationInNode.getNode().getMethod().isClinit() && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Short$ShortCache") || (normalAllocationInNode
+				.getNode().getMethod().getName().toString().equals("valueOf") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Short")));
+	}
+
+	private static boolean isFloatCache(NormalAllocationInNode normalAllocationInNode) {
+		return ((normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString()
+				.equals("Ljava/lang/Float")));
+	}
+
+	private static boolean isDoubleCache(NormalAllocationInNode normalAllocationInNode) {
+		return ((normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString()
+				.equals("Ljava/lang/Double")));
+	}
+
+	private static boolean isByteCache(NormalAllocationInNode normalAllocationInNode) {
+		return (normalAllocationInNode.getNode().getMethod().isClinit() && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString().equals("Ljava/lang/Byte$ByteCache"));
 	}
 
 	private static boolean isIntegerCache(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf");
-		//		return (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals("Ljava/lang/Integer")
+		return (normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf") && normalAllocationInNode.getNode().getMethod().getDeclaringClass().getName().toString()
+				.equals("Ljava/lang/Integer"));
 	}
 
 	private boolean isIgnoredClass(IClass klass) {
