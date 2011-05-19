@@ -8,7 +8,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 /**
  * 
  * This test checks that the detector distinguishes reusable and unreusable
- * Long objects.
+ * Short objects.
  * 
  */
 public class A {
@@ -19,13 +19,13 @@ public class A {
 	}
 
 	private void m() {
-		Long longUnsafe = (long) 200;
-		Long longSafe = new Long(5);
-
-		/* [LCK01J,01,java.lang.Long */synchronized (longUnsafe) {
+		Short shortUnsafe = (short) 1;
+		Short shortSafe = new Short((short) 1);
+		
+		/* [LCK01J,01,java.lang.Short */synchronized (shortUnsafe) {
 		}/* ] */
 
-		synchronized (longSafe) {
+		synchronized (shortSafe) {
 		}
 	}
 }

@@ -8,7 +8,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 /**
  * 
  * This test checks that the detector distinguishes reusable and unreusable
- * Long objects.
+ * Byte objects.
  * 
  */
 public class A {
@@ -19,13 +19,14 @@ public class A {
 	}
 
 	private void m() {
-		Long longUnsafe = (long) 200;
-		Long longSafe = new Long(5);
 
-		/* [LCK01J,01,java.lang.Long */synchronized (longUnsafe) {
+		Byte byteUnsafe = (byte) 2;
+		Byte byteSafe = new Byte((byte) 2);
+
+		/* [LCK01J,01,java.lang.Byte */synchronized (byteUnsafe) {
 		}/* ] */
 
-		synchronized (longSafe) {
+		synchronized (byteSafe) {
 		}
 	}
 }

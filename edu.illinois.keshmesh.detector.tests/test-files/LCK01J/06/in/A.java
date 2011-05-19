@@ -8,7 +8,7 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
 /**
  * 
  * This test checks that the detector distinguishes reusable and unreusable
- * Long objects.
+ * Float objects.
  * 
  */
 public class A {
@@ -19,13 +19,17 @@ public class A {
 	}
 
 	private void m() {
-		Long longUnsafe = (long) 200;
-		Long longSafe = new Long(5);
+		Float floatUnsafe = (float) 1.0;
+		Float floatUnsafe2 = 3.14f;
+		Float floatSafe = new Float(1.0);
 
-		/* [LCK01J,01,java.lang.Long */synchronized (longUnsafe) {
+		/* [LCK01J,01,java.lang.Float */synchronized (floatUnsafe) {
 		}/* ] */
 
-		synchronized (longSafe) {
+		/* [LCK01J,02,java.lang.Float */synchronized (floatUnsafe2) {
+		}/* ] */
+		
+		synchronized (floatSafe) {
 		}
 	}
 }
