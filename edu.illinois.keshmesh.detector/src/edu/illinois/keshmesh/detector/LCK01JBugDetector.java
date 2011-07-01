@@ -13,9 +13,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.ipa.callgraph.propagation.ConcreteTypeKey;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
-import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
@@ -36,9 +34,6 @@ import edu.illinois.keshmesh.util.Logger;
  * 
  */
 public class LCK01JBugDetector extends BugPatternDetector {
-	private static final String JAVA_LANG_INTEGER = "java.lang.Integer";
-	private static final String JAVA_LANG_STRING = "java.lang.String";
-	private static final String JAVA_LANG_BOOLEAN = "java.lang.Boolean";
 
 	@Override
 	public IntermediateResults getIntermediateResults() {
@@ -93,45 +88,19 @@ public class LCK01JBugDetector extends BugPatternDetector {
 		if (!monitorInstruction.isMonitorEnter()) {
 			throw new AssertionError("Expected a monitor enter instruction.");
 		}
-		//		if (monitorInstruction.getRef() == 5) {
-		//			System.out.println("FOUND");
-		//		} else if (monitorInstruction.getRef() == 13) {
-		//			System.out.println("FOUND");
-		//		}
 
 		PointerKey lockPointer = getPointerForValueNumber(cgNode, monitorInstruction.getRef());
 		Collection<InstanceKey> lockPointedInstances = getPointedInstances(lockPointer);
 		Set<String> instancesTypes = new HashSet<String>();
 		for (InstanceKey instanceKey : lockPointedInstances) {
-			String javaType = AnalysisUtils.walaTypeNameToJavaName(instanceKey.getConcreteType().getName());
-			if (javaType.equals(JAVA_LANG_INTEGER)) {
-				if (instanceKey instanceof NormalAllocationInNode && isIntegerCache((NormalAllocationInNode) instanceKey)) {
-					instancesTypes.add(javaType);
-				}
-			} else if (javaType.equals(JAVA_LANG_BOOLEAN)) {
-				if (instanceKey instanceof NormalAllocationInNode && isClinit((NormalAllocationInNode) instanceKey))
-					instancesTypes.add(javaType);
-			} else if (javaType.equals(JAVA_LANG_STRING)) {
-				if ((instanceKey instanceof NormalAllocationInNode && isIntern((NormalAllocationInNode) instanceKey)) || instanceKey instanceof ConcreteTypeKey) {
-					instancesTypes.add(javaType);
-				}
+			LCK01JReusableChecker instanceKeyReusableChecker = LCK01JReusableCheckerFactory.createReusableChecker(instanceKey);
+			if (instanceKeyReusableChecker.isReusable()) {
+				instancesTypes.add(AnalysisUtils.walaTypeNameToJavaName(instanceKey.getConcreteType().getName()));
+				break;
 			}
 		}
 		return instancesTypes;
 
-	}
-
-	private static boolean isIntern(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("intern");
-	}
-
-	private static boolean isClinit(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().isClinit();
-	}
-
-	private static boolean isIntegerCache(NormalAllocationInNode normalAllocationInNode) {
-		return normalAllocationInNode.getNode().getMethod().getName().toString().equals("valueOf");
-		//		return (normalAllocationInNode.getSite().getDeclaredType().getName().toString().equals("Ljava/lang/Integer")
 	}
 
 	private boolean isIgnoredClass(IClass klass) {
