@@ -64,3 +64,6 @@ Version 1.0.
 * Keshmesh depends on WALA. WALA is licensed under the Eclipse Public License -
 Version 1.0 and is available at http://wala.sf.net/.
  
+* Keshmesh depends on a modified version of FindBugs. FindBugs is licensed under
+the Lesser GNU Public License and is available at http://findbugs.sf.net/.
+
