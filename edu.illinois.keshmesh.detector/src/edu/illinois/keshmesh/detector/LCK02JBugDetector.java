@@ -16,7 +16,6 @@ import com.ibm.wala.ipa.callgraph.propagation.AbstractTypeInNode;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 import com.ibm.wala.ipa.callgraph.propagation.NormalAllocationInNode;
 import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
-import com.ibm.wala.ipa.callgraph.propagation.ReceiverInstanceContext;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
@@ -31,6 +30,7 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 import edu.illinois.keshmesh.util.Logger;
+import edu.illinois.keshmesh.walaconfig.ReceiverStringContext;
 
 /**
  * 
@@ -145,7 +145,7 @@ public class LCK02JBugDetector extends BugPatternDetector {
 	}
 
 	private static String getReceiverTypeName(AbstractTypeInNode node) {
-		TypeName typeName = ((ReceiverInstanceContext) (node.getNode().getContext())).getReceiver().getConcreteType().getName();
+		TypeName typeName = ((ReceiverStringContext) (node.getNode().getContext())).getReceiver().getConcreteType().getName();
 		return getJavaClassName(typeName);
 	}
 

@@ -51,7 +51,7 @@ public class KeshmeshAnalysisEngine {
 	}
 
 	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-		ContextSelector contextSelector = new CustomReceiverInstanceContextSelector();
+		ContextSelector contextSelector = new KObjectSensitiveContextSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
 		//		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
