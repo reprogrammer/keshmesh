@@ -25,6 +25,8 @@ public class A {
 		D d = new D();
 		b2.setD(d);
 
+		// If the context sensitiviy is not at least 2 object context sensitive,
+		// the detector will produce a false positive by reporting the following statement. 
 		b2.d.value = 0;
 	}
 
@@ -52,13 +54,13 @@ class C {
 
 class D {
 	int value;
-	
+
 }
 
 class ThreadSafeD extends D implements Runnable {
 
 	public void run() {
-		
+
 	}
 
 }
