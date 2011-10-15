@@ -13,12 +13,14 @@ import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.io.FileProvider;
+import com.ibm.wala.util.warnings.WalaException;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.detector.util.DisplayUtils;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModelWithMain;
 
 /**
@@ -28,6 +30,8 @@ import edu.illinois.keshmesh.walaconfig.KeshmeshCGModelWithMain;
  * 
  */
 public class Main {
+
+	private static boolean hasShownGraphs = false;
 
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
 		BugInstances bugInstances = new BugInstances();
@@ -54,11 +58,15 @@ public class Main {
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
-		//		try {
-		//			DisplayUtils.displayGraph(basicHeapGraph);
-		//		} catch (WalaException e) {
-		//			throw new WALAInitializationException(e);
-		//		}
+		if (!hasShownGraphs) {
+			try {
+				DisplayUtils.displayGraph(callGraph);
+				DisplayUtils.displayGraph(basicHeapGraph);
+				hasShownGraphs = true;
+			} catch (WalaException e) {
+				throw new WALAInitializationException(e);
+			}
+		}
 		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, basicHeapGraph);
 	}

@@ -37,7 +37,7 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 		if (receiver == null) {
 			//Provide a distinguishing context even when the receiver is null (e.g. in case of an invocation of a static method)
 			return caller.getContext();
-		} else if (AnalysisUtils.isJDKClass(callee.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(callee)) {
+		} else if (AnalysisUtils.isLibraryClass(callee.getDeclaringClass()) || (AnalysisUtils.isJDKClass(callee.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(callee))) {
 			//Note: new Random() and similar statements cause an infinite pointer analysis for contexts like CallerSiteContext(caller, site)
 			PointType pointType = new PointType(receiver.getConcreteType());
 			return new JavaTypeContext(pointType);
@@ -52,5 +52,4 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 			return new ReceiverStringContext(receiverString);
 		}
 	}
-
 }

@@ -26,6 +26,8 @@ import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
 import com.ibm.wala.types.TypeName;
+import com.ibm.wala.types.TypeReference;
+import com.ibm.wala.util.strings.Atom;
 
 import edu.illinois.keshmesh.detector.BasicAnalysisData;
 import edu.illinois.keshmesh.detector.InstructionFilter;
@@ -39,6 +41,10 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
  * 
  */
 public class AnalysisUtils {
+
+	public static final String EXTENSION_CLASSLOADER_NAME = "Extension"; //$NON-NLS-1$
+
+	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
 	private static final String OBJECT_GETCLASS_SIGNATURE = "java.lang.Object.getClass()Ljava/lang/Class;"; //$NON-NLS-1$
 
@@ -130,9 +136,24 @@ public class AnalysisUtils {
 		return packageName + "." + className;
 	}
 
+	private static boolean isExtension(Atom classLoaderName) {
+		return classLoaderName.toString().equals("Extension");
+	}
+
+	private static boolean isPrimordial(Atom classLoaderName) {
+		return classLoaderName.toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+	}
+
+	public static boolean isLibraryClass(IClass klass) {
+		return isExtension(klass.getClassLoader().getName());
+	}
+
 	public static boolean isJDKClass(IClass klass) {
-		boolean isJDKClass = klass.getClassLoader().getName().toString().equals(AnalysisUtils.PRIMORDIAL_CLASSLOADER_NAME);
-		return isJDKClass;
+		return isPrimordial(klass.getClassLoader().getName());
+	}
+
+	public static boolean isJDKClass(TypeReference typeReference) {
+		return isPrimordial(typeReference.getClassLoader().getName());
 	}
 
 	public static boolean isObjectGetClass(IMethod method) {
@@ -170,8 +191,6 @@ public class AnalysisUtils {
 	public static boolean isMonitorExit(SSAInstruction ssaInstruction) {
 		return ssaInstruction instanceof SSAMonitorInstruction && !((SSAMonitorInstruction) ssaInstruction).isMonitorEnter();
 	}
-
-	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
 
 	public static boolean doesAllowPropagation(InstructionInfo instructionInfo, IClassHierarchy classHierarchy) {
 		if (!(instructionInfo.getInstruction() instanceof SSAInvokeInstruction)) {

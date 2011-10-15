@@ -53,7 +53,7 @@ public class KeshmeshAnalysisEngine {
 	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
 		ContextSelector contextSelector = new KObjectSensitiveContextSelector();
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
-		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
+		//		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
 		//		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
 		return makeZeroOneCFABuilder(analysisOptions, analysisCache, classHierarchy, analysisScope, contextSelector, null);
 	}
@@ -65,7 +65,7 @@ public class KeshmeshAnalysisEngine {
 			throw new IllegalArgumentException("options is null");
 		}
 		Util.addDefaultSelectors(options, cha);
-		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
+		//		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
 
 		return ZeroXCFABuilder.make(cha, options, cache, customSelector, customInterpreter, ZeroXInstanceKeys.ALLOCATIONS | ZeroXInstanceKeys.SMUSH_MANY | ZeroXInstanceKeys.SMUSH_THROWABLES);
 	}
