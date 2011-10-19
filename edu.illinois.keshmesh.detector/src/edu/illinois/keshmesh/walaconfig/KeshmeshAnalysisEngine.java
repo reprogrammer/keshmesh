@@ -17,7 +17,6 @@ import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.DefaultEntrypoint;
-import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXCFABuilder;
@@ -52,7 +51,7 @@ public class KeshmeshAnalysisEngine {
 
 	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
 		ContextSelector contextSelector = new KObjectSensitiveContextSelector();
-		Util.addDefaultSelectors(analysisOptions, classHierarchy);
+		//		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		//		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
 		//		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);
 		return makeZeroOneCFABuilder(analysisOptions, analysisCache, classHierarchy, analysisScope, contextSelector, null);
@@ -64,7 +63,7 @@ public class KeshmeshAnalysisEngine {
 		if (options == null) {
 			throw new IllegalArgumentException("options is null");
 		}
-		Util.addDefaultSelectors(options, cha);
+		//		Util.addDefaultSelectors(options, cha);
 		//		Util.addDefaultBypassLogic(options, scope, Util.class.getClassLoader(), cha);
 
 		return ZeroXCFABuilder.make(cha, options, cache, customSelector, customInterpreter, ZeroXInstanceKeys.ALLOCATIONS | ZeroXInstanceKeys.SMUSH_MANY | ZeroXInstanceKeys.SMUSH_THROWABLES);

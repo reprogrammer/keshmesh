@@ -25,6 +25,7 @@ import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSAMonitorInstruction;
+import com.ibm.wala.types.MemberReference;
 import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.strings.Atom;
@@ -148,6 +149,10 @@ public class AnalysisUtils {
 		return isExtension(klass.getClassLoader().getName());
 	}
 
+	public static boolean isLibraryClass(TypeReference typeReference) {
+		return isExtension(typeReference.getClassLoader().getName());
+	}
+
 	public static boolean isJDKClass(IClass klass) {
 		return isPrimordial(klass.getClassLoader().getName());
 	}
@@ -156,8 +161,16 @@ public class AnalysisUtils {
 		return isPrimordial(typeReference.getClassLoader().getName());
 	}
 
+	public static boolean isObjectGetClass(MemberReference memberReference) {
+		return isObjectGetClass(memberReference.getSignature());
+	}
+
 	public static boolean isObjectGetClass(IMethod method) {
-		return method.getSignature().toString().equals(OBJECT_GETCLASS_SIGNATURE);
+		return isObjectGetClass(method.getSignature());
+	}
+
+	private static boolean isObjectGetClass(String methodSignature) {
+		return methodSignature.equals(OBJECT_GETCLASS_SIGNATURE);
 	}
 
 	public static String walaTypeNameToJavaName(TypeName typeName) {

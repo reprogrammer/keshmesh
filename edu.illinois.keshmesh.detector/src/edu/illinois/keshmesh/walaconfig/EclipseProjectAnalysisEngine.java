@@ -73,15 +73,17 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 			throw new IllegalArgumentException("classLoader is null");
 		}
 
+		Util.addDefaultSelectors(analysisOptions, classHierarchy);
+
 		InputStream inputStream = classLoader.getResourceAsStream(Util.nativeSpec);
 		XMLMethodSummaryReader methodSummaryReader = new XMLMethodSummaryReader(inputStream, analysisScope);
 
 		MethodTargetSelector customMethodTargetSelector = getCustomBypassMethodTargetSelector(classHierarchy, analysisOptions, methodSummaryReader);
 		analysisOptions.setSelector(customMethodTargetSelector);
 
-		ClassTargetSelector classTargetSelector = new BypassClassTargetSelector(analysisOptions.getClassTargetSelector(), methodSummaryReader.getAllocatableClasses(), classHierarchy,
+		ClassTargetSelector customClassTargetSelector = new BypassClassTargetSelector(analysisOptions.getClassTargetSelector(), methodSummaryReader.getAllocatableClasses(), classHierarchy,
 				classHierarchy.getLoader(analysisScope.getLoader(Atom.findOrCreateUnicodeAtom("Synthetic"))));
-		analysisOptions.setSelector(classTargetSelector);
+		analysisOptions.setSelector(customClassTargetSelector);
 	}
 
 	private BypassMethodTargetSelector getCustomBypassMethodTargetSelector(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, XMLMethodSummaryReader summary) {
@@ -110,8 +112,7 @@ class KeshmeshBypassMethodTargetSelector extends BypassMethodTargetSelector {
 
 	@Override
 	protected boolean canIgnore(MemberReference m) {
-		System.out.println("edu.illinois.keshmesh.walaconfig.KeshmeshBypassMethodTargetSelector.canIgnore(MemberReference)");
-		if (AnalysisUtils.isJDKClass(m.getDeclaringClass())) {
+		if (AnalysisUtils.isLibraryClass(m.getDeclaringClass()) || (AnalysisUtils.isJDKClass(m.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(m))) {
 			return true;
 		} else {
 			return super.canIgnore(m);
