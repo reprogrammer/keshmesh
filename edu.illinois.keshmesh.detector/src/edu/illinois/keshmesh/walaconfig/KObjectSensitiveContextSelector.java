@@ -12,6 +12,9 @@ import com.ibm.wala.ipa.callgraph.Context;
 import com.ibm.wala.ipa.callgraph.ContextKey;
 import com.ibm.wala.ipa.callgraph.ContextSelector;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.util.intset.EmptyIntSet;
+import com.ibm.wala.util.intset.IntSet;
+import com.ibm.wala.util.intset.IntSetUtil;
 
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 
@@ -33,11 +36,16 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 		}
 	};
 
-	public Context getCalleeTarget(CGNode caller, CallSiteReference site, IMethod callee, InstanceKey receiver) {
-		if (receiver == null) {
+	@Override
+	public Context getCalleeTarget(CGNode caller, CallSiteReference site, IMethod callee, InstanceKey[] actualParameters) {
+		if (actualParameters == null || actualParameters.length == 0 || actualParameters[0] == null) {
 			//Provide a distinguishing context even when the receiver is null (e.g. in case of an invocation of a static method)
 			return caller.getContext();
-		} else if (AnalysisUtils.isLibraryClass(callee.getDeclaringClass()) || (AnalysisUtils.isJDKClass(callee.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(callee))) {
+		}
+
+		InstanceKey receiver = actualParameters[0];
+
+		if (AnalysisUtils.isLibraryClass(callee.getDeclaringClass()) || (AnalysisUtils.isJDKClass(callee.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(callee))) {
 			//Note: new Random() and similar statements cause an infinite pointer analysis for contexts like CallerSiteContext(caller, site)
 			PointType pointType = new PointType(receiver.getConcreteType());
 			return new JavaTypeContext(pointType);
@@ -52,4 +60,16 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 			return new ReceiverStringContext(receiverString);
 		}
 	}
+
+	private static final IntSet receiver = IntSetUtil.make(new int[] { 0 });
+
+	@Override
+	public IntSet getRelevantParameters(CGNode caller, CallSiteReference site) {
+		if (site.isDispatch() || site.getDeclaredTarget().getNumberOfParameters() > 0) {
+			return receiver;
+		} else {
+			return EmptyIntSet.instance;
+		}
+	}
+
 }

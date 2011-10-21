@@ -52,7 +52,7 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 	public void buildAnalysisScope() throws IOException {
 		try {
 			EclipseProjectPath eclipseProjectPath = EclipseProjectPath.make(javaProject, AnalysisScopeType.NO_SOURCE);
-			analysisScope = eclipseProjectPath.toAnalysisScope(new File(getExclusionsFile()));
+			scope = eclipseProjectPath.toAnalysisScope(new File(getExclusionsFile()));
 		} catch (CoreException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -76,13 +76,13 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 
 		InputStream inputStream = classLoader.getResourceAsStream(Util.nativeSpec);
-		XMLMethodSummaryReader methodSummaryReader = new XMLMethodSummaryReader(inputStream, analysisScope);
+		XMLMethodSummaryReader methodSummaryReader = new XMLMethodSummaryReader(inputStream, scope);
 
 		MethodTargetSelector customMethodTargetSelector = getCustomBypassMethodTargetSelector(classHierarchy, analysisOptions, methodSummaryReader);
 		analysisOptions.setSelector(customMethodTargetSelector);
 
 		ClassTargetSelector customClassTargetSelector = new BypassClassTargetSelector(analysisOptions.getClassTargetSelector(), methodSummaryReader.getAllocatableClasses(), classHierarchy,
-				classHierarchy.getLoader(analysisScope.getLoader(Atom.findOrCreateUnicodeAtom("Synthetic"))));
+				classHierarchy.getLoader(scope.getLoader(Atom.findOrCreateUnicodeAtom("Synthetic"))));
 		analysisOptions.setSelector(customClassTargetSelector);
 	}
 
@@ -92,9 +92,8 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-		System.out.println("edu.illinois.keshmesh.walaconfig.EclipseProjectAnalysisEngine.getCallGraphBuilder(IClassHierarchy, AnalysisOptions, AnalysisCache)");
 		addCustomBypassLogic(classHierarchy, analysisOptions);
-		return KeshmeshAnalysisEngine.getCallGraphBuilder(analysisScope, classHierarchy, analysisOptions, analysisCache);
+		return KeshmeshAnalysisEngine.getCallGraphBuilder(scope, classHierarchy, analysisOptions, analysisCache);
 	}
 
 	@Override
@@ -112,7 +111,9 @@ class KeshmeshBypassMethodTargetSelector extends BypassMethodTargetSelector {
 
 	@Override
 	protected boolean canIgnore(MemberReference m) {
-		if (AnalysisUtils.isLibraryClass(m.getDeclaringClass()) || (AnalysisUtils.isJDKClass(m.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(m))) {
+		//FIXME: LCK01BugDetector depends on some JDK classes.
+		//		if (AnalysisUtils.isLibraryClass(m.getDeclaringClass()) || (AnalysisUtils.isJDKClass(m.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(m))) {
+		if (AnalysisUtils.isLibraryClass(m.getDeclaringClass())) {
 			return true;
 		} else {
 			return super.canIgnore(m);

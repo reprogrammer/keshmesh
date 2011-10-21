@@ -12,8 +12,8 @@ import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
+import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
-import com.ibm.wala.util.warnings.WalaException;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
@@ -21,7 +21,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.util.DisplayUtils;
-import edu.illinois.keshmesh.walaconfig.KeshmeshCGModelWithMain;
+import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 
 /**
  * 
@@ -46,10 +46,10 @@ public class Main {
 	}
 
 	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject) throws WALAInitializationException {
-		KeshmeshCGModelWithMain model;
+		KeshmeshCGModel model;
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
-			model = new KeshmeshCGModelWithMain(javaProject, exclusionsFileName);
+			model = new KeshmeshCGModel(javaProject, exclusionsFileName);
 			model.buildGraph();
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);

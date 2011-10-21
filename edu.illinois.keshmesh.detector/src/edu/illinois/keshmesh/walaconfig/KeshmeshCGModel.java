@@ -1,3 +1,6 @@
+/**
+ * This file is licensed under the University of Illinois/NCSA Open Source License. See LICENSE.TXT for details.
+ */
 package edu.illinois.keshmesh.walaconfig;
 
 import java.io.IOException;
@@ -13,12 +16,12 @@ import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
+import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.graph.InferGraphRoots;
-import com.ibm.wala.util.warnings.WalaException;
 
-public class KeshmeshCGModelWithMain extends WalaProjectCGModel {
+public class KeshmeshCGModel extends WalaProjectCGModel {
 
-	public KeshmeshCGModelWithMain(IJavaProject project, String exclusionsFile) throws IOException, CoreException {
+	public KeshmeshCGModel(IJavaProject project, String exclusionsFile) throws IOException, CoreException {
 		super(project, exclusionsFile);
 		engine = new EclipseProjectAnalysisEngine(project);
 		engine.setExclusionsFile(exclusionsFile);
@@ -26,7 +29,7 @@ public class KeshmeshCGModelWithMain extends WalaProjectCGModel {
 
 	@Override
 	protected Iterable<Entrypoint> getEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
-		//return Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		new UnsupportedOperationException();
 		return null;
 	}
 
