@@ -27,7 +27,7 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class KObjectSensitiveContextSelector implements ContextSelector {
 
-	private static final int K = 1;
+	private static final int K = 2;
 
 	public static final ContextKey RECEIVER_STRING = new ContextKey() {
 		@Override
