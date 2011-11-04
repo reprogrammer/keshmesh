@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testrun name="edu.illinois.keshmesh.detector.tests.lck06j" project="edu.illinois.keshmesh.detector.tests" tests="64" started="64" failures="0" errors="0" ignored="0">
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest09" time="11.283">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest09" time="8.249"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest09" time="1.027"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest09" time="1.057"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest09" time="0.87"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest01" time="11.094">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest01" time="1.358"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest01" time="1.12"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest01" time="1.084"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest01" time="7.526"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest03" time="6.729">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest03" time="1.032"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest03" time="1.348"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest03" time="1.482"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest03" time="2.857"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest07" time="18.93">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest07" time="4.827"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest07" time="4.47"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest07" time="6.126"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest07" time="3.49"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest11" time="8.386">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest11" time="1.925"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest11" time="1.954"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest11" time="1.734"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest11" time="2.765"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest12" time="8.913">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest12" time="1.684"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest12" time="1.676"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest12" time="1.843"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest12" time="3.703"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest14" time="10.4">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest14" time="1.324"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest14" time="1.67"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest14" time="1.958"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest14" time="5.39"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest16" time="12.85">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest16" time="1.998"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest16" time="2.004"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest16" time="2.1"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest16" time="6.741"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest05" time="10.462">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest05" time="2.008"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest05" time="2.206"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest05" time="2.293"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest05" time="3.948"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest02" time="9.45">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest02" time="3.065"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest02" time="1.832"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest02" time="2.271"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest02" time="2.257"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest04" time="12.147">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest04" time="2.176"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest04" time="2.052"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest04" time="2.424"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest04" time="5.485"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest08" time="20.918">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest08" time="3.686"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest08" time="2.106"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest08" time="2.301"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest08" time="12.815"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest15" time="10.155">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest15" time="2.231"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest15" time="2.838"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest15" time="2.557"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest15" time="2.522"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest13" time="16.828">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest13" time="2.156"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest13" time="3.118"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest13" time="3.116"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest13" time="8.141"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest10" time="10.277">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest10" time="2.774"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest10" time="2.353"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest10" time="2.329"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest10" time="2.81"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest06" time="14.171">
+    <testcase name="testStaticFields" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest06" time="2.421"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest06" time="2.824"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest06" time="2.518"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck06j.LCK06JTests.LCK06JTest06" time="6.399"/>
+  </testsuite>
+</testrun>

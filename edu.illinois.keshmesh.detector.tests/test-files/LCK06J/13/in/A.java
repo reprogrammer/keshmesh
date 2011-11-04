@@ -21,7 +21,7 @@ public class A {
 	}
 
 	void m() {
-		/* [LCK06J,01,staticField */synchronized (new Object()) {
+		/* [LCK06J,01,p.A.staticField */synchronized (new Object()) {
 			B localVariable = staticField;
 			localVariable.nonStaticField = null;
 		}/* ] */

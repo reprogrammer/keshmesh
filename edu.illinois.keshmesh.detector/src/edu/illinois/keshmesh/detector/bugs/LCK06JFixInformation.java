@@ -34,7 +34,7 @@ public class LCK06JFixInformation implements FixInformation {
 		LCK06JFixInformation otherLCK06JFixInformation = (LCK06JFixInformation) other;
 		Set<String> allUnsafeStaticFieldNames = new HashSet<String>(unsafeStaticFieldNames);
 		allUnsafeStaticFieldNames.addAll(otherLCK06JFixInformation.getStaticFieldNames());
-		return new LCK02JFixInformation(allUnsafeStaticFieldNames);
+		return new LCK06JFixInformation(allUnsafeStaticFieldNames);
 	}
 
 	@Override
