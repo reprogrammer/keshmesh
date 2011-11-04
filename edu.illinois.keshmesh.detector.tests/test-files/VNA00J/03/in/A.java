@@ -19,7 +19,6 @@ public class A implements Runnable {
 	private List<String> l = new LinkedList<String>();
 
 	@EntryPoint
-	@Override
 	public void run() {
 		/* [VNA00J,01 */l.add("0"); /* ] */
 	}
