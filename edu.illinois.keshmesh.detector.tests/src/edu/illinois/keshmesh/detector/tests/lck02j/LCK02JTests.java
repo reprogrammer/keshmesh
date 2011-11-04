@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector.tests.lck02j;
 
 import org.junit.Before;
+import org.junit.Ignore;
 
 /**
  * 
@@ -132,6 +133,7 @@ public class LCK02JTests {
 		}
 	}
 
+	@Ignore("issue #40")
 	public static class LCK02JTest14 extends LCK02JTest {
 
 		@Before
