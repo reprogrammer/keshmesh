@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testrun name="edu.illinois.keshmesh.detector.tests.lck03j" project="edu.illinois.keshmesh.detector.tests" tests="17" started="17" failures="0" errors="0" ignored="0">
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTestBugInstanceParser" time="0.005">
+    <testcase name="shouldParseLCK03J" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTestBugInstanceParser" time="0.002"/>
+    <testcase name="shouldParseLCK03JWithSpaces" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTestBugInstanceParser" time="0.002"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest02" time="27.158">
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest02" time="14.842"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest02" time="3.901"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest02" time="8.408"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest01" time="14.086">
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest01" time="4.355"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest01" time="3.328"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest01" time="6.398"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest05" time="19.639">
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest05" time="3.164"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest05" time="3.077"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest05" time="13.389"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest04" time="13.763">
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest04" time="2.7"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest04" time="3.473"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest04" time="7.582"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest03" time="14.702">
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest03" time="2.892"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest03" time="3.565"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.lck03j.LCK03JTests.LCK03JTest03" time="8.238"/>
+  </testsuite>
+</testrun>

@@ -17,6 +17,7 @@ import org.junit.Test;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.tests.BugInstanceParser;
 import edu.illinois.keshmesh.detector.tests.NumberedBugInstance;
+import edu.illinois.keshmesh.util.Modes;
 
 /**
  * 
@@ -32,6 +33,8 @@ public class LCK02JTestBugInstanceParser {
 
 	@Before
 	public void setup() {
+		Modes.setInTestMode(true);
+		BugPatterns.enableBugPatterns(BugPatterns.LCK02J);
 		path = new Path(".");
 		bugInstanceCreator = new LCK02JTest.LCK02JBugInstanceCreator();
 		bugInstanceParser = new BugInstanceParser(bugInstanceCreator, path);
