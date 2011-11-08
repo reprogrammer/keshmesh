@@ -478,7 +478,14 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		BugInstances bugInstances = new BugInstances();
 		for (InstructionInfo instructionInfo : instructionInfosToReport) {
 			if (!isInFakeRootMethod(instructionInfo)) {
-				bugInstances.add(new BugInstance(BugPatterns.VNA00J, instructionInfo.getPosition(), new VNA00JFixInformation()));
+				//FIXME: The following try-catch block is a workaround for issue #41.
+				try {
+					bugInstances.add(new BugInstance(BugPatterns.VNA00J, instructionInfo.getPosition(), new VNA00JFixInformation()));
+				} catch (RuntimeException e) {
+					if (!e.getMessage().startsWith("Position not found.")) {
+						throw e;
+					}
+				}
 			}
 		}
 		return bugInstances;

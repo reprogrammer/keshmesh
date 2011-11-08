@@ -9,6 +9,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
 import com.ibm.wala.classLoader.IClass;
@@ -185,7 +186,16 @@ public class AnalysisUtils {
 		if (method instanceof ShrikeCTMethod) {
 			ShrikeCTMethod shrikeMethod = (ShrikeCTMethod) method;
 			try {
-				IPath fullPath = getWorkspaceLocation().append(javaProject.findType(enclosingClassName, new NullProgressMonitor()).getCompilationUnit().getPath());
+				IType enclosingType = javaProject.findType(enclosingClassName, new NullProgressMonitor());
+
+				//FIXME: The following check is a workaround for issue #41.
+				if (enclosingType == null) {
+					String message = "Position not found. Could not find the type corresponding to %s in the Java project.";
+					System.err.println(String.format(message, enclosingClassName));
+					throw new RuntimeException(message);
+				}
+
+				IPath fullPath = getWorkspaceLocation().append(enclosingType.getCompilationUnit().getPath());
 				int lineNumber = shrikeMethod.getLineNumber(shrikeMethod.getBytecodeIndex(instructionIndex));
 				return new CodePosition(lineNumber, lineNumber, fullPath, enclosingClassName);
 			} catch (JavaModelException e) {
