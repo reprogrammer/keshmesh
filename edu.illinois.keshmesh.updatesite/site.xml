@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/edu.illinois.keshmesh_1.0.0.201110211812.jar" id="edu.illinois.keshmesh" version="1.0.0.201110211812">
-      <category name="Keshmesh"/>
-   </feature>
    <category-def name="Keshmesh" label="Keshmesh"/>
 </site>

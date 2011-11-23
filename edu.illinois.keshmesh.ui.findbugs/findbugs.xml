@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <FindbugsPlugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="findbugsplugin.xsd" pluginid="edu.illinois.keshmesh.ui"
+	xsi:noNamespaceSchemaLocation="findbugsplugin.xsd" pluginid="edu.illinois.keshmesh.ui.findbugs"
 	defaultenabled="true" provider="University of Illinois" website="http://illinois.edu">
 
 	<Detector class="edu.illinois.keshmesh.ui.findbugs.KeshmeshFindBugsDetector"
