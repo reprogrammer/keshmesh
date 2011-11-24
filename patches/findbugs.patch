@@ -1,0 +1,40 @@
+Index: build.properties
+===================================================================
+--- build.properties	(revision 13970)
++++ build.properties	(working copy)
+@@ -45,3 +45,18 @@
+ 
+ pluginsSrc.dir=../plugins/
+ serverSrc.dir=../server/
++bin.includes = META-INF/,\
++               lib/ant.jar,\
++               lib/asm-3.3.jar,\
++               lib/asm-tree-3.3.jar,\
++               lib/bcel.jar,\
++               lib/commons-lang-2.4.jar,\
++               lib/dom4j-1.6.1.jar,\
++               lib/jFormatString.jar,\
++               lib/jaxen-1.1.1.jar,\
++               lib/jcip-annotations.jar,\
++               lib/jdepend-2.9.jar,\
++               lib/jsr305.jar,\
++               lib/junit.jar,\
++               lib/asm-commons-3.3.jar,\
++               lib/AppleJavaExtensions.jar
+\ No newline at end of file
+Index: META-INF/MANIFEST.MF
+===================================================================
+--- META-INF/MANIFEST.MF	(revision 13970)
++++ META-INF/MANIFEST.MF	(working copy)
+@@ -15,7 +15,10 @@
+  lib/jaxen-1.1.1.jar,
+  lib/jFormatString.jar,
+  lib/commons-lang-2.4.jar,
+- lib/jsr305.jar
++ lib/jsr305.jar,
++ lib/ant.jar,
++ lib/jcip-annotations.jar,
++ lib/jdepend-2.9.jar
+ Bundle-Localization: plugin
+ Export-Package: edu.umd.cs.findbugs,
+  edu.umd.cs.findbugs.annotations,

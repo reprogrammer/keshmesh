@@ -5,7 +5,7 @@
          point="edu.umd.cs.findbugs.plugin.eclipse.findbugsPlugins">
       <findbugsPlugin
             fbPluginId="edu.illinois.keshmesh.ui.findbugs"
-            libraryPath="lib/KeshmeshDetectors.jar">
+            libraryPath=".">
       </findbugsPlugin>
    </extension>
 </plugin>
