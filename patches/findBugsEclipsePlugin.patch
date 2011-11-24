@@ -1,6 +1,6 @@
 Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml
 ===================================================================
---- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(revision 13136)
+--- src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(revision 13970)
 +++ src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/findbugs-resolutions.xml	(working copy)
 @@ -1,5 +1,15 @@
  <?xml version="1.0" encoding="UTF-8"?>
@@ -159,7 +159,7 @@ Index: src/edu/umd/cs/findbugs/plugin/eclipse/quickfix/LCK02JKeshmeshResolution.
 +}
 Index: META-INF/MANIFEST.MF
 ===================================================================
---- META-INF/MANIFEST.MF	(revision 13136)
+--- META-INF/MANIFEST.MF	(revision 13970)
 +++ META-INF/MANIFEST.MF	(working copy)
 @@ -40,7 +40,13 @@
   org.eclipse.ui.views.properties.tabbed,
@@ -176,3 +176,13 @@ Index: META-INF/MANIFEST.MF
  Bundle-ActivationPolicy: lazy
  Eclipse-BuddyPolicy: registered
  Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Index: META-INF/p2.inf
+===================================================================
+--- META-INF/p2.inf	(revision 13970)
++++ META-INF/p2.inf	(working copy)
+@@ -1,5 +0,0 @@
+-instructions.configure = \
+-    addJVMArg(jvmArg:-Xmx900m);
+-
+-instructions.unconfigure = \
+-    removeJVMArg(jvmArg:-Xmx900m);
