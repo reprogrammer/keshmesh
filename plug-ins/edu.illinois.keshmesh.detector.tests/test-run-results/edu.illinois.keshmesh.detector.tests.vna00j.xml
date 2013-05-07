@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testrun name="VNA00JTests" project="edu.illinois.keshmesh.detector.tests" tests="66" started="66" failures="0" errors="0" ignored="1">
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="10.884">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="6.49"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="1.779"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="0.962"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="0.938"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest08" time="0.715"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="4.718">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="0.844"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="0.692"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="0.731"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="0.711"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest03" time="1.74"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="6.26">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="0.881"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="0.707"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="0.777"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="0.76"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest01" time="3.135"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="4.535">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="1.028"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="0.858"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="0.913"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="0.842"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest10" time="0.894"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="20.199">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="6.07"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="3.928"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="4.067"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="3.116"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest12" time="3.017"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="17.542">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="3.139"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="2.892"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="3.002"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="2.735"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest06" time="5.774"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="5.559">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="0.961"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="0.905"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="0.8"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="1.071"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest07" time="1.822"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="14.147">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="3.104"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="2.725"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="2.764"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="2.802"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest14" time="2.752"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="29.333">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="2.744"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="2.962"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="2.996"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="2.925"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest04" time="17.706"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="21.311">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="3.086"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="3.049"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="2.93"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="3.071"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest09" time="9.175"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="15.065">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="3.44"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="2.935"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="2.921"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="2.897"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest02" time="2.872"/>
+  </testsuite>
+  <testcase name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests$VNA00JTest11" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest11" time="0.001" ignored="true"/>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="15.015">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="2.879"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="3.172"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="2.931"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="2.842"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest13" time="3.191"/>
+  </testsuite>
+  <testsuite name="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="18.647">
+    <testcase name="testThreadSafeClasses" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="2.919"/>
+    <testcase name="testUnprotectedInstructionsThatMayAccessUnsafelySharedFields" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="3.06"/>
+    <testcase name="shouldFindAllBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="3.17"/>
+    <testcase name="bugInstancesShouldExist" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="2.857"/>
+    <testcase name="tryFixExpectedBugInstances" classname="edu.illinois.keshmesh.detector.tests.vna00j.VNA00JTests.VNA00JTest05" time="6.641"/>
+  </testsuite>
+</testrun>

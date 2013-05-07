@@ -69,11 +69,15 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	private boolean isThreadSafe(IClass klass) {
+		populateThreadSafeClassesLazily();
+		return threadSafeClasses.contains(klass);
+	}
+
+	private void populateThreadSafeClassesLazily() {
 		if (threadSafeClasses == null) {
 			populateThreadSafeClasses();
 			intermediateResults.setThreadSafeClasses(threadSafeClasses);
 		}
-		return threadSafeClasses.contains(klass);
 	}
 
 	@Override
@@ -81,6 +85,8 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		this.javaProject = javaProject;
 		this.basicAnalysisData = basicAnalysisData;
 		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
+		populateThreadSafeClassesLazily();
+
 		while (cgNodesIter.hasNext()) {
 			CGNode cgNode = cgNodesIter.next();
 			Logger.log("CGNode:" + cgNode);
@@ -306,7 +312,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 		if (ssaInstruction instanceof SSAFieldAccessInstruction) {
 			SSAFieldAccessInstruction fieldAccessInstruction = (SSAFieldAccessInstruction) ssaInstruction;
 			IField accessedField = basicAnalysisData.classHierarchy.resolveField(fieldAccessInstruction.getDeclaredField());
-			if (accessedField.isVolatile()) {
+			if (accessedField.isVolatile() || accessedField.isFinal()) {
 				return false;
 			}
 			if (fieldAccessInstruction.isStatic()) {

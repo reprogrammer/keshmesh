@@ -4,6 +4,7 @@
 package edu.illinois.keshmesh.detector.tests.vna00j;
 
 import org.junit.Before;
+import org.junit.Ignore;
 
 /**
  * 
@@ -158,6 +159,7 @@ public class VNA00JTests {
 
 	}
 
+	@Ignore("issue #40")
 	public static class VNA00JTest11 extends VNA00JTest {
 
 		@Before
@@ -167,7 +169,49 @@ public class VNA00JTests {
 
 		@Override
 		protected String getExpectedThreadSafeClasses() {
-			return "?";
+			return "[<Application,Lp/A$1>, <Application,Lp/A$RunnableWrapper>]";
+		}
+
+	}
+
+	public static class VNA00JTest12 extends VNA00JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("12", "A.java");
+		}
+
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/A>]";
+		}
+
+	}
+
+	public static class VNA00JTest13 extends VNA00JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("13", "A.java");
+		}
+
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/A>]";
+		}
+
+	}
+
+	public static class VNA00JTest14 extends VNA00JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("14", "A.java");
+		}
+
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/A>]";
 		}
 
 	}
