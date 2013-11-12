@@ -230,4 +230,18 @@ public class VNA00JTests {
 
 	}
 
+	public static class VNA00JTest16 extends VNA00JTest {
+
+		@Before
+		public void setup() throws Exception {
+			setupProjectAndAnalyze("16", "A.java");
+		}
+
+		@Override
+		protected String getExpectedThreadSafeClasses() {
+			return "[<Application,Lp/B>]";
+		}
+
+	}
+
 }
