@@ -23,19 +23,19 @@ public class A {
 
 class C {
 
-	B b = new B();
+	B b1 = new B();
 
 	void accessNonLocally() {
-		/* [VNA00J,01 */b.counter = 1;/* ] */
-		if (b.finalCounter == 0) {
-			b.volatileCounter = 1;
+		/* [VNA00J,01 */b1.counter = 1;/* ] */
+		if (b1.finalCounter == 0) {
+			b1.staticVolatileCounter = 1;
 		}
 	}
 
 	void accessLocally() {
-		B b = new B();
-		b.counter = 1;
-		/* [VNA00J,02 */b.staticCounter = 1;/* ] */
+		B b2 = new B();
+		b2.counter = 1;
+		/* [VNA00J,02 */b2.staticCounter = 1;/* ] */
 	}
 
 }
@@ -44,7 +44,7 @@ class B implements Runnable {
 
 	int counter = 0;
 
-	volatile static int volatileCounter = 0;
+	static volatile int staticVolatileCounter = 0;
 
 	final int finalCounter = 0;
 
