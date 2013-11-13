@@ -44,7 +44,7 @@ class B implements Runnable {
 
 	int counter = 0;
 
-	volatile int volatileCounter = 0;
+	volatile static int volatileCounter = 0;
 
 	final int finalCounter = 0;
 
