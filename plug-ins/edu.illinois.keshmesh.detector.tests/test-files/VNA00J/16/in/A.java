@@ -14,33 +14,33 @@ public class A {
 
 	@EntryPoint
 	public static void main(String args[]) {
-		new C().accessNonLocally();
-		new C().accessLocally();
-		new B().increment();
+		new B().accessNonLocally();
+		new B().accessLocally();
+		new C().increment();
 	}
 
 }
 
-class C {
+class B {
 
-	B b1 = new B();
+	C c1 = new C();
 
 	void accessNonLocally() {
-		/* [VNA00J,01 */b1.counter = 1;/* ] */
-		if (b1.finalCounter == 0) {
-			b1.staticVolatileCounter = 1;
+		/* [VNA00J,01 */c1.counter = 1;/* ] */
+		if (c1.finalCounter == 0) {
+			c1.staticVolatileCounter = 1;
 		}
 	}
 
 	void accessLocally() {
-		B b2 = new B();
-		b2.counter = 1;
-		/* [VNA00J,02 */b2.staticCounter = 1;/* ] */
+		C c2 = new C();
+		c2.counter = 1;
+		/* [VNA00J,02 */c2.staticCounter = 1;/* ] */
 	}
 
 }
 
-class B implements Runnable {
+class C implements Runnable {
 
 	int counter = 0;
 

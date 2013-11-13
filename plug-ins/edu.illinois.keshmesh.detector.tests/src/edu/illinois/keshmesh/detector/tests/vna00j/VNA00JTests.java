@@ -239,7 +239,7 @@ public class VNA00JTests {
 
 		@Override
 		protected String getExpectedThreadSafeClasses() {
-			return "[<Application,Lp/B>]";
+			return "[<Application,Lp/C>]";
 		}
 
 	}
