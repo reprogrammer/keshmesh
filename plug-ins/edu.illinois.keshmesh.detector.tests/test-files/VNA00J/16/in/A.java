@@ -35,6 +35,7 @@ class C {
 	void accessLocally() {
 		B b = new B();
 		b.counter = 1;
+		/* [VNA00J,02 */b.staticCounter = 1;/* ] */
 	}
 
 }
@@ -47,8 +48,10 @@ class B implements Runnable {
 
 	final int finalCounter = 0;
 
+	static int staticCounter = 0;
+
 	void increment() {
-		/* [VNA00J,02 */counter++;/* ] */
+		/* [VNA00J,03 */counter++;/* ] */
 	}
 
 	public void run() {
