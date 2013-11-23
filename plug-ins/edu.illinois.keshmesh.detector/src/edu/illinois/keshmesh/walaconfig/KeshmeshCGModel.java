@@ -29,8 +29,7 @@ public class KeshmeshCGModel extends WalaProjectCGModel {
 
 	@Override
 	protected Iterable<Entrypoint> getEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
-		new UnsupportedOperationException();
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.io.Writer;
 import java.util.Iterator;
 
 import org.eclipse.jdt.core.IJavaProject;
@@ -14,6 +15,7 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
+import com.ibm.wala.util.perf.Stopwatch;
 
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
@@ -21,6 +23,9 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.util.DisplayUtils;
+import edu.illinois.keshmesh.report.KeyValuePair;
+import edu.illinois.keshmesh.report.Reporter;
+import edu.illinois.keshmesh.report.WriterFactory;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 
 /**
@@ -31,30 +36,43 @@ import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
  */
 public class Main {
 
+	private static Stopwatch stopWatch = new Stopwatch();
+
 	private static boolean hasShownGraphs = false;
 
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
+		Writer writer = new WriterFactory().createWriter(javaProject.getProject().getName());
+		Reporter reporter = new Reporter(writer);
 		BugInstances bugInstances = new BugInstances();
-		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject);
+		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter);
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
-			BugInstances instancesOfCurrentBugPattern = bugPattern.createBugPatternDetector().performAnalysis(javaProject, basicAnalysisData);
+			BugPatternDetector bugPatternDetector = bugPattern.createBugPatternDetector();
+			stopWatch.start();
+			BugInstances instancesOfCurrentBugPattern = bugPatternDetector.performAnalysis(javaProject, basicAnalysisData);
+			stopWatch.stop();
+			reporter.report(new KeyValuePair("BUG_PATTERN_" + bugPattern.getName() + "_DETECTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.getElapsedMillis())));
 			bugInstances.addAll(instancesOfCurrentBugPattern);
 		}
+		reporter.close();
 		return bugInstances;
 	}
 
-	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject) throws WALAInitializationException {
+	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject, Reporter reporter) throws WALAInitializationException {
 		KeshmeshCGModel model;
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
 			model = new KeshmeshCGModel(javaProject, exclusionsFileName);
+			stopWatch.start();
 			model.buildGraph();
+			stopWatch.stop();
+			reporter.report(new KeyValuePair("CALL_GRAPH_CONSTRUCTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.getElapsedMillis())));
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
 		CallGraph callGraph = model.getGraph();
+		reporter.report(new KeyValuePair("NUMBER_OF_NODES_OF_CALL_GRAPH", String.valueOf(callGraph.getNumberOfNodes())));
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph basicHeapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
