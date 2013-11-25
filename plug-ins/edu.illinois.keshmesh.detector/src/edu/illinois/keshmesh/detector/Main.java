@@ -3,7 +3,6 @@
  */
 package edu.illinois.keshmesh.detector;
 
-import java.io.Writer;
 import java.util.Iterator;
 
 import org.eclipse.jdt.core.IJavaProject;
@@ -17,9 +16,7 @@ import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
 import com.ibm.wala.util.perf.Stopwatch;
 
-import edu.illinois.keshmesh.config.ConfigurationInputStreamFactory;
 import edu.illinois.keshmesh.config.ConfigurationOptions;
-import edu.illinois.keshmesh.config.ConfigurationReaderFactory;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -28,7 +25,6 @@ import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationExc
 import edu.illinois.keshmesh.detector.util.DisplayUtils;
 import edu.illinois.keshmesh.report.KeyValuePair;
 import edu.illinois.keshmesh.report.Reporter;
-import edu.illinois.keshmesh.report.WriterFactory;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 
 /**
@@ -43,15 +39,9 @@ public class Main {
 
 	private static boolean hasShownGraphs = false;
 
-	private static ConfigurationOptions readConfigurationOptions() {
-		return new ConfigurationReaderFactory(new ConfigurationInputStreamFactory()).create().read();
-	}
-
-	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
-		Writer writer = new WriterFactory().createWriter(javaProject.getProject().getName());
-		Reporter reporter = new Reporter(writer);
+	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject, Reporter reporter, ConfigurationOptions configurationOptions) throws WALAInitializationException {
 		BugInstances bugInstances = new BugInstances();
-		int objectSensitivityLevel = readConfigurationOptions().getObjectSensitivityLevel();
+		int objectSensitivityLevel = configurationOptions.getObjectSensitivityLevel();
 		reporter.report(new KeyValuePair("OBJECT_SENSITIVITY_LEVEL", String.valueOf(objectSensitivityLevel)));
 		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter, objectSensitivityLevel);
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();

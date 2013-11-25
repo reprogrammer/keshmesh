@@ -35,6 +35,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.matchers.IsCollectionContaining;
 
+import edu.illinois.keshmesh.config.AbsentConfigurationOptionsInputStreamFactory;
+import edu.illinois.keshmesh.config.ConfigurationOptions;
+import edu.illinois.keshmesh.config.ConfigurationOptionsReaderFactory;
 import edu.illinois.keshmesh.detector.IntermediateResults;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
@@ -44,6 +47,9 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.report.Reporter;
+import edu.illinois.keshmesh.report.ReporterFactory;
+import edu.illinois.keshmesh.report.StringWriterFactory;
 import edu.illinois.keshmesh.util.Logger;
 import edu.illinois.keshmesh.util.Modes;
 
@@ -54,15 +60,6 @@ import edu.illinois.keshmesh.util.Modes;
  * which contains the input file with that bug fixed
  * 
  */
-
-/**
- * 
- * For each detected bug in the test input file, a number is assigned. For each
- * bug number, in the output folder a sub folder with that number is created
- * which contains the input file with that bug fixed
- * 
- */
-
 @SuppressWarnings("restriction")
 public abstract class AbstractTestCase {
 
@@ -213,7 +210,9 @@ public abstract class AbstractTestCase {
 	private void findBugs() throws WALAInitializationException {
 		Modes.setInTestMode(true);
 		BugPatterns.enableBugPatterns(getBugPattern());
-		bugInstances = Main.initAndPerformAnalysis(javaProject);
+		Reporter reporter = new ReporterFactory().create(new StringWriterFactory());
+		ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new AbsentConfigurationOptionsInputStreamFactory()).create().read();
+		bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 		Logger.log(bugInstances.toString());
 	}
 

@@ -13,12 +13,18 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
+import edu.illinois.keshmesh.config.ConfigurationOptions;
+import edu.illinois.keshmesh.config.ConfigurationOptionsInputStreamFactory;
+import edu.illinois.keshmesh.config.ConfigurationOptionsReaderFactory;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.LCK02JFixInformation;
 import edu.illinois.keshmesh.detector.bugs.LCK03JFixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.report.FileWriterFactory;
+import edu.illinois.keshmesh.report.Reporter;
+import edu.illinois.keshmesh.report.ReporterFactory;
 import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -81,7 +87,9 @@ public class KeshmeshFindBugsDetector implements Detector {
 				IJavaProject javaProject = getProject(projectName);
 				Logger.log("The java project under analysis is " + javaProject.getElementName());
 				BugPatterns.enableAllBugPatterns();
-				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject);
+				Reporter reporter = new ReporterFactory().create(new FileWriterFactory(javaProject.getProject().getName()));
+				ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new ConfigurationOptionsInputStreamFactory()).create().read();
+				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
 					Logger.log(bugInstance.getBugPosition().getFullyQualifiedClassName());
 					SourceLineAnnotation sourceLineAnnotation = new SourceLineAnnotation(bugInstance.getBugPosition().getFullyQualifiedClassName(), bugInstance.getBugPosition().getSourcePath()

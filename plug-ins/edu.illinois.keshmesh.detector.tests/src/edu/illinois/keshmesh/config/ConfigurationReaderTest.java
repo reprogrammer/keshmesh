@@ -8,17 +8,17 @@ public class ConfigurationReaderTest {
 
 	@Test
 	public void testAbsentConfiguration() {
-		ConfigurationReader configurationReader = createConfigurationReader(new AbsentConfigurationInputStreamFactory());
+		ConfigurationOptionsReader configurationReader = createConfigurationReader(new AbsentConfigurationOptionsInputStreamFactory());
 		assertEquals(new ConfigurationOptions(2), configurationReader.read());
 	}
 
 	@Test
 	public void testMockConfiguration() {
-		ConfigurationReader configurationReader = createConfigurationReader(new MockConfigurationInputStreamFactory());
+		ConfigurationOptionsReader configurationReader = createConfigurationReader(new MockConfigurationInputStreamFactory());
 		assertEquals(new ConfigurationOptions(3), configurationReader.read());
 	}
 
-	private ConfigurationReader createConfigurationReader(ConfigurationInputStreamFactory configurationInputStreamFactory) {
-		return new ConfigurationReaderFactory(configurationInputStreamFactory).create();
+	private ConfigurationOptionsReader createConfigurationReader(ConfigurationOptionsInputStreamFactory configurationInputStreamFactory) {
+		return new ConfigurationOptionsReaderFactory(configurationInputStreamFactory).create();
 	}
 }

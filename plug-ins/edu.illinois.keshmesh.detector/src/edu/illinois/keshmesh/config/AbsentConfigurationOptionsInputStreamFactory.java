@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 import com.google.common.base.Optional;
 
-public class AbsentConfigurationInputStreamFactory extends ConfigurationInputStreamFactory {
+public class AbsentConfigurationOptionsInputStreamFactory extends ConfigurationOptionsInputStreamFactory {
 
 	public Optional<InputStream> createInputStream() {
 		return Optional.absent();

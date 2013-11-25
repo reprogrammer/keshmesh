@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-public class ConfigurationReader {
+public class ConfigurationOptionsReader {
 
 	private final Optional<InputStream> inputStream;
 
@@ -18,7 +18,7 @@ public class ConfigurationReader {
 
 	static final String OBJECT_SENSITIVITY_LEVEL_KEY = "object_sensitivity_level";
 
-	public ConfigurationReader(Optional<InputStream> inputStream) {
+	public ConfigurationOptionsReader(Optional<InputStream> inputStream) {
 		this.inputStream = inputStream;
 	}
 

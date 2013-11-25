@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 
 import edu.illinois.keshmesh.constants.Constants;
 
-public class ConfigurationInputStreamFactory {
+public class ConfigurationOptionsInputStreamFactory {
 
 	public Optional<InputStream> createInputStream() {
 		try {
