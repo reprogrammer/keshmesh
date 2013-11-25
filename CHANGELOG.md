@@ -1,5 +1,11 @@
 v1.0.0.201305071705
 ===================
+- Added a dependency on Guava (issue #53).
+- Made Keshmesh read configuration options from a file and report profiling
+  information to several files (issue #47).
+
+v1.0.0.201305071705
+===================
 - Made the VNA00-J detector consider accesses to final fields safe (issue #48).
 
 v1.0.0.201111231854
