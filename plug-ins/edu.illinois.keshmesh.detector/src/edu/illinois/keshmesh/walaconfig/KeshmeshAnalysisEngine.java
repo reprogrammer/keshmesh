@@ -49,8 +49,9 @@ public class KeshmeshAnalysisEngine {
 		return makeAnnotatedEntryPoints(classHierarchy);
 	}
 
-	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
-		ContextSelector contextSelector = new KObjectSensitiveContextSelector();
+	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache,
+			int objectSensitivityLevel) {
+		ContextSelector contextSelector = new KObjectSensitiveContextSelector(objectSensitivityLevel);
 		//		Util.addDefaultSelectors(analysisOptions, classHierarchy);
 		//		Util.addDefaultBypassLogic(analysisOptions, analysisScope, Util.class.getClassLoader(), classHierarchy);
 		//		return new KeshmeshCFABuilder(classHierarchy, analysisOptions, analysisCache, contextSelector, null);

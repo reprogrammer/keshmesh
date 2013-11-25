@@ -21,9 +21,9 @@ import com.ibm.wala.util.graph.InferGraphRoots;
 
 public class KeshmeshCGModel extends WalaProjectCGModel {
 
-	public KeshmeshCGModel(IJavaProject project, String exclusionsFile) throws IOException, CoreException {
+	public KeshmeshCGModel(IJavaProject project, String exclusionsFile, int objectSensitivityLevel) throws IOException, CoreException {
 		super(project, exclusionsFile);
-		engine = new EclipseProjectAnalysisEngine(project);
+		engine = new EclipseProjectAnalysisEngine(project, objectSensitivityLevel);
 		engine.setExclusionsFile(exclusionsFile);
 	}
 

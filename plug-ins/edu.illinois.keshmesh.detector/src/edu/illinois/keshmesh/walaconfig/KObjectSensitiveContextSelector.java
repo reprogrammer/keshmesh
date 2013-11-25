@@ -27,7 +27,11 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class KObjectSensitiveContextSelector implements ContextSelector {
 
-	private static final int K = 2;
+	private final int objectSensitivityLevel;
+
+	public KObjectSensitiveContextSelector(int objectSensitivityLevel) {
+		this.objectSensitivityLevel = objectSensitivityLevel;
+	}
 
 	public static final ContextKey RECEIVER_STRING = new ContextKey() {
 		@Override
@@ -55,7 +59,7 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 				receiverString = new ReceiverString(receiver);
 			} else {
 				ReceiverString callerReceiverString = (ReceiverString) ((ReceiverStringContext) caller.getContext()).get(RECEIVER_STRING);
-				receiverString = new ReceiverString(receiver, K, callerReceiverString);
+				receiverString = new ReceiverString(receiver, objectSensitivityLevel, callerReceiverString);
 			}
 			return new ReceiverStringContext(receiverString);
 		}

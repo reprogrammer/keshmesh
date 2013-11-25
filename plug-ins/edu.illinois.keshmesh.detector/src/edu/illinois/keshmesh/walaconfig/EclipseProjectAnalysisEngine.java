@@ -42,10 +42,13 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  */
 public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
-	protected final IJavaProject javaProject;
+	private final IJavaProject javaProject;
 
-	public EclipseProjectAnalysisEngine(IJavaProject javaProject) {
+	private final int objectSensitivityLevel;
+
+	public EclipseProjectAnalysisEngine(IJavaProject javaProject, int objectSensitivityLevel) {
 		this.javaProject = javaProject;
+		this.objectSensitivityLevel = objectSensitivityLevel;
 	}
 
 	@Override
@@ -93,7 +96,7 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 	@Override
 	protected CallGraphBuilder getCallGraphBuilder(IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache) {
 		addCustomBypassLogic(classHierarchy, analysisOptions);
-		return KeshmeshAnalysisEngine.getCallGraphBuilder(scope, classHierarchy, analysisOptions, analysisCache);
+		return KeshmeshAnalysisEngine.getCallGraphBuilder(scope, classHierarchy, analysisOptions, analysisCache, objectSensitivityLevel);
 	}
 
 	@Override

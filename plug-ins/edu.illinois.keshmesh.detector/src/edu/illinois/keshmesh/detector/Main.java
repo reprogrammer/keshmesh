@@ -17,6 +17,9 @@ import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
 import com.ibm.wala.util.perf.Stopwatch;
 
+import edu.illinois.keshmesh.config.ConfigurationInputStreamFactory;
+import edu.illinois.keshmesh.config.ConfigurationOptions;
+import edu.illinois.keshmesh.config.ConfigurationReaderFactory;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -40,11 +43,17 @@ public class Main {
 
 	private static boolean hasShownGraphs = false;
 
+	private static ConfigurationOptions readConfigurationOptions() {
+		return new ConfigurationReaderFactory(new ConfigurationInputStreamFactory()).create().read();
+	}
+
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject) throws WALAInitializationException {
 		Writer writer = new WriterFactory().createWriter(javaProject.getProject().getName());
 		Reporter reporter = new Reporter(writer);
 		BugInstances bugInstances = new BugInstances();
-		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter);
+		int objectSensitivityLevel = readConfigurationOptions().getObjectSensitivityLevel();
+		reporter.report(new KeyValuePair("OBJECT_SENSITIVITY_LEVEL", String.valueOf(objectSensitivityLevel)));
+		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter, objectSensitivityLevel);
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
@@ -54,16 +63,17 @@ public class Main {
 			stopWatch.stop();
 			reporter.report(new KeyValuePair("BUG_PATTERN_" + bugPattern.getName() + "_DETECTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.getElapsedMillis())));
 			bugInstances.addAll(instancesOfCurrentBugPattern);
+			reporter.report(new KeyValuePair("NUMBER_OF_INSTANCES_OF_BUG_PATTERN_" + bugPattern.getName(), String.valueOf(instancesOfCurrentBugPattern.size())));
 		}
 		reporter.close();
 		return bugInstances;
 	}
 
-	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject, Reporter reporter) throws WALAInitializationException {
+	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject, Reporter reporter, int objectSensitivityLevel) throws WALAInitializationException {
 		KeshmeshCGModel model;
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
-			model = new KeshmeshCGModel(javaProject, exclusionsFileName);
+			model = new KeshmeshCGModel(javaProject, exclusionsFileName, objectSensitivityLevel);
 			stopWatch.start();
 			model.buildGraph();
 			stopWatch.stop();

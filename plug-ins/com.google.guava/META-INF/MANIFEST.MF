@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: com.google.guava
 Bundle-SymbolicName: com.google.guava
 Bundle-Version: 1.0.0
-Bundle-ClassPath: guava-sources.jar
+Bundle-ClassPath: guava.jar
 Export-Package: com.google.common.annotations,
  com.google.common.base,
  com.google.common.cache,
