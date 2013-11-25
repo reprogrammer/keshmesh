@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.core.runtime,
  com.google.guava
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Export-Package: edu.illinois.keshmesh.detector,
+Export-Package: edu.illinois.keshmesh.config,
+ edu.illinois.keshmesh.detector,
  edu.illinois.keshmesh.detector.bugs,
  edu.illinois.keshmesh.detector.exception,
  edu.illinois.keshmesh.detector.util,
