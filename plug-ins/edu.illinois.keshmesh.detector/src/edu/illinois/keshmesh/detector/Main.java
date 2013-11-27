@@ -4,9 +4,11 @@
 package edu.illinois.keshmesh.detector;
 
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.google.common.base.Stopwatch;
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
@@ -14,7 +16,6 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
-import com.ibm.wala.util.perf.Stopwatch;
 
 import edu.illinois.keshmesh.config.ConfigurationOptions;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
@@ -35,8 +36,6 @@ import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
  */
 public class Main {
 
-	private static Stopwatch stopWatch = new Stopwatch();
-
 	private static boolean hasShownGraphs = false;
 
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject, Reporter reporter, ConfigurationOptions configurationOptions) throws WALAInitializationException {
@@ -48,10 +47,10 @@ public class Main {
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
 			BugPatternDetector bugPatternDetector = bugPattern.createBugPatternDetector();
-			stopWatch.start();
+			Stopwatch stopWatch = Stopwatch.createStarted();
 			BugInstances instancesOfCurrentBugPattern = bugPatternDetector.performAnalysis(javaProject, basicAnalysisData);
 			stopWatch.stop();
-			reporter.report(new KeyValuePair("BUG_PATTERN_" + bugPattern.getName() + "_DETECTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.getElapsedMillis())));
+			reporter.report(new KeyValuePair("BUG_PATTERN_" + bugPattern.getName() + "_DETECTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.elapsed(TimeUnit.MILLISECONDS))));
 			bugInstances.addAll(instancesOfCurrentBugPattern);
 			reporter.report(new KeyValuePair("NUMBER_OF_INSTANCES_OF_BUG_PATTERN_" + bugPattern.getName(), String.valueOf(instancesOfCurrentBugPattern.size())));
 		}
@@ -64,10 +63,10 @@ public class Main {
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
 			model = new KeshmeshCGModel(javaProject, exclusionsFileName, objectSensitivityLevel);
-			stopWatch.start();
+			Stopwatch stopWatch = Stopwatch.createStarted();
 			model.buildGraph();
 			stopWatch.stop();
-			reporter.report(new KeyValuePair("CALL_GRAPH_CONSTRUCTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.getElapsedMillis())));
+			reporter.report(new KeyValuePair("CALL_GRAPH_CONSTRUCTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.elapsed(TimeUnit.MILLISECONDS))));
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
