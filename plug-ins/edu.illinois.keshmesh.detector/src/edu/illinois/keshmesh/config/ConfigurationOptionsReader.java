@@ -28,16 +28,23 @@ public class ConfigurationOptionsReader {
 		return properties;
 	}
 
-	private Properties loadProperties(Optional<InputStream> inputStream) {
+	private Properties loadProperties(Optional<InputStream> optionalInputStream) {
 		Properties defaultProperties = createDefaultProperties();
-		if (!inputStream.isPresent()) {
+		if (!optionalInputStream.isPresent()) {
 			return defaultProperties;
 		}
+		InputStream inputStream = optionalInputStream.get();
 		Properties properties = new Properties(defaultProperties);
 		try {
-			properties.load(inputStream.get());
+			properties.load(inputStream);
 		} catch (IOException e) {
 			throw new RuntimeException();
+		} finally {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				throw new RuntimeException();
+			}
 		}
 		return properties;
 	}
