@@ -46,6 +46,8 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	private final int objectSensitivityLevel;
 
+	private int numberOfEntryPoints = -1;
+
 	public EclipseProjectAnalysisEngine(IJavaProject javaProject, int objectSensitivityLevel) {
 		this.javaProject = javaProject;
 		this.objectSensitivityLevel = objectSensitivityLevel;
@@ -101,7 +103,16 @@ public class EclipseProjectAnalysisEngine extends AbstractAnalysisEngine {
 
 	@Override
 	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope analysisScope, IClassHierarchy classHierarchy) {
-		return KeshmeshAnalysisEngine.makeDefaultEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
+		Set<Entrypoint> entryPoints = KeshmeshAnalysisEngine.findEntryPoints(classHierarchy);
+		numberOfEntryPoints = entryPoints.size();
+		return KeshmeshAnalysisEngine.toIterable(entryPoints);
+	}
+
+	public int getNumberOfEntryPoints() {
+		if (numberOfEntryPoints == -1) {
+			throw new RuntimeException("getNumberOfEntryPoints() should be called after makeDefaultEntrypoints().");
+		}
+		return numberOfEntryPoints;
 	}
 
 }

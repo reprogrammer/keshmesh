@@ -67,6 +67,7 @@ public class Main {
 			model.buildGraph();
 			stopWatch.stop();
 			reporter.report(new KeyValuePair("CALL_GRAPH_CONSTRUCTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.elapsed(TimeUnit.MILLISECONDS))));
+			reporter.report(new KeyValuePair("NUMBER_OF_ENTRY_POINTS", String.valueOf(model.getNumberOfEntryPoints())));
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}

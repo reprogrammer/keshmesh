@@ -3,8 +3,8 @@
  */
 package edu.illinois.keshmesh.walaconfig;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
@@ -41,7 +41,7 @@ public class KeshmeshAnalysisEngine {
 		//Iterable<Entrypoint> mainEntrypoints = Util.makeMainEntrypoints(analysisScope.getApplicationLoader(), classHierarchy);
 		//		return new FilteredIterable(mainEntrypoints);
 		//		return Util.makeMainEntrypoints(classLoaderReference, classHierarchy);
-		return makeAnnotatedEntryPoints(classHierarchy);
+		return toIterable(findEntryPoints(classHierarchy));
 	}
 
 	public static CallGraphBuilder getCallGraphBuilder(AnalysisScope analysisScope, IClassHierarchy classHierarchy, AnalysisOptions analysisOptions, AnalysisCache analysisCache,
@@ -55,7 +55,6 @@ public class KeshmeshAnalysisEngine {
 
 	public static SSAPropagationCallGraphBuilder makeZeroOneCFABuilder(AnalysisOptions options, AnalysisCache cache, IClassHierarchy cha, AnalysisScope scope, ContextSelector customSelector,
 			SSAContextInterpreter customInterpreter) {
-
 		if (options == null) {
 			throw new IllegalArgumentException("options is null");
 		}
@@ -65,8 +64,16 @@ public class KeshmeshAnalysisEngine {
 		return ZeroXCFABuilder.make(cha, options, cache, customSelector, customInterpreter, ZeroXInstanceKeys.ALLOCATIONS | ZeroXInstanceKeys.SMUSH_MANY | ZeroXInstanceKeys.SMUSH_THROWABLES);
 	}
 
-	public static Iterable<Entrypoint> makeAnnotatedEntryPoints(IClassHierarchy classHierarchy) {
-		final HashSet<Entrypoint> result = HashSetFactory.make();
+	public static Iterable<Entrypoint> toIterable(final Set<Entrypoint> entryPoints) {
+		return new Iterable<Entrypoint>() {
+			public Iterator<Entrypoint> iterator() {
+				return entryPoints.iterator();
+			}
+		};
+	}
+
+	public static Set<Entrypoint> findEntryPoints(IClassHierarchy classHierarchy) {
+		final Set<Entrypoint> result = HashSetFactory.make();
 		Iterator<IClass> classIterator = classHierarchy.iterator();
 		while (classIterator.hasNext()) {
 			IClass klass = classIterator.next();
@@ -91,11 +98,7 @@ public class KeshmeshAnalysisEngine {
 				}
 			}
 		}
-		return new Iterable<Entrypoint>() {
-			public Iterator<Entrypoint> iterator() {
-				return result.iterator();
-			}
-		};
+		return result;
 	}
 
 	private static boolean isEntryPointClass(TypeName typeName) {

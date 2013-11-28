@@ -45,4 +45,8 @@ public class KeshmeshCGModel extends WalaProjectCGModel {
 		return engine.getClassHierarchy();
 	}
 
+	public int getNumberOfEntryPoints() {
+		return ((EclipseProjectAnalysisEngine) engine).getNumberOfEntryPoints();
+	}
+
 }
