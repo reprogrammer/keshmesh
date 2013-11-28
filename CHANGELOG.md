@@ -1,3 +1,9 @@
+v1.0.0.201311271834
+===================
+- Closed the configuration file after reading it (issue #54).
+- Made sure the stopwatch is started properly (issue #55).
+- Reported the number of entry points (issue #57).
+
 v1.0.0.201305071705
 ===================
 - Added a dependency on Guava (issue #53).
