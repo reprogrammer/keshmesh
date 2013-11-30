@@ -3,6 +3,7 @@
  */
 package edu.illinois.keshmesh.walaconfig;
 
+import com.google.common.base.Joiner;
 import com.ibm.wala.ipa.callgraph.ContextItem;
 import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
 
@@ -37,12 +38,7 @@ public class ReceiverString implements ContextItem {
 
 	@Override
 	public String toString() {
-		StringBuffer str = new StringBuffer("[");
-		for (int i = 0; i < instances.length; i++) {
-			str.append(" :: ").append(instances[i].toString());
-		}
-		str.append(" ]");
-		return str.toString();
+		return "[" + Joiner.on(" :: ").join(instances) + "]";
 	}
 
 	@Override
