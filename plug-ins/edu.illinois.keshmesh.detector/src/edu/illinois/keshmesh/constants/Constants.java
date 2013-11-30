@@ -16,4 +16,6 @@ public class Constants {
 
 	public static final String PROFILING_RESULTS_FILENAME = "profiling-results.csv";
 
+	public static final String INFINITY = "INF";
+
 }
