@@ -1,3 +1,8 @@
+v1.0.0.201311291936
+===================
+- Dumped the call graph and heap graphs to files (issue #59).
+- Avoided the creation of the Keshmesh folder if it doesn't exist (issue #58).
+
 v1.0.0.201311271834
 ===================
 - Closed the configuration file after reading it (issue #54).
