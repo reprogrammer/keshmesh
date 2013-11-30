@@ -11,7 +11,6 @@ import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
  * @author Mohsen Vakilian
  * @author Stas Negara
  * 
- * 
  */
 public class ReceiverString implements ContextItem {
 
@@ -25,7 +24,7 @@ public class ReceiverString implements ContextItem {
 		int instancesLength = Math.min(max_length, base.getCurrentLength() + 1);
 		instances = new InstanceKey[instancesLength];
 		instances[0] = instanceKey;
-		System.arraycopy(base.instances, 0, instances, 1, Math.min(max_length - 1, base.getCurrentLength()));
+		System.arraycopy(base.instances, 0, instances, 1, instancesLength - 1);
 	}
 
 	private int getCurrentLength() {
@@ -40,7 +39,7 @@ public class ReceiverString implements ContextItem {
 	public String toString() {
 		StringBuffer str = new StringBuffer("[");
 		for (int i = 0; i < instances.length; i++) {
-			str.append(" ").append(instances[i].toString());
+			str.append(" :: ").append(instances[i].toString());
 		}
 		str.append(" ]");
 		return str.toString();
