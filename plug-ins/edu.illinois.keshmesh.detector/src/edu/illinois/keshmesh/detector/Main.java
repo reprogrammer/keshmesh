@@ -37,7 +37,6 @@ import edu.illinois.keshmesh.report.FileWriterFactory;
 import edu.illinois.keshmesh.report.KeyValuePair;
 import edu.illinois.keshmesh.report.Reporter;
 import edu.illinois.keshmesh.report.StringWriterFactory;
-import edu.illinois.keshmesh.util.Logger;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 
 /**
