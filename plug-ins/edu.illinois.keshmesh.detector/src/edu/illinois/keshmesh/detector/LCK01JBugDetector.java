@@ -41,20 +41,12 @@ public class LCK01JBugDetector extends BugPatternDetector {
 	}
 
 	@Override
-	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
-		this.javaProject = javaProject;
-		this.basicAnalysisData = basicAnalysisData;
-		Iterator<CGNode> cgNodesIter = this.basicAnalysisData.callGraph.iterator();
-		while (cgNodesIter.hasNext()) {
-			CGNode cgNode = cgNodesIter.next();
-			Logger.log("CGNode: " + cgNode.getIR());
-		}
+	public BugInstances doPerformAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		BugInstances bugInstances = new BugInstances();
 		Collection<InstructionInfo> unsafeSynchronizedBlocks = new HashSet<InstructionInfo>();
 		Iterator<CGNode> cgNodesIterator = basicAnalysisData.callGraph.iterator();
 		while (cgNodesIterator.hasNext()) {
 			final CGNode cgNode = cgNodesIterator.next();
-			Logger.log("IR is:" + cgNode.getIR());
 			IMethod method = cgNode.getMethod();
 			if (!isIgnoredClass(method.getDeclaringClass())) {
 				populateBugInstances(unsafeSynchronizedBlocks, cgNode, bugInstances);

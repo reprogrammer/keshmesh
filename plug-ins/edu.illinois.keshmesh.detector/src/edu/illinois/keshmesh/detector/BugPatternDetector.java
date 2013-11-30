@@ -27,14 +27,13 @@ public abstract class BugPatternDetector {
 
 	protected BasicAnalysisData basicAnalysisData = null;
 
-	/**
-	 * Should assign basicAnalysisData as its first action in order to make
-	 * other methods valid (e.g. getPointerForValueNumber(CGNode,int) )
-	 * 
-	 * @param basicAnalysisData
-	 * @return
-	 */
-	public abstract BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData);
+	public final BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
+		this.javaProject = javaProject;
+		this.basicAnalysisData = basicAnalysisData;
+		return doPerformAnalysis(javaProject, basicAnalysisData);
+	}
+
+	protected abstract BugInstances doPerformAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData);
 
 	/**
 	 * Tests can perform more rigorous checks if the detectors collect more fine

@@ -81,22 +81,11 @@ public class VNA00JBugDetector extends BugPatternDetector {
 	}
 
 	@Override
-	public BugInstances performAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
-		this.javaProject = javaProject;
-		this.basicAnalysisData = basicAnalysisData;
-		Iterator<CGNode> cgNodesIter = basicAnalysisData.callGraph.iterator();
+	public BugInstances doPerformAnalysis(IJavaProject javaProject, BasicAnalysisData basicAnalysisData) {
 		populateThreadSafeClassesLazily();
-
-		while (cgNodesIter.hasNext()) {
-			CGNode cgNode = cgNodesIter.next();
-			Logger.log("CGNode:" + cgNode);
-			Logger.log("IR: " + cgNode.getIR());
-		}
 		collectUnprotectedInstructionsThatMayAccessUnsafelySharedFields();
-
 		BitVectorSolver<CGNode> bitVectorSolver = propagateUnprotectedInstructionThatMayAccessUnsafelySharedFields();
 		Collection<InstructionInfo> instructionInfosToReport = getInstructionsToReport(bitVectorSolver);
-
 		return createBugInstances(instructionInfosToReport);
 	}
 

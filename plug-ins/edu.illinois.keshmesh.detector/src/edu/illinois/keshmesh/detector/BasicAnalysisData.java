@@ -18,9 +18,13 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 public class BasicAnalysisData {
 
 	public final IClassHierarchy classHierarchy;
+
 	public final CallGraph callGraph;
+
 	public final PointerAnalysis pointerAnalysis;
+
 	public final HeapModel heapModel;
+
 	public final BasicHeapGraph basicHeapGraph;
 
 	public BasicAnalysisData(IClassHierarchy classHierarchy, CallGraph callGraph, PointerAnalysis pointerAnalysis, HeapModel heapModel, BasicHeapGraph basicHeapGraph) {
