@@ -25,7 +25,7 @@ public class FileWriterFactory implements WriterFactory {
 			if (!keshmeshHome.exists()) {
 				return stringWriterFactory.create();
 			}
-			return new FileWriter(new File(Constants.KESHMESH_HOME + Constants.FILE_SEPARATOR + filename + ".csv"));
+			return new FileWriter(new File(Constants.KESHMESH_HOME + Constants.FILE_SEPARATOR + filename));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

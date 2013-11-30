@@ -12,4 +12,6 @@ public class Constants {
 
 	public static final String KESHMESH_CALL_GRAPH_FILE_NAME = "call-graph.md";
 
+	public static final String KESHMESH_HEAP_GRAPH_FILE_NAME = "heap-graph.md";
+
 }

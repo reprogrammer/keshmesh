@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
+import com.ibm.wala.analysis.pointers.HeapGraph;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -90,6 +91,7 @@ public class Main {
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph heapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
+		reportHeapGraph(heapGraph);
 		reporter.report(new KeyValuePair("NUMBER_OF_NODES_OF_HEAP_GRAPH", String.valueOf(heapGraph.getNumberOfNodes())));
 		if (!hasShownGraphs) {
 			try {
@@ -123,6 +125,32 @@ public class Main {
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	private static void reportHeapGraph(HeapGraph heapGraph) {
+		Preconditions.checkNotNull(heapGraph);
+		Writer writer = new FileWriterFactory(Constants.KESHMESH_HEAP_GRAPH_FILE_NAME, stringWriterFactory).create();
+		Preconditions.checkNotNull(heapGraph);
+		Iterator<Object> cgNodesIter = heapGraph.iterator();
+		try {
+			while (cgNodesIter.hasNext()) {
+				writer.write(cgNodesIter.next() + "\n");
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 

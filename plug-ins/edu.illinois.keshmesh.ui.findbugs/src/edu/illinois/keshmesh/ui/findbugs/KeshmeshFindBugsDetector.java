@@ -88,7 +88,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 				IJavaProject javaProject = getProject(projectName);
 				Logger.log("The java project under analysis is " + javaProject.getElementName());
 				BugPatterns.enableAllBugPatterns();
-				Reporter reporter = new ReporterFactory().create(new FileWriterFactory(javaProject.getProject().getName(), new StringWriterFactory()));
+				Reporter reporter = new ReporterFactory().create(new FileWriterFactory(javaProject.getProject().getName() + ".csv", new StringWriterFactory()));
 				ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new ConfigurationOptionsInputStreamFactory()).create().read();
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {
