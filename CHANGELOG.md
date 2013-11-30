@@ -1,3 +1,8 @@
+v1.0.0.201311301706
+===================
+- Allowed infinite object sensitivity (issue #62).
+- Renamed `*.md` to `*.txt` (issue #61).
+
 v1.0.0.201311291936
 ===================
 - Dumped the call graph and heap graphs to files (issue #59).
