@@ -10,4 +10,6 @@ public class Constants {
 
 	public static final String KESHMESH_PROPERTIES_FILE = KESHMESH_HOME + FILE_SEPARATOR + "keshmesh.properties";
 
+	public static final String KESHMESH_CALL_GRAPH_FILE_NAME = "call-graph.md";
+
 }

@@ -3,6 +3,8 @@
  */
 package edu.illinois.keshmesh.detector;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +24,7 @@ import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.io.FileProvider;
 
 import edu.illinois.keshmesh.config.ConfigurationOptions;
+import edu.illinois.keshmesh.constants.Constants;
 import edu.illinois.keshmesh.detector.bugs.BugInstances;
 import edu.illinois.keshmesh.detector.bugs.BugPattern;
 import edu.illinois.keshmesh.detector.bugs.BugPatterns;
@@ -29,8 +32,10 @@ import edu.illinois.keshmesh.detector.exception.Exceptions;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
 import edu.illinois.keshmesh.detector.util.AnalysisUtils;
 import edu.illinois.keshmesh.detector.util.DisplayUtils;
+import edu.illinois.keshmesh.report.FileWriterFactory;
 import edu.illinois.keshmesh.report.KeyValuePair;
 import edu.illinois.keshmesh.report.Reporter;
+import edu.illinois.keshmesh.report.StringWriterFactory;
 import edu.illinois.keshmesh.util.Logger;
 import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 
@@ -43,6 +48,8 @@ import edu.illinois.keshmesh.walaconfig.KeshmeshCGModel;
 public class Main {
 
 	private static boolean hasShownGraphs = false;
+
+	private final static StringWriterFactory stringWriterFactory = new StringWriterFactory();
 
 	public static BugInstances initAndPerformAnalysis(IJavaProject javaProject, Reporter reporter, ConfigurationOptions configurationOptions) throws WALAInitializationException {
 		BugInstances bugInstances = new BugInstances();
@@ -100,17 +107,22 @@ public class Main {
 
 	private static void reportCallGraph(CallGraph callGraph) {
 		Preconditions.checkNotNull(callGraph);
+		Writer writer = new FileWriterFactory(Constants.KESHMESH_CALL_GRAPH_FILE_NAME, stringWriterFactory).create();
 		Iterator<CGNode> cgNodesIter = callGraph.iterator();
-		while (cgNodesIter.hasNext()) {
-			CGNode cgNode = cgNodesIter.next();
-			IMethod method = cgNode.getMethod();
-			if (AnalysisUtils.isJDKClass(method.getDeclaringClass()))
-				continue;
-			Logger.log("**CGNode:** " + cgNode);
-			IR ir = cgNode.getIR();
-			if (ir != null) {
-				Logger.log("**IR:** " + ir);
+		try {
+			while (cgNodesIter.hasNext()) {
+				CGNode cgNode = cgNodesIter.next();
+				IMethod method = cgNode.getMethod();
+				if (AnalysisUtils.isJDKClass(method.getDeclaringClass()))
+					continue;
+				writer.write("**CGNode:** " + cgNode + "\n");
+				IR ir = cgNode.getIR();
+				if (ir != null) {
+					writer.write("**IR:** " + ir + "\n");
+				}
 			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
