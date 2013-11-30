@@ -14,4 +14,6 @@ public class Constants {
 
 	public static final String KESHMESH_HEAP_GRAPH_FILE_NAME = "heap-graph.md";
 
+	public static final String PROFILING_RESULTS_FILENAME = "profiling-results.csv";
+
 }

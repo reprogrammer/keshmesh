@@ -15,6 +15,7 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: edu.illinois.keshmesh.config,
+ edu.illinois.keshmesh.constants,
  edu.illinois.keshmesh.detector,
  edu.illinois.keshmesh.detector.bugs,
  edu.illinois.keshmesh.detector.exception,

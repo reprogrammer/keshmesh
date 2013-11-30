@@ -38,6 +38,7 @@ import org.junit.internal.matchers.IsCollectionContaining;
 import edu.illinois.keshmesh.config.AbsentConfigurationOptionsInputStreamFactory;
 import edu.illinois.keshmesh.config.ConfigurationOptions;
 import edu.illinois.keshmesh.config.ConfigurationOptionsReaderFactory;
+import edu.illinois.keshmesh.constants.Constants;
 import edu.illinois.keshmesh.detector.IntermediateResults;
 import edu.illinois.keshmesh.detector.Main;
 import edu.illinois.keshmesh.detector.bugs.BugInstance;
@@ -47,6 +48,7 @@ import edu.illinois.keshmesh.detector.bugs.BugPatterns;
 import edu.illinois.keshmesh.detector.bugs.CodePosition;
 import edu.illinois.keshmesh.detector.bugs.FixInformation;
 import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationException;
+import edu.illinois.keshmesh.report.FileWriterFactory;
 import edu.illinois.keshmesh.report.Reporter;
 import edu.illinois.keshmesh.report.ReporterFactory;
 import edu.illinois.keshmesh.report.StringWriterFactory;
@@ -210,7 +212,7 @@ public abstract class AbstractTestCase {
 	private void findBugs() throws WALAInitializationException {
 		Modes.setInTestMode(true);
 		BugPatterns.enableBugPatterns(getBugPattern());
-		Reporter reporter = new ReporterFactory().create(new StringWriterFactory());
+		Reporter reporter = new ReporterFactory().create(new FileWriterFactory(Constants.PROFILING_RESULTS_FILENAME, new StringWriterFactory()));
 		ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new AbsentConfigurationOptionsInputStreamFactory()).create().read();
 		bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 		Logger.log(bugInstances.toString());
