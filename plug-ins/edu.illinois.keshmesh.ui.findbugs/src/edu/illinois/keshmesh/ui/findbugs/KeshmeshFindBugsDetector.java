@@ -25,6 +25,7 @@ import edu.illinois.keshmesh.detector.exception.Exceptions.WALAInitializationExc
 import edu.illinois.keshmesh.report.FileWriterFactory;
 import edu.illinois.keshmesh.report.Reporter;
 import edu.illinois.keshmesh.report.ReporterFactory;
+import edu.illinois.keshmesh.report.StringWriterFactory;
 import edu.illinois.keshmesh.util.Logger;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -87,7 +88,7 @@ public class KeshmeshFindBugsDetector implements Detector {
 				IJavaProject javaProject = getProject(projectName);
 				Logger.log("The java project under analysis is " + javaProject.getElementName());
 				BugPatterns.enableAllBugPatterns();
-				Reporter reporter = new ReporterFactory().create(new FileWriterFactory(javaProject.getProject().getName()));
+				Reporter reporter = new ReporterFactory().create(new FileWriterFactory(javaProject.getProject().getName(), new StringWriterFactory()));
 				ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new ConfigurationOptionsInputStreamFactory()).create().read();
 				BugInstances bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 				for (edu.illinois.keshmesh.detector.bugs.BugInstance bugInstance : bugInstances) {

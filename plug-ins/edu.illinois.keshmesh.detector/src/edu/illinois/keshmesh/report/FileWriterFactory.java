@@ -11,8 +11,11 @@ public class FileWriterFactory implements WriterFactory {
 
 	private final String filename;
 
-	public FileWriterFactory(String filename) {
+	private final StringWriterFactory stringWriterFactory;
+
+	public FileWriterFactory(String filename, StringWriterFactory stringWriterFactory) {
 		this.filename = filename;
+		this.stringWriterFactory = stringWriterFactory;
 	}
 
 	@Override
@@ -20,7 +23,7 @@ public class FileWriterFactory implements WriterFactory {
 		try {
 			File keshmeshHome = new File(Constants.KESHMESH_HOME);
 			if (!keshmeshHome.exists()) {
-				keshmeshHome.mkdir();
+				return stringWriterFactory.create();
 			}
 			return new FileWriter(new File(Constants.KESHMESH_HOME + Constants.FILE_SEPARATOR + filename + ".csv"));
 		} catch (IOException e) {
