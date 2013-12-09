@@ -43,26 +43,34 @@ public class KObjectSensitiveContextSelector implements ContextSelector {
 	@Override
 	public Context getCalleeTarget(CGNode caller, CallSiteReference site, IMethod callee, InstanceKey[] actualParameters) {
 		if (actualParameters == null || actualParameters.length == 0 || actualParameters[0] == null) {
-			//Provide a distinguishing context even when the receiver is null (e.g. in case of an invocation of a static method)
+			// Provide a distinguishing context even when the receiver is null (e.g. in case of an invocation of a static method)
 			return caller.getContext();
 		}
-
 		InstanceKey receiver = actualParameters[0];
-
-		if (AnalysisUtils.isLibraryClass(callee.getDeclaringClass()) || (AnalysisUtils.isJDKClass(callee.getDeclaringClass()) && !AnalysisUtils.isObjectGetClass(callee))) {
-			//Note: new Random() and similar statements cause an infinite pointer analysis for contexts like CallerSiteContext(caller, site)
-			PointType pointType = new PointType(receiver.getConcreteType());
-			return new JavaTypeContext(pointType);
+		if (AnalysisUtils.isObjectGetClass(callee)) {
+			return createReceiverContext(receiver, caller.getContext());
+		} else if (AnalysisUtils.isLibraryClass(callee.getDeclaringClass()) || AnalysisUtils.isJDKClass(callee.getDeclaringClass())) {
+			return createTypeContext(receiver);
+		} else if (objectSensitivityLevel == 0) {
+			return createTypeContext(receiver);
 		} else {
-			ReceiverString receiverString;
-			if (!(caller.getContext() instanceof ReceiverStringContext)) {
-				receiverString = new ReceiverString(receiver);
-			} else {
-				ReceiverString callerReceiverString = (ReceiverString) ((ReceiverStringContext) caller.getContext()).get(RECEIVER_STRING);
-				receiverString = new ReceiverString(receiver, objectSensitivityLevel, callerReceiverString);
-			}
-			return new ReceiverStringContext(receiverString);
+			return createReceiverContext(receiver, caller.getContext());
 		}
+	}
+
+	private Context createReceiverContext(InstanceKey receiver, Context callerContext) {
+		ReceiverString receiverString;
+		if (!(callerContext instanceof ReceiverStringContext)) {
+			receiverString = new ReceiverString(receiver);
+		} else {
+			ReceiverString callerReceiverString = (ReceiverString) ((ReceiverStringContext) callerContext).get(RECEIVER_STRING);
+			receiverString = new ReceiverString(receiver, objectSensitivityLevel, callerReceiverString);
+		}
+		return new ReceiverStringContext(receiverString);
+	}
+
+	private Context createTypeContext(InstanceKey receiver) {
+		return new JavaTypeContext(new PointType(receiver.getConcreteType()));
 	}
 
 	private static final IntSet receiver = IntSetUtil.make(new int[] { 0 });
