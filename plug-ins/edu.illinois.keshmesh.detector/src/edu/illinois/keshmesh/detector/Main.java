@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Iterables;
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.analysis.pointers.HeapGraph;
 import com.ibm.wala.classLoader.IMethod;
@@ -86,7 +88,7 @@ public class Main {
 			throw new Exceptions.WALAInitializationException(e);
 		}
 		CallGraph callGraph = model.getGraph();
-		reporter.report(new KeyValuePair("NUMBER_OF_NODES_OF_CALL_GRAPH", String.valueOf(callGraph.getNumberOfNodes())));
+		reportCallGraphStatistics(reporter, callGraph);
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph heapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
@@ -104,6 +106,31 @@ public class Main {
 		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		reporter.report(new KeyValuePair("NUMBER_OF_CLASSES", String.valueOf(classHierarchy.getNumberOfClasses())));
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, heapGraph);
+	}
+
+	private static void reportCallGraphStatistics(Reporter reporter, CallGraph callGraph) {
+		reporter.report(new KeyValuePair("NUMBER_OF_NODES_OF_CALL_GRAPH", String.valueOf(callGraph.getNumberOfNodes())));
+		Iterable<CGNode> primordialCGNodes = Iterables.filter(callGraph, new Predicate<CGNode>() {
+			@Override
+			public boolean apply(CGNode cgNode) {
+				return AnalysisUtils.isJDKClass(cgNode.getMethod().getDeclaringClass());
+			}
+		});
+		reporter.report(new KeyValuePair("NUMBER_OF_PRIMORDIAL_NODES_OF_CALL_GRAPH", String.valueOf(Iterables.size(primordialCGNodes))));
+		Iterable<CGNode> extensionCGNodes = Iterables.filter(callGraph, new Predicate<CGNode>() {
+			@Override
+			public boolean apply(CGNode cgNode) {
+				return AnalysisUtils.isLibraryClass(cgNode.getMethod().getDeclaringClass());
+			}
+		});
+		reporter.report(new KeyValuePair("NUMBER_OF_EXTENSION_NODES_OF_CALL_GRAPH", String.valueOf(Iterables.size(extensionCGNodes))));
+		Iterable<CGNode> applicationCGNodes = Iterables.filter(callGraph, new Predicate<CGNode>() {
+			@Override
+			public boolean apply(CGNode cgNode) {
+				return AnalysisUtils.isApplicationClass(cgNode.getMethod().getDeclaringClass());
+			}
+		});
+		reporter.report(new KeyValuePair("NUMBER_OF_APPLICATION_NODES_OF_CALL_GRAPH", String.valueOf(Iterables.size(applicationCGNodes))));
 	}
 
 	private static void reportCallGraph(CallGraph callGraph) {

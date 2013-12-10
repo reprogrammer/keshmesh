@@ -44,6 +44,8 @@ import edu.illinois.keshmesh.detector.bugs.CodePosition;
  */
 public class AnalysisUtils {
 
+	public static final String APPLICATION_CLASSLOADER_NAME = "Application"; //$NON-NLS-1$
+
 	public static final String EXTENSION_CLASSLOADER_NAME = "Extension"; //$NON-NLS-1$
 
 	public static final String PRIMORDIAL_CLASSLOADER_NAME = "Primordial"; //$NON-NLS-1$
@@ -139,11 +141,19 @@ public class AnalysisUtils {
 	}
 
 	private static boolean isExtension(Atom classLoaderName) {
-		return classLoaderName.toString().equals("Extension");
+		return classLoaderName.toString().equals(EXTENSION_CLASSLOADER_NAME);
 	}
 
 	private static boolean isPrimordial(Atom classLoaderName) {
 		return classLoaderName.toString().equals(PRIMORDIAL_CLASSLOADER_NAME);
+	}
+
+	private static boolean isApplication(Atom classLoaderName) {
+		return classLoaderName.toString().equals(APPLICATION_CLASSLOADER_NAME);
+	}
+
+	public static boolean isApplicationClass(IClass klass) {
+		return isApplication(klass.getClassLoader().getName());
 	}
 
 	public static boolean isLibraryClass(IClass klass) {
