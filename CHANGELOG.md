@@ -1,3 +1,11 @@
+v1.0.0.201312101057
+===================
+- Reported the number of CGNodes per class loader (issue #66).
+
+v1.0.0.201312091449
+===================
+- Added the support for a light-weight type-based context sensitivity (issue #64).
+
 v1.0.0.201311301706
 ===================
 - Allowed infinite object sensitivity (issue #62).
