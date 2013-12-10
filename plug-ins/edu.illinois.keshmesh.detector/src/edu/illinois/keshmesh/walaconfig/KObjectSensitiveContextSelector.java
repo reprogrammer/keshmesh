@@ -23,7 +23,6 @@ import edu.illinois.keshmesh.detector.util.AnalysisUtils;
  * @author Mohsen Vakilian
  * @author Stas Negara
  * 
- * 
  */
 public class KObjectSensitiveContextSelector implements ContextSelector {
 

@@ -12,18 +12,14 @@ import edu.illinois.keshmesh.annotations.EntryPoint;
  */
 public class A {
 
-	static D f;
-
 	@EntryPoint
 	public static void main(String[] args) {
 		B b1 = new B();
 		synchronized (new Object()) {
-			f = new ThreadSafeD();
-			b1.setD(f);
+			b1.setD(new ThreadSafeD());
 		}
 		B b2 = new B();
-		D d = new D();
-		b2.setD(d);
+		b2.setD(new D());
 
 		// If the context sensitiviy is not at least 2 object context sensitive,
 		// the detector will produce a false positive by reporting the following statement. 
@@ -53,6 +49,7 @@ class C {
 }
 
 class D {
+
 	int value;
 
 }
