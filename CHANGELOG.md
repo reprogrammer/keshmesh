@@ -1,3 +1,7 @@
+v1.0.0.201312111715
+===================
+- Fixed the compilation problem in `KeshmeshFindBugsDetector` (issue #73).
+
 v1.0.0.201312111624
 ===================
 - Fixed the reporting of bug patterns inside inner classes (issue #41).
