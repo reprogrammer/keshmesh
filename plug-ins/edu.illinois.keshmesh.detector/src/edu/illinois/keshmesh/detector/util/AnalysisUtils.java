@@ -122,7 +122,7 @@ public class AnalysisUtils {
 	 * class name as reported by WALA and returns the name of the innermost
 	 * enclosing non-anonymous class of it. See issue #5 for more details.
 	 * 
-	 * @param walaClassName
+	 * @param typeName
 	 * @return
 	 */
 	public static String getEnclosingNonanonymousClassName(TypeName typeName) {
@@ -134,7 +134,7 @@ public class AnalysisUtils {
 		}
 		String className = typeName.getClassName().toString();
 		int indexOfDollarSign = className.indexOf('$');
-		if (indexOfDollarSign != -1 && Character.isDigit(className.charAt(indexOfDollarSign + 1))) {
+		if (indexOfDollarSign != -1) {
 			className = className.substring(0, indexOfDollarSign);
 		}
 		return packageName + "." + className;

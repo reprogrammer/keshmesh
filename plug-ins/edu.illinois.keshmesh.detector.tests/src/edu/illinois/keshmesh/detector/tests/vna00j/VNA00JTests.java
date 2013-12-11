@@ -4,7 +4,6 @@
 package edu.illinois.keshmesh.detector.tests.vna00j;
 
 import org.junit.Before;
-import org.junit.Ignore;
 
 /**
  * 
@@ -159,7 +158,6 @@ public class VNA00JTests {
 
 	}
 
-	@Ignore("issue #40")
 	public static class VNA00JTest11 extends VNA00JTest {
 
 		@Before
