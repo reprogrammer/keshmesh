@@ -8,7 +8,9 @@ public class ConfigurationOptionsFactory {
 
 	ConfigurationOptions create(Map<String, String> options) {
 		String objectSensitivityLevelString = options.get(ConfigurationOptionsReader.OBJECT_SENSITIVITY_LEVEL_KEY);
-		return new ConfigurationOptions(toObjectSensitivityLevel(objectSensitivityLevelString));
+		String dumpCallGraphString = options.get(ConfigurationOptionsReader.DUMP_CALL_GRAPH_KEY);
+		String dumpHeapGraphString = options.get(ConfigurationOptionsReader.DUMP_HEAP_GRAPH_KEY);
+		return new ConfigurationOptions(toObjectSensitivityLevel(objectSensitivityLevelString), Boolean.valueOf(dumpCallGraphString), Boolean.valueOf(dumpHeapGraphString));
 	}
 
 	private int toObjectSensitivityLevel(String objectSensitivityLevelString) {

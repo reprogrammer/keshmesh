@@ -14,9 +14,17 @@ public class ConfigurationOptionsReader {
 
 	private final ConfigurationOptionsFactory configurationOptionsFactory = new ConfigurationOptionsFactory();
 
-	private static final String OBJECT_SENSITIVITY_LEVEL_DEFAULT_VALUE = "2";
-
 	static final String OBJECT_SENSITIVITY_LEVEL_KEY = "object_sensitivity_level";
+
+	private static final String OBJECT_SENSITIVITY_LEVEL_DEFAULT_VALUE = "2";
+	
+	static final String DUMP_CALL_GRAPH_KEY = "dump_call_graph";
+	
+	private static final String DUMP_CALL_GRAPH_DEFAULT_VALUE = "true";
+
+	static final String DUMP_HEAP_GRAPH_KEY = "dump_heap_graph";
+	
+	private static final String DUMP_HEAP_GRAPH_DEFAULT_VALUE = "true";
 
 	public ConfigurationOptionsReader(Optional<InputStream> inputStream) {
 		this.inputStream = inputStream;
@@ -25,6 +33,8 @@ public class ConfigurationOptionsReader {
 	private Properties createDefaultProperties() {
 		Properties properties = new Properties();
 		properties.setProperty(OBJECT_SENSITIVITY_LEVEL_KEY, OBJECT_SENSITIVITY_LEVEL_DEFAULT_VALUE);
+		properties.setProperty(DUMP_CALL_GRAPH_KEY, DUMP_CALL_GRAPH_DEFAULT_VALUE);
+		properties.setProperty(DUMP_HEAP_GRAPH_KEY, DUMP_HEAP_GRAPH_DEFAULT_VALUE);
 		return properties;
 	}
 

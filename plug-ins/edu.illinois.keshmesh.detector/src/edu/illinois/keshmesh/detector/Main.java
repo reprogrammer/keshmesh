@@ -57,8 +57,10 @@ public class Main {
 		BugInstances bugInstances = new BugInstances();
 		int objectSensitivityLevel = configurationOptions.getObjectSensitivityLevel();
 		reporter.report(new KeyValuePair("OBJECT_SENSITIVITY_LEVEL", String.valueOf(objectSensitivityLevel)));
-		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter, objectSensitivityLevel);
-		reportCallGraph(basicAnalysisData.callGraph);
+		BasicAnalysisData basicAnalysisData = initBytecodeAnalysis(javaProject, reporter, configurationOptions);
+		if (configurationOptions.shouldDumpCallGraph()) {
+			dumpCallGraph(basicAnalysisData.callGraph);
+		}
 		Iterator<BugPattern> bugPatternsIterator = BugPatterns.iterator();
 		while (bugPatternsIterator.hasNext()) {
 			BugPattern bugPattern = bugPatternsIterator.next();
@@ -74,11 +76,11 @@ public class Main {
 		return bugInstances;
 	}
 
-	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject, Reporter reporter, int objectSensitivityLevel) throws WALAInitializationException {
+	private static BasicAnalysisData initBytecodeAnalysis(IJavaProject javaProject, Reporter reporter, ConfigurationOptions configurationOptions) throws WALAInitializationException {
 		KeshmeshCGModel model;
 		try {
 			String exclusionsFileName = FileProvider.getFileFromPlugin(Activator.getDefault(), "EclipseDefaultExclusions.txt").getAbsolutePath();
-			model = new KeshmeshCGModel(javaProject, exclusionsFileName, objectSensitivityLevel);
+			model = new KeshmeshCGModel(javaProject, exclusionsFileName, configurationOptions.getObjectSensitivityLevel());
 			Stopwatch stopWatch = Stopwatch.createStarted();
 			model.buildGraph();
 			stopWatch.stop();
@@ -92,7 +94,9 @@ public class Main {
 		PointerAnalysis pointerAnalysis = model.getPointerAnalysis();
 		HeapModel heapModel = pointerAnalysis.getHeapModel();
 		BasicHeapGraph heapGraph = new BasicHeapGraph(pointerAnalysis, callGraph);
-		reportHeapGraph(heapGraph);
+		if (configurationOptions.shouldDumpHeapGraph()) {
+			dumpHeapGraph(heapGraph);
+		}
 		reporter.report(new KeyValuePair("NUMBER_OF_NODES_OF_HEAP_GRAPH", String.valueOf(heapGraph.getNumberOfNodes())));
 		if (!hasShownGraphs) {
 			try {
@@ -133,7 +137,7 @@ public class Main {
 		reporter.report(new KeyValuePair("NUMBER_OF_APPLICATION_NODES_OF_CALL_GRAPH", String.valueOf(Iterables.size(applicationCGNodes))));
 	}
 
-	private static void reportCallGraph(CallGraph callGraph) {
+	private static void dumpCallGraph(CallGraph callGraph) {
 		Preconditions.checkNotNull(callGraph);
 		Writer writer = new FileWriterFactory(Constants.KESHMESH_CALL_GRAPH_FILE_NAME, stringWriterFactory).create();
 		Iterator<CGNode> cgNodesIter = callGraph.iterator();
@@ -160,7 +164,7 @@ public class Main {
 		}
 	}
 
-	private static void reportHeapGraph(HeapGraph heapGraph) {
+	private static void dumpHeapGraph(HeapGraph heapGraph) {
 		Preconditions.checkNotNull(heapGraph);
 		Writer writer = new FileWriterFactory(Constants.KESHMESH_HEAP_GRAPH_FILE_NAME, stringWriterFactory).create();
 		Preconditions.checkNotNull(heapGraph);

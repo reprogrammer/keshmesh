@@ -10,6 +10,7 @@ public class MockConfigurationInputStreamFactory extends ConfigurationOptionsInp
 
 	public Optional<InputStream> createInputStream() {
 		String content = ConfigurationOptionsReader.OBJECT_SENSITIVITY_LEVEL_KEY + "=3";
+		content += "\n" + ConfigurationOptionsReader.DUMP_CALL_GRAPH_KEY + "=false";
 		InputStream is = new ByteArrayInputStream(content.getBytes(Charsets.UTF_8));
 		return Optional.of(is);
 	}
