@@ -199,7 +199,7 @@ public class AnalysisUtils {
 				IType enclosingType = javaProject.findType(enclosingClassName, new NullProgressMonitor());
 
 				//FIXME: The following check is a workaround for issue #41.
-				if (enclosingType == null) {
+				if (enclosingType == null || enclosingType.getCompilationUnit() == null) {
 					String message = "Position not found. Could not find the type corresponding to %s in the Java project.";
 					System.err.println(String.format(message, enclosingClassName));
 					throw new RuntimeException(message);

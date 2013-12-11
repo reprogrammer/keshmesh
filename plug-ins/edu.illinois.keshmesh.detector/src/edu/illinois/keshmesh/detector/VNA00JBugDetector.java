@@ -477,7 +477,7 @@ public class VNA00JBugDetector extends BugPatternDetector {
 				try {
 					bugInstances.add(new BugInstance(BugPatterns.VNA00J, instructionInfo.getPosition(), new VNA00JFixInformation()));
 				} catch (RuntimeException e) {
-					if (!e.getMessage().startsWith("Position not found.")) {
+					if (e.getMessage() == null || !e.getMessage().startsWith("Position not found.")) {
 						throw e;
 					}
 				}
