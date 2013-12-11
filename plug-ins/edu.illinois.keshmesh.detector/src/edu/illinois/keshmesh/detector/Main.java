@@ -6,15 +6,18 @@ package edu.illinois.keshmesh.detector;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.ibm.wala.analysis.pointers.BasicHeapGraph;
 import com.ibm.wala.analysis.pointers.HeapGraph;
 import com.ibm.wala.classLoader.IMethod;
@@ -116,13 +119,14 @@ public class Main {
 	}
 
 	private static void reportEntryPointStatistics(Reporter reporter, Iterable<Entrypoint> entryPoints) {
-		reporter.report(new KeyValuePair("NUMBER_OF_ENTRY_POINTS", String.valueOf(entryPoints)));
+		reporter.report(new KeyValuePair("NUMBER_OF_ENTRY_POINTS", String.valueOf(Iterables.size(entryPoints))));
 	}
 
 	private static void dumpEntryPoints(Iterable<Entrypoint> entryPoints) {
 		Writer writer = new FileWriterFactory(Constants.KESHMESH_ENTRY_POINTS_FILE_NAME, stringWriterFactory).create();
+		List<Entrypoint> sortedEntryPoints = sortedCopy(entryPoints);
 		try {
-			writer.write(Joiner.on(Constants.LINE_SEPARATOR).join(entryPoints));
+			writer.write(Joiner.on(Constants.LINE_SEPARATOR).join(sortedEntryPoints));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -132,6 +136,16 @@ public class Main {
 				throw new RuntimeException(e);
 			}
 		}
+	}
+
+	private static List<Entrypoint> sortedCopy(Iterable<Entrypoint> entryPoints) {
+		Ordering<Entrypoint> ordering = Ordering.natural().onResultOf(new Function<Entrypoint, String>() {
+			@Override
+			public String apply(Entrypoint entryPoint) {
+				return entryPoint.toString();
+			}
+		});
+		return ordering.sortedCopy(entryPoints);
 	}
 
 	private static void reportCallGraphStatistics(Reporter reporter, CallGraph callGraph) {
