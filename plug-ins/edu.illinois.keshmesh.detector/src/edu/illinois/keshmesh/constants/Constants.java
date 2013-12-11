@@ -3,6 +3,8 @@ package edu.illinois.keshmesh.constants;
 import java.io.File;
 
 public class Constants {
+	
+	public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	public static final String FILE_SEPARATOR = File.separator;
 
@@ -13,6 +15,8 @@ public class Constants {
 	public static final String KESHMESH_CALL_GRAPH_FILE_NAME = "call-graph.txt";
 
 	public static final String KESHMESH_HEAP_GRAPH_FILE_NAME = "heap-graph.txt";
+
+	public static final String KESHMESH_ENTRY_POINTS_FILE_NAME = "entry-points.txt";
 
 	public static final String PROFILING_RESULTS_FILENAME = "profiling-results.csv";
 

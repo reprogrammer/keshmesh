@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
@@ -19,6 +20,7 @@ import com.ibm.wala.analysis.pointers.HeapGraph;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
+import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.propagation.HeapModel;
 import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
@@ -85,7 +87,8 @@ public class Main {
 			model.buildGraph();
 			stopWatch.stop();
 			reporter.report(new KeyValuePair("CALL_GRAPH_CONSTRUCTION_TIME_IN_MILLISECONDS", String.valueOf(stopWatch.elapsed(TimeUnit.MILLISECONDS))));
-			reporter.report(new KeyValuePair("NUMBER_OF_ENTRY_POINTS", String.valueOf(model.getNumberOfEntryPoints())));
+			reportEntryPointStatistics(reporter, model.getEntryPoints());
+			dumpEntryPoints(model.getEntryPoints());
 		} catch (Exception e) {
 			throw new Exceptions.WALAInitializationException(e);
 		}
@@ -110,6 +113,25 @@ public class Main {
 		IClassHierarchy classHierarchy = model.getClassHierarchy();
 		reporter.report(new KeyValuePair("NUMBER_OF_CLASSES", String.valueOf(classHierarchy.getNumberOfClasses())));
 		return new BasicAnalysisData(classHierarchy, callGraph, pointerAnalysis, heapModel, heapGraph);
+	}
+
+	private static void reportEntryPointStatistics(Reporter reporter, Iterable<Entrypoint> entryPoints) {
+		reporter.report(new KeyValuePair("NUMBER_OF_ENTRY_POINTS", String.valueOf(entryPoints)));
+	}
+
+	private static void dumpEntryPoints(Iterable<Entrypoint> entryPoints) {
+		Writer writer = new FileWriterFactory(Constants.KESHMESH_ENTRY_POINTS_FILE_NAME, stringWriterFactory).create();
+		try {
+			writer.write(Joiner.on(Constants.LINE_SEPARATOR).join(entryPoints));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	private static void reportCallGraphStatistics(Reporter reporter, CallGraph callGraph) {
