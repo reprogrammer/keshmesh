@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_findbugs_jar" name="Create FindBugs Detector Jar for Project edu.illinois.keshmesh.ui.findbugs.debug">
+	<target name="create_findbugs_jar">
+		<jar destfile="lib/KeshmeshDetectors.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="bin" />
+			<fileset dir=".">
+				<include name="bugrank.txt" />
+				<include name="findbugs.xml" />
+				<include name="messages.xml" />
+			</fileset>
+		</jar>
+	</target>
+</project>

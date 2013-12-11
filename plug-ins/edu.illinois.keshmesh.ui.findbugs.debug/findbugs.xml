@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<FindbugsPlugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="findbugsplugin.xsd" pluginid="edu.illinois.keshmesh.ui.findbugs"
+	defaultenabled="true" provider="University of Illinois" website="http://illinois.edu">
+
+	<Detector class="edu.illinois.keshmesh.ui.findbugs.debug.KeshmeshFindBugsDetector"
+		speed="fast" reports="KESHMESH_LCK01J,KESHMESH_LCK02J,KESHMESH_LCK03J,KESHMESH_LCK06J,KESHMESH_VNA00J" />
+
+	<BugPattern abbrev="KESHMESH_LCK01J" type="KESHMESH_LCK01J"
+		category="BAD_PRACTICE" />
+		
+	<BugPattern abbrev="KESHMESH_LCK02J" type="KESHMESH_LCK02J"
+		category="BAD_PRACTICE" />
+		
+	<BugPattern abbrev="KESHMESH_LCK03J" type="KESHMESH_LCK03J"
+		category="BAD_PRACTICE" />
+		
+	<BugPattern abbrev="KESHMESH_LCK06J" type="KESHMESH_LCK06J"
+		category="BAD_PRACTICE" />
+
+	<BugPattern abbrev="KESHMESH_VNA00J" type="KESHMESH_VNA00J"
+		category="BAD_PRACTICE" />
+
+</FindbugsPlugin>
