@@ -212,7 +212,7 @@ public abstract class AbstractTestCase {
 	private void findBugs() throws WALAInitializationException {
 		Modes.setInTestMode(true);
 		BugPatterns.enableBugPatterns(getBugPattern());
-		Reporter reporter = new ReporterFactory().create(new FileWriterFactory(Constants.PROFILING_RESULTS_FILENAME, new StringWriterFactory()));
+		Reporter reporter = new ReporterFactory().create(new FileWriterFactory(Constants.PROFILING_RESULTS_FILENAME, new StringWriterFactory()), Constants.PROFILING_RESULTS_HEADER);
 		ConfigurationOptions configurationOptions = new ConfigurationOptionsReaderFactory(new AbsentConfigurationOptionsInputStreamFactory()).create().read();
 		bugInstances = Main.initAndPerformAnalysis(javaProject, reporter, configurationOptions);
 		Logger.log(bugInstances.toString());
