@@ -1,3 +1,11 @@
+v1.0.0.201312111624
+===================
+- Fixed the reporting of bug patterns inside inner classes (issue #41).
+- Added the option to skip dumping the call and heap graphs (issue #68).
+- Fixed a bug that caused Keshmesh fail on Cassandra (issue #69).
+- Made it possible to debug Keshmesh within Eclipse (issue #70).
+- Reported the list of entry points (issue #71).
+
 v1.0.0.201312101057
 ===================
 - Reported the number of CGNodes per class loader (issue #66).
